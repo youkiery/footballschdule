@@ -1,0 +1,24 @@
+<ion-header>
+
+  <ion-navbar>
+    <ion-title>library</ion-title>
+    <div class="right">
+      <ion-icon name="checkmark" (click)="updateAvatar()"></ion-icon>
+      <ion-icon name="cloud-upload" (click)="uploadImage()"></ion-icon>
+      <ion-icon menuToggle name="rewind"></ion-icon>
+    </div>
+  </ion-navbar>
+
+</ion-header>
+
+<ion-content>
+  <p>
+    Nhấn vào ảnh đầu tiên để chọn ảnh từ máy, nhấn <ion-icon name="cloud-upload"></ion-icon> để tải lên, nhấn <ion-icon name="checkmark"></ion-icon> để xác nhận
+  </p>
+  <label for="file">
+    <img id="blah" class="md-icon" src="{{this.avatar}}">
+    <span class="glyphicon glyphicon-folder-open" aria-hidden="true"></span>
+    <input type="file" id="file" style="display:none" (change)="getFile()" />
+  </label>
+  <img class="md-icon inline" *ngFor="let image of lib" src="{{image.url}}" (click)="selectImage(image.url)">
+</ion-content>

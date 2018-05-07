@@ -14,3 +14,43 @@
 // To declare rules for a specific mode, create a child rule
 // for the .md, .ios, or .wp mode classes. The mode class is
 // automatically applied to the <body> element in the app.
+ion-navbar, .invol {
+	position: relative;
+}
+ion-navbar ion-icon {
+	font-size: 2em;
+}
+.invol img, .invol input, .right {
+	position: absolute;
+}
+.invol img {
+	z-index: 3;
+}
+.invol input {
+	z-index: 2;
+}
+.right {
+	right: 4px;
+	top: 1em;
+}
+.right button, .right ion-icon {
+	display: inline;
+	margin-right: 16px
+}
+.card-header-md {
+	padding: 0px;
+	border-bottom: 1px solid #ddd;
+}
+.msg {
+	padding: 16px 16px 0px 16px;
+	border-bottom: 1px solid #ddd;
+}
+.md-icon {
+	width: 64px;
+	height: 64px;
+	border-radius: 30%;
+	margin: 4px;
+}
+.inline {
+	display: inline;
+}

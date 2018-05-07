@@ -1,0 +1,74 @@
+<!--
+  Generated template for the MainPage page.
+
+  See http://ionicframework.com/docs/components/#navigation for more info on
+  Ionic pages and navigation.
+-->
+<ion-header>
+  <ion-navbar>
+    <ion-title>main</ion-title>
+    <div class="right">
+      <ion-icon name="settings" (click)="gotoSetting()"></ion-icon>
+      <ion-icon name="contacts" (click)="gotoFriend()"></ion-icon>
+      <ion-icon menuToggle name="rewind"></ion-icon>
+    </div>
+  </ion-navbar>
+</ion-header>
+
+<ion-content>
+  <ion-card *ngFor="let new of user.postList; let i of index">
+    <ion-card-header *ngIf="user.user[user.post[new].userId] !== undefine">
+      <ion-item>
+        <ion-avatar item-start>
+          <img src="{{user.user[user.post[new].userId].avatar}}">
+        </ion-avatar>
+        <b>
+          {{user.user[user.post[new].userId].name}}
+        </b>
+        <p>
+          <span ion-button *ngIf="user.post[new].userId !== user.data.userId && user.friendActiveList.indexOf(user.post[new].userId) === -1 && user.friendInactiveList.indexOf(user.post[new].userId) === -1" (click)="user.addFriend(user.post[new].userId)">
+            +
+          </span>
+          <span *ngIf="user.post[new].time.getDate() < 10">0</span>{{user.post[new].time.getDate()}}/<span *ngIf="user.post[new].time.getMonth() < 9">0</span>{{user.post[new].time.getMonth() + 1}}/<span>{{user.post[new].time.getFullYear()}}</span>
+        </p>
+      </ion-item>
+      <span *ngIf="user.post[new].image !== undefine">
+        {{user.post[new].image.length}} image
+      </span>
+      <!--
+        click event view image or video
+        (?) comment in library
+        -->
+    </ion-card-header>
+    <ion-list>
+      <p class="msg">
+        {{user.post[new].msg}}
+      </p>
+      <ion-item>
+        <div *ngIf="user.post[new].like !== undefine">
+          <button ion-button (click)="viewLiked(user.post[new].postId)">
+            {{user.post[new].like.length}}
+          </button>
+          <button ion-button color="primary" *ngIf='user.post[new].like.indexOf(user.data.userId) === -1' (click)="user.like(user.post[new].userId, user.post[new].postId, user.post[new].like, i)">
+            like
+          </button>
+          <button ion-button color="secondary" *ngIf='user.post[new].like.indexOf(user.data.userId) !== -1' (click)="user.unlike(user.post[new].userId, user.post[new].postId, user.post[new].like, i)">
+            like
+          </button>
+        </div>
+        <div *ngIf="user.post[new].like === undefine">
+          <button ion-button *ngIf="user.post[new].like === undefine" (click)="viewLiked(user.post[new].postId)">
+            0
+          </button>
+          <button ion-button (click)="user.like(user.post[new].userId, user.post[new].postId, user.post[new].like, i)">
+            like
+          </button>
+        </div>
+        <span style="float: right;">
+          <span *ngIf="user.post[new].time.getHours() < 10">0</span>{{user.post[new].time.getHours()}}:<span *ngIf="user.post[new].time.getMinutes() < 10">0</span>{{user.post[new].time.getMinutes()}}
+        </span>
+      </ion-item>
+    </ion-list>
+  </ion-card>
+
+</ion-content>

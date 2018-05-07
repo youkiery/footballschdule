@@ -1,14 +1,64 @@
 <ion-header>
   <ion-navbar>
     <ion-title>
-      Ionic Blank
+      đăng nhập
     </ion-title>
   </ion-navbar>
 </ion-header>
-
 <ion-content padding>
-  The world is your oyster.
-  <p>
-    If you get lost, the <a href="http://ionicframework.com/docs/v2">docs</a> will be your guide.
-  </p>
+  <form class="center">
+    <ion-segment [(ngModel)]="form" name="form">
+      <ion-segment-button value="login">
+        đăng nhập
+      </ion-segment-button>
+      <ion-segment-button value="signup">
+        đăng ký
+      </ion-segment-button>
+    </ion-segment>
+    <div [ngSwitch]="form">
+      <div *ngSwitchCase="'login'">
+        <ion-item>
+          <ion-label col-3>
+            tài khoản
+          </ion-label>
+          <ion-input [(ngModel)]="username" type="text" name="username"></ion-input>
+        </ion-item>
+        <ion-item>
+          <ion-label col-3>
+            mật khẩu
+          </ion-label>
+          <ion-input [(ngModel)]="password" type="password" name="password"></ion-input>
+        </ion-item>
+        <button ion-button color="primary" (click)="login()">xác nhận</button>
+      </div>
+      <div *ngSwitchCase="'signup'">
+        <ion-item>
+          <ion-label col-3>
+            tài khoản
+          </ion-label>
+          <ion-input [(ngModel)]="username" type="text" name="username"></ion-input>
+        </ion-item>
+        <ion-item>
+          <ion-label col-3>
+            mật khẩu
+          </ion-label>
+          <ion-input [(ngModel)]="password" type="password" name="password"></ion-input>
+        </ion-item>
+        <ion-item>
+          <ion-label col-3>
+            xác nhận mật khẩu
+          </ion-label>
+          <ion-input [(ngModel)]="vpassword" type="password" name="vpassword"></ion-input>
+        </ion-item>
+        <ion-item>
+          <ion-label col-3>
+            tên hiển thị
+          </ion-label>
+          <ion-input [(ngModel)]="name" type="text" name="name"></ion-input>
+        </ion-item>
+        <button ion-button color="primary" (click)="signup()">xác nhận</button>
+        <button ion-button color="secondary" (click)="user.signupFb()">đăng ký với tài khoản Facebook</button>
+      </div>
+    </div>
+  </form>
 </ion-content>
