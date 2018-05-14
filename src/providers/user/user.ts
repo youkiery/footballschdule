@@ -272,7 +272,7 @@ export class UserProvider {
       this.event.publish('fail')
     }
   }
-
+//
   acceptFriend(friendId, friendIndex) {
     this.event.publish('loading')
     console.log(friendId, friendIndex)
