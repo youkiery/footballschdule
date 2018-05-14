@@ -7,9 +7,11 @@ import { Events, Platform } from 'ionic-angular'
 
 /**
  * forgot password
+ * update friend structure
  * accept friend, add for both user
  * order some new data structure
  * update some function
+ * subcribe for friend updae
  */
 
 @Injectable()
@@ -21,25 +23,27 @@ export class UserProvider {
   friendRef = firebase.database().ref('friend')
   data
   profileId = ''
+  postId = ''
   user = {}
   userList = []
   post = {}
   postList = []
   library = []
   image = []
-  friendActiveList = []
-  friendInactiveList = []
+  friendActiveList = []   // in relationship
+  friendInactiveList = [] // waiting for a relationship
+  friendRequestList = []  // other person want a relationship
+
   constructor(public storage: Storage, public event: Events, public fb: Facebook, public platform: Platform) {
-    storage.get('userInfo').then(userInfo => {
+    /*storage.get('userInfo').then(userInfo => {
       if(userInfo !== null) {
         this.data = userInfo
-        this.event.publish("loading")
         this.loginSuccess()
       }
-    })
+    })*/
   }
+
   loginSuccess() {
-    this.event.publish("loading")
     this.friendRef.child(this.data.userId).once("value").then(friendSnap => {
       var friendList = friendSnap.val()
       var friendNumber = friendList.length
@@ -47,26 +51,35 @@ export class UserProvider {
       this.libraryRef.child(this.data.userId).once("value").then(librarySnap => {
         this.library = librarySnap.val()
 
-        this.imageRef.child(this.data.userId).once("value").then(imageSnap => {
-          this.image = imageSnap.val()
+        this.postRef.child("list").child(this.data.userId).once("value").then(userPostSnap => {
+          this.postList = userPostSnap.val()
 
-          this.postRef.child(this.data.userId).child("list").once("value").then(userPostSnap => {
-            this.postList = userPostSnap.val()
-
-            friendList.forEach(friend => {
-              if(friend.type) {
-                this.friendActiveList.push(friend)
-              }
-              else {
-                this.friendInactiveList.push(friend)
-              }
-
-              // friend or user
-              this.postRef.child(friend.userId).child("list").once("vale").then(friendPostSnap => {
+          friendList.forEach(friend => {
+            switch(friend.type) {
+              case 0:
+                this.friendInactiveList.push(friend.userId)
+                break
+              case 1:
+                this.friendRequestList.push(friend.userId)
+                break
+              case 2:
+                this.friendActiveList.push(friend.userId)
+                break
+            }
+            
+            this.userRef.child(friend.userId).once("value").then(friendDataSnap => {
+              var friendData = friendDataSnap.val()
+              this.user[friend.userId] = friendData
+              this.postRef.child("list").child(friend.userId).once("value").then(friendPostSnap => {
                 var friendPost = friendPostSnap.val()
-                this.postList = this.postList.concat(friendPost)
+                if(friendPost !== null) {
+                  this.postList = this.postList.concat(friendPost)
+                }
                 friendNumber --
                 if(!friendNumber) {
+                  this.postList.sort((a, b) => {
+                    return b.time - a.time
+                  })
                   this.event.publish("login-success")
                 }
               })
@@ -76,18 +89,32 @@ export class UserProvider {
       })
     })
   }
+
   login(username, password) {
     this.event.publish('loading')
     this.userRef.orderByChild("username").equalTo(username).once('value').then(snap => {
       var userInfo = snap.val()
-      if(userInfo !== null) {
-        this.updateData(userInfo)
+      var msg = ""
+
+      if(userInfo === null) {
+        msg = "Tài khoản không tồn tại"
       }
       else {
-        this.event.publish('fail', 'tên tài khoản hoặc mật khẩu không đúng')
+        var userId = Object.keys(userInfo)[0]
+        if(userInfo[userId].password !== password) {
+          msg = "Mật khẩu không đúng"
+        }
+      }
+
+      if(!msg) {
+        this.updateData(userInfo, userId)
+      }
+      else {
+        this.event.publish("fail", msg)
       }
     })
   }
+
   signup(username, password, name, avatar) {
     this.event.publish('loading')
     this.userRef.orderByChild('username').equalTo(username).once('value').then(snap => {
@@ -113,6 +140,7 @@ export class UserProvider {
       }
     })
   }
+
   signupFb() {
     this.event.publish('loading')
     var provider = new firebase.auth.FacebookAuthProvider();
@@ -128,6 +156,7 @@ export class UserProvider {
         avatar: user.photoURL,
         lastLog: currentTime
       }
+
       this.userRef.child(userId).once("value").then((snap) => {
         var userInfo = snap.val()
         if(userInfo === null) {
@@ -157,15 +186,15 @@ export class UserProvider {
       this.event.publish("fail", "lỗi mạng")          
     });
   }
+
   logout() {
     this.data = {}
     this.event.publish("logout")
     this.storage.remove("userInfo")
   }
-  updateData(userInfo) {
+
+  updateData(userInfo, userId) {
     var currentTime = Date.now()
-    console.log(userInfo)
-    var userId = Object.keys(userInfo)[0]
     userInfo[userId].lastLog = currentTime
     this.data = userInfo[userId]
     this.data['userId'] = userId
@@ -174,9 +203,11 @@ export class UserProvider {
       this.loginSuccess()
     })
   }
+
   storeData() {
     this.storage.set('userInfo', this.data)
   }
+
   selectImage(imageUrl) {
     this.event.publish('loading')
     this.data.avatar = imageUrl
@@ -185,6 +216,7 @@ export class UserProvider {
       this.event.publish('fail')
     })
   }
+
   confirmAccount(username, password) {
     this.event.publish('loading')
     this.userRef.orderByChild('username').equalTo(username).once('value').then((snap) => {
@@ -208,6 +240,7 @@ export class UserProvider {
       }
     })
   }
+
   changeUserInfo(username, password, name) {
     this.event.publish('loading')
     var updateData = {}
@@ -225,7 +258,7 @@ export class UserProvider {
       check ++
     }
     if(check) {
-      this.userRef  .child(this.data.userId).update(updateData).then(() => {
+      this.userRef.child(this.data.userId).update(updateData).then(() => {
         for (const key in updateData) {
           if (updateData.hasOwnProperty(key)) {
             this.data[key] = updateData[key]
@@ -239,69 +272,99 @@ export class UserProvider {
       this.event.publish('fail')
     }
   }
-  acceptFriend(friendId) {
+
+  acceptFriend(friendId, friendIndex) {
     this.event.publish('loading')
-    this.userRef.child(this.data.userId).child("friend").child(friendId).update({
-      type: 1,
+    console.log(friendId, friendIndex)
+    this.friendRef.child(this.data.userId).child(friendIndex).update({
+      type: 2,
     }).then(() => {
-      this.friendInactiveList = this.friendInactiveList.filter(friend => {
-        return friend !== friendId
+      this.friendRef.child(friendId).orderByChild("userId").equalTo(this.data.userId).once("value")
+          .then(friendDataSnap => {
+            var friendDataIndex = Object.keys(friendDataSnap.val())[0]
+            this.friendRef.child(friendId).child(friendDataIndex).push({
+              type: 2,
+            })
+
+            this.friendRequestList = this.friendRequestList.filter(friend => {
+              return friend !== friendId
+            })
+            this.friendActiveList.push(friendId)
+            this.event.publish('fail')
+          })
       })
-      this.friendActiveList.push(friendId)
-      this.event.publish('fail')
-    })    
   }
-  deleteFriendRequest(friendId) {
+
+  deleteFriendRequest(friendId, friendIndex) {
     this.event.publish('loading')
-    this.userRef.child(this.data.userId).child("friend").child(friendId).remove().then(() => {
-      this.friendInactiveList = this.friendInactiveList.filter(friend => {
-        return friend !== friendId
-      })
-      this.event.publish('fail')
+    this.friendRef.child(this.data.userId).child(friendIndex).remove().then(() => {
+      
+      this.friendRef.child(friendId).orderByChild("userId").equalTo(this.data.userId).once("value")
+          .then(friendDataSnap => {
+            var friendDataIndex = friendDataSnap.key()
+            this.friendRef.child(friendId).child(friendDataIndex).remove().then(() => {
+
+              this.friendRequestList = this.friendRequestList.filter(friend => {
+                return friend !== friendId
+              })
+              this.event.publish('fail')
+            })
+          })
     })    
   }
+
   addFriend(friendId) {
     this.event.publish('loading')
     var currentTime = Date.now()
-    var updateData = {
+    
+    this.friendInactiveList.push({
       type: 0,
-      time: currentTime
-    }
-    this.userRef.child(friendId).child("friend").child(this.data.userId).set(updateData).then(() => {
-      this.friendInactiveList = this.friendInactiveList.filter(friend => {
-        return friend !== friendId
-      })
-      this.friendInactiveList.push(friendId)
-      this.event.publish('fail')
+      time: currentTime,
+      userId: friendId
+    })
+    this.userRef.child(this.data.userId).set(this.friendInactiveList).then(() => {
+      
+      this.friendRef.child(friendId).once("value").then(friendDataSnap => {
+            var friendData = friendDataSnap.val()
+            friendData.push({
+              type: 1,
+              time: currentTime,
+              userId: this.data.userId
+            })
+            this.friendRef.child(friendId).set(friendData).then(() => {
+              this.event.publish('fail')
+            })
+          })
     })
   }
-  like(userId, postId, like, index) {
-    console.log(like)
+
+  likePost(userId, postId, like) {
     this.event.publish('loading')
     if(like === undefined) {
       like = []
     }
     like.push(this.data.userId)
-    console.log(like)
-    firebase.database().ref("post").child(userId).child(postId).child("like").set(like).then(() => {
+    this.postRef.child(userId).child("detail").child(postId).child("like").set(like).then(() => {
       this.post[postId].like = like
       this.event.publish('fail')
     })
   }
-  unlike(userId, postId, like, index) {
+
+  unlike(userId, postId, like) {
     this.event.publish('loading')
     like = like.filter(likedUser => {
       return likedUser !== this.data.userId
     })
-    console.log(like)
-    firebase.database().ref("post").child(userId).child(postId).child("like").set(like).then(() => {
+    this.postRef.child(userId).child("detail").child(postId).child("like").set(like).then(() => {
       this.post[postId].like = like
       this.event.publish('fail')
     })
   }
+
   gotoProfile(id) {
     this.profileId = id
   }
+
   bbtotext(text) {
     var format_search =  [
       /\[b\](.*?)\[\/b\]/ig,
@@ -322,6 +385,7 @@ export class UserProvider {
     }
     return text
   }
+
   objToList(obj) {
     var arr = []
     for (const key in obj) {
@@ -332,6 +396,7 @@ export class UserProvider {
     }
     return arr
   }
+
   objToKeyList(obj) {
     var arr = []
     for (const key in obj) {

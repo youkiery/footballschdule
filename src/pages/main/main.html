@@ -16,7 +16,7 @@
 </ion-header>
 
 <ion-content>
-  <ion-card *ngFor="let new of user.postList; let i of index">
+  <ion-card *ngFor="let new of displayNew; let i of index">
     <ion-card-header *ngIf="user.user[user.post[new].userId] !== undefine">
       <ion-item>
         <ion-avatar item-start>
@@ -26,9 +26,6 @@
           {{user.user[user.post[new].userId].name}}
         </b>
         <p>
-          <span ion-button *ngIf="user.post[new].userId !== user.data.userId && user.friendActiveList.indexOf(user.post[new].userId) === -1 && user.friendInactiveList.indexOf(user.post[new].userId) === -1" (click)="user.addFriend(user.post[new].userId)">
-            +
-          </span>
           <span *ngIf="user.post[new].time.getDate() < 10">0</span>{{user.post[new].time.getDate()}}/<span *ngIf="user.post[new].time.getMonth() < 9">0</span>{{user.post[new].time.getMonth() + 1}}/<span>{{user.post[new].time.getFullYear()}}</span>
         </p>
       </ion-item>
@@ -55,6 +52,9 @@
           <button ion-button color="secondary" *ngIf='user.post[new].like.indexOf(user.data.userId) !== -1' (click)="user.unlike(user.post[new].userId, user.post[new].postId, user.post[new].like, i)">
             like
           </button>
+          <button ion-button *ngIf="user.post[new].userId !== user.data.userId && user.friendActiveList.indexOf(user.post[new].userId) === -1 && user.friendInactiveList.indexOf(user.post[new].userId) === -1" (click)="user.addFriend(user.post[new].userId)">
+            +
+          </button>
         </div>
         <div *ngIf="user.post[new].like === undefine">
           <button ion-button *ngIf="user.post[new].like === undefine" (click)="viewLiked(user.post[new].postId)">
@@ -62,6 +62,9 @@
           </button>
           <button ion-button (click)="user.like(user.post[new].userId, user.post[new].postId, user.post[new].like, i)">
             like
+          </button>
+          <button ion-button *ngIf="user.post[new].userId !== user.data.userId && user.friendActiveList.indexOf(user.post[new].userId) === -1 && user.friendInactiveList.indexOf(user.post[new].userId) === -1" (click)="user.addFriend(user.post[new].userId)">
+            +
           </button>
         </div>
         <span style="float: right;">

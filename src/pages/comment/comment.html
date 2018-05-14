@@ -1,0 +1,67 @@
+<ion-header>
+  <ion-navbar>
+    <ion-title>comment</ion-title>
+  </ion-navbar>
+</ion-header>
+
+<ion-content>
+  <ion-avatar item-start>
+    <img src="{{user.user[postData.userId].avatar}}">
+  </ion-avatar>
+  <b>
+    {{user.user[postData.userId].name}}
+  </b>
+  <ion-list>
+    <p class="msg">
+      {{postData.msg}}
+    </p>
+    <ion-item>
+      <div *ngIf="user.post[new].like !== undefine">
+        <button ion-button (click)="viewLiked(user.post[new].postId)">
+          {{user.post[new].like.length}}
+        </button>
+        <button ion-button color="primary" *ngIf='user.post[new].like.indexOf(user.data.userId) === -1' (click)="user.like(user.post[new].userId, user.post[new].postId, user.post[new].like, i)">
+          like
+        </button>
+        <button ion-button color="secondary" *ngIf='user.post[new].like.indexOf(user.data.userId) !== -1' (click)="user.unlike(user.post[new].userId, user.post[new].postId, user.post[new].like, i)">
+          like
+        </button>
+      </div>
+      <div *ngIf="user.post[new].like === undefine">
+        <button ion-button *ngIf="user.post[new].like === undefine" (click)="viewLiked(user.post[new].postId)">
+          0
+        </button>
+        <button ion-button (click)="user.like(user.post[new].userId, user.post[new].postId, user.post[new].like, i)">
+          like
+        </button>
+      </div>
+      <span style="float: right;">
+        <span *ngIf="user.post[new].time.getHours() < 10">0</span>{{user.post[new].time.getHours()}}:<span *ngIf="user.post[new].time.getMinutes() < 10">0</span>{{user.post[new].time.getMinutes()}}
+      </span>
+    </ion-item>
+  </ion-list>
+  <ion-list>
+    <ion-item *ngFor="let comment of post.comment">
+      <div class="comment">
+        {{comment.msg}}
+      </div>
+      <div class="comment-tail">
+        {{comment.time}} by 
+        <img src="{{user.user[postData.userId].avatar}}">
+        {{comment.userId}}
+      </div>
+      <div class="rely" *ngIf="comment.comment !== undefine">
+        <div class="rely-list" *ngFor="let rely of comment.comment">
+          <div class="comment">
+            {{comment.msg}}
+          </div>
+          <div class="comment-tail">
+            {{comment.time}} by 
+            <img src="{{user.user[postData.userId].avatar}}">
+            {{comment.userId}}
+          </div>
+        </div>
+      </div>
+    </ion-item>
+  </ion-list>
+</ion-content>

@@ -1,6 +1,8 @@
 import { Component } from '@angular/core';
 import { IonicPage, NavController, AlertController } from 'ionic-angular';
 
+import firebase from "firebase"
+
 import { SettingPage } from '../../pages/setting/setting';
 import { FriendPage } from '../../pages/friend/friend';
 
@@ -10,7 +12,8 @@ import { UserProvider } from '../../providers/user/user';
  * filter for data display
  * paging
  * subscribe data
- * 
+ * group list
+ * msglist
  */
 
 @IonicPage()
@@ -20,23 +23,40 @@ import { UserProvider } from '../../providers/user/user';
 })
 export class MainPage {
   displayNew = []
+  page = 1
   constructor(public navCtrl: NavController, public user: UserProvider, public alertCtrl: AlertController) {
-    if(this.user.postList.length < 10) {
-      // get more option
-    }
-    else {
-      // sort
-      // load, update user.post
-      this.user.postList.sort((a, b) => {
-        return this.user.post[b].time - this.user.post[a].time
-      })
-
-    }
     console.log(this.user.postList)
+    this.loadNew()
   }
 
   ionViewDidLoad() {
     console.log('ionViewDidLoad MainPage');
+  }
+  loadNew() {
+    var from = (this.page - 1) * 8
+    var to = this.page * 8
+    var end = this.user.postList.length
+    var postRef = firebase.database().ref("post")
+    var userRef = firebase.database().ref("user")
+    console.log(from, to, end)
+    while(from < to && from < end) {
+      postRef.child("detail").child(this.user.postList[from].postId).once("value").then(postSnap => {
+        var post = postSnap.val()
+
+        if(this.user.userList.indexOf(post.userId) < 0) {
+          userRef.child(post.userId).once("value").then(userSnap => {
+            var user = userSnap.val()
+            this.user.user[post.userId] = user
+          })
+        }
+        console.log(this.user.postList, from)
+        post.time = new Date(this.user.postList[from].time)
+        this.user.post[this.user.postList[from]] = post
+        this.displayNew.push(this.user.postList[from])
+      })
+      from ++
+    }
+    this.page ++
   }
   getItem(index, src) {
     var count = 10

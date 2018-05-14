@@ -11,8 +11,9 @@ import { LibraryPage } from '../pages/library/library';
 import { SettingPage } from '../pages/setting/setting'
 import { FriendPage } from '../pages/friend/friend'
 import { ProfilePage } from '../pages/profile/profile'
+import { CommentPage } from '../pages/comment/comment'
 
-import * as firebase from 'firebase'
+import  firebase from 'firebase'
 import { Facebook } from '@ionic-native/facebook'
 
 import { IonicStorageModule } from '@ionic/storage'
@@ -36,7 +37,8 @@ firebase.initializeApp(config);
     SettingPage,
     LibraryPage,
     FriendPage,
-    ProfilePage
+    ProfilePage,
+    CommentPage
   ],
   imports: [
     BrowserModule,
@@ -51,7 +53,8 @@ firebase.initializeApp(config);
     SettingPage,
     LibraryPage,
     FriendPage,
-    ProfilePage
+    ProfilePage,
+    CommentPage
   ],
   providers: [
     StatusBar,

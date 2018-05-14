@@ -4,17 +4,18 @@
   </ion-navbar>
 </ion-header>
 <ion-content>
-  <form [(ngSubmit)="user.post(this.msg)"]>
+  <form [(ngSubmit)="user.post(this.msg)"] *ngIf="user.user[user.profileId] !== undefine">
     <ion-avatar item-start>
-      <img src="{{user.data.avatar}}">
+      <img src="{{user.user[user.profileId].avatar}}">
     </ion-avatar>
     <b>
-      {{user.data.name}}
+      {{user.user[user.profileId].name}}
     </b>
     <ion-input type="text" name="msg" [(ngModel)]="msg"></ion-input>
+    <button ion-button>post</button>
   </form>
 
-  <ion-card *ngFor="let new of user.postList; let i of index">
+  <ion-card *ngFor="let new of post; let i of index">
     
     <ion-card-header *ngIf="user.user[user.post[new].userId] !== undefine">
       <ion-item>
