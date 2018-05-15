@@ -8,6 +8,8 @@ import { MyApp } from './app.component';
 import { HomePage } from '../pages/home/home';
 import { MainPage } from '../pages/main/main';
 import { LibraryPage } from '../pages/library/library';
+import { LibManPage } from '../pages/lib-man/lib-man';
+import { LibDetPage } from '../pages/lib-det/lib-det';
 import { SettingPage } from '../pages/setting/setting'
 import { FriendPage } from '../pages/friend/friend'
 import { ProfilePage } from '../pages/profile/profile'
@@ -36,6 +38,8 @@ firebase.initializeApp(config);
     MainPage,
     SettingPage,
     LibraryPage,
+    LibManPage,
+    LibDetPage,
     FriendPage,
     ProfilePage,
     CommentPage
@@ -52,6 +56,8 @@ firebase.initializeApp(config);
     MainPage,
     SettingPage,
     LibraryPage,
+    LibManPage,
+    LibDetPage,
     FriendPage,
     ProfilePage,
     CommentPage

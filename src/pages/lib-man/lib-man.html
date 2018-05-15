@@ -1,0 +1,13 @@
+<ion-header>
+  <ion-navbar>
+    <ion-title>lib-man</ion-title>
+  </ion-navbar>
+</ion-header>
+
+<ion-content>
+  <div *ngFor="let library of user.library" style="margin: 4px; display: inline-block; width: 128px; height: 128px;">
+    <div *ngIf="user.image[library.list[0].imageId] !== undefined" >
+      <img src="{{user.image[library.list[0].imageId]}} style='max-width: 128px; max-heighit: 128px;'">
+    </div>
+  </div>
+</ion-content>

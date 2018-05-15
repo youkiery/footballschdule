@@ -21,32 +21,37 @@ export class UserProvider {
   libraryRef = firebase.database().ref('library')
   imageRef = firebase.database().ref('image')
   friendRef = firebase.database().ref('friend')
-  data
+  data // CHANGE DATA TO USERID ONLY
   profileId = ''
+  libraryId = ''
   postId = ''
   user = {}
   userList = []
   post = {}
   postList = []
   library = []
-  image = []
+  image = {}
   friendActiveList = []   // in relationship
   friendInactiveList = [] // waiting for a relationship
   friendRequestList = []  // other person want a relationship
 
   constructor(public storage: Storage, public event: Events, public fb: Facebook, public platform: Platform) {
-    /*storage.get('userInfo').then(userInfo => {
+    storage.get('userInfo').then(userInfo => {
       if(userInfo !== null) {
         this.data = userInfo
+        this.event.publish("loading")
         this.loginSuccess()
       }
-    })*/
+    })
   }
 
   loginSuccess() {
     this.friendRef.child(this.data.userId).once("value").then(friendSnap => {
       var friendList = friendSnap.val()
-      var friendNumber = friendList.length
+      var friendNumber = 0
+      if(friendList !== undefined) {
+        friendNumber = friendList.length
+      }
 
       this.libraryRef.child(this.data.userId).once("value").then(librarySnap => {
         this.library = librarySnap.val()
@@ -70,11 +75,23 @@ export class UserProvider {
             this.userRef.child(friend.userId).once("value").then(friendDataSnap => {
               var friendData = friendDataSnap.val()
               this.user[friend.userId] = friendData
-              this.postRef.child("list").child(friend.userId).once("value").then(friendPostSnap => {
-                var friendPost = friendPostSnap.val()
-                if(friendPost !== null) {
-                  this.postList = this.postList.concat(friendPost)
-                }
+              if(friend.type === 2) {
+                this.postRef.child("list").child(friend.userId).once("value").then(friendPostSnap => {
+                  var friendPost = friendPostSnap.val()
+                  if(friendPost !== null) {
+                    console.log(this.postList, friendPost)
+                    this.postList = this.postList.concat(friendPost)
+                  }
+                  friendNumber --
+                  if(!friendNumber) {
+                    this.postList.sort((a, b) => {
+                      return b.time - a.time
+                    })
+                    this.event.publish("login-success")
+                  }
+                })
+              }
+              else {
                 friendNumber --
                 if(!friendNumber) {
                   this.postList.sort((a, b) => {
@@ -82,7 +99,7 @@ export class UserProvider {
                   })
                   this.event.publish("login-success")
                 }
-              })
+              }
             })
           })
         })
@@ -272,7 +289,7 @@ export class UserProvider {
       this.event.publish('fail')
     }
   }
-//
+
   acceptFriend(friendId, friendIndex) {
     this.event.publish('loading')
     console.log(friendId, friendIndex)
@@ -282,7 +299,7 @@ export class UserProvider {
       this.friendRef.child(friendId).orderByChild("userId").equalTo(this.data.userId).once("value")
           .then(friendDataSnap => {
             var friendDataIndex = Object.keys(friendDataSnap.val())[0]
-            this.friendRef.child(friendId).child(friendDataIndex).push({
+            this.friendRef.child(friendId).child(friendDataIndex).update({
               type: 2,
             })
 
@@ -297,12 +314,18 @@ export class UserProvider {
 
   deleteFriendRequest(friendId, friendIndex) {
     this.event.publish('loading')
-    this.friendRef.child(this.data.userId).child(friendIndex).remove().then(() => {
+    
+    this.friendRequestList = this.friendRequestList.filter(friend => {
+      return friend !== friendId
+    })
+    this.friendRef.child(this.data.userId).set(this.friendRequestList).then(() => {
       
-      this.friendRef.child(friendId).orderByChild("userId").equalTo(this.data.userId).once("value")
+      this.friendRef.child(friendId).once("value")
           .then(friendDataSnap => {
-            var friendDataIndex = friendDataSnap.key()
-            this.friendRef.child(friendId).child(friendDataIndex).remove().then(() => {
+            var friendData = friendDataSnap.val().filter(friend => {
+              return friend !== this.data.userId
+            })
+            this.friendRef.child(friendId).set(friendData).then(() => {
 
               this.friendRequestList = this.friendRequestList.filter(friend => {
                 return friend !== friendId
@@ -338,13 +361,14 @@ export class UserProvider {
     })
   }
 
-  likePost(userId, postId, like) {
+  like(userId, postId, like) {
     this.event.publish('loading')
     if(like === undefined) {
       like = []
     }
     like.push(this.data.userId)
-    this.postRef.child(userId).child("detail").child(postId).child("like").set(like).then(() => {
+    console.log(userId, postId, like)
+    this.postRef.child("detail").child(postId).child("like").set(like).then(() => {
       this.post[postId].like = like
       this.event.publish('fail')
     })
@@ -355,7 +379,7 @@ export class UserProvider {
     like = like.filter(likedUser => {
       return likedUser !== this.data.userId
     })
-    this.postRef.child(userId).child("detail").child(postId).child("like").set(like).then(() => {
+    this.postRef.child("detail").child(postId).child("like").set(like).then(() => {
       this.post[postId].like = like
       this.event.publish('fail')
     })

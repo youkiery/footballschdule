@@ -4,7 +4,8 @@ import { UserProvider } from '../../providers/user/user';
 
 import firebase from 'firebase'
 
-import { LibraryPage, LibraryPage2 } from '../library/library'
+import { LibraryPage } from '../library/library'
+import { LibManPage } from '../lib-man/lib-man'
 
 /**
  * xem thông tin
@@ -88,5 +89,8 @@ export class SettingPage {
   }
   gotoLibrary() {
     this.navCtrl.push(LibraryPage)
+  }
+  gotoLibrary2() {
+    this.navCtrl.push(LibManPage)
   }
 }

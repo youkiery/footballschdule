@@ -5,6 +5,7 @@ import firebase from "firebase"
 
 import { SettingPage } from '../../pages/setting/setting';
 import { FriendPage } from '../../pages/friend/friend';
+import { ProfilePage } from '../../pages/profile/profile';
 
 import { UserProvider } from '../../providers/user/user';
 
@@ -24,8 +25,9 @@ import { UserProvider } from '../../providers/user/user';
 export class MainPage {
   displayNew = []
   page = 1
+  msg = ""
   constructor(public navCtrl: NavController, public user: UserProvider, public alertCtrl: AlertController) {
-    console.log(this.user.postList)
+    console.log(this.user.post)
     this.loadNew()
   }
 
@@ -33,56 +35,40 @@ export class MainPage {
     console.log('ionViewDidLoad MainPage');
   }
   loadNew() {
+    var end = this.user.postList.length
     var from = (this.page - 1) * 8
     var to = this.page * 8
-    var end = this.user.postList.length
-    var postRef = firebase.database().ref("post")
-    var userRef = firebase.database().ref("user")
-    console.log(from, to, end)
+    var rex = []
     while(from < to && from < end) {
-      postRef.child("detail").child(this.user.postList[from].postId).once("value").then(postSnap => {
-        var post = postSnap.val()
-
-        if(this.user.userList.indexOf(post.userId) < 0) {
-          userRef.child(post.userId).once("value").then(userSnap => {
-            var user = userSnap.val()
-            this.user.user[post.userId] = user
-          })
-        }
-        console.log(this.user.postList, from)
-        post.time = new Date(this.user.postList[from].time)
-        this.user.post[this.user.postList[from]] = post
-        this.displayNew.push(this.user.postList[from])
-      })
+      rex.push(from)
       from ++
     }
-    this.page ++
-  }
-  getItem(index, src) {
-    var count = 10
-    var tex = []
-    index *= 10
-    this.displayNew = []
-
-    // is something wrong?
-    while(count) {
-      if(src[index + count] !== undefined) {
-        // postId or id
-        if(this.user.post[src[index + count].postId] === undefined) {
-          this.user.postRef.child(src[index + count].userId).child("detail")
-          .child(src[index + count].postId).once("value").then(userPostSnap => {
-            var userPost = userPostSnap.val()
-            // detailId or postId
-            this.user.post[userPost.postId] = userPost
-          })
-        }
-        this.displayNew.push(src[index + count].postId)
+    var postRef = firebase.database().ref("post")
+    var userRef = firebase.database().ref("user")
+    rex.forEach(index => {
+      if(index < end) {
+        postRef.child("detail").child(this.user.postList[index].postId).once("value").then(postSnap => {
+          var post = postSnap.val()
+          
+          if(this.user.userList.indexOf(post.userId) < 0) {
+            userRef.child(post.userId).once("value").then(userSnap => {
+              var user = userSnap.val()
+              this.user.user[post.userId] = user
+            })
+          }
+          
+          post.time = new Date(this.user.postList[index].time)
+          this.user.post[this.user.postList[index].postId] = post
+          this.displayNew.push(this.user.postList[index].postId)
+          console.log(this.user.post)
+        })  
       }
-      count --
-    }
+    })
+    this.page ++
   }
   viewLiked(postId) {
     var displayForm = ''
+    console.log(this.user.user)
     this.user.post[postId].like.forEach((likedUser, index) => {
       displayForm += index + ', ' + this.user.user[likedUser].name + '<br/>'
     });
@@ -98,5 +84,39 @@ export class MainPage {
   }
   gotoFriend() {
     this.navCtrl.push(FriendPage)
+  }
+  gotoProfile() {
+    this.user.profileId = this.user.data.userId
+    this.navCtrl.push(ProfilePage)
+  }
+  submitPost() {
+    var postRef = firebase.database().ref("post")
+    var currTime = Date.now()
+    var postId = postRef.child("detail").child(this.user.data.userId).push().key
+    var postData = {
+      userId: this.user.data.userId,
+      msg: this.msg
+    }
+    var length = (this.user.postList.filter(post => {
+      return this.user.post[post.postId].userId === this.user.data.userId
+    })).length
+    postRef.child("detail").child(postId).set(postData).then(() => {
+      var postListData = {
+        postId: postId,
+        time: currTime
+      }
+      postRef.child("list").child(this.user.data.userId).child(length.toString())
+          .set(postListData).then(() => {
+            this.user.post[postId] = postData
+            this.user.post[postId].time = new Date(currTime)
+            this.user.postList.push(postListData)
+            var newTemp = []
+            this.displayNew.forEach((postTemp, index) => {
+              newTemp[index + 1] = postTemp
+            })
+            newTemp[0] = postId
+            this.displayNew = newTemp
+          })
+    })
   }
 }

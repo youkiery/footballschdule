@@ -20,5 +20,5 @@
     <span class="glyphicon glyphicon-folder-open" aria-hidden="true"></span>
     <input type="file" id="file" style="display:none" (change)="getFile()" />
   </label>
-  <img class="md-icon inline" *ngFor="let image of lib" src="{{image.url}}" (click)="selectImage(image.url)">
+  <img class="md-icon inline" *ngFor="let image of lib" src="{{user.image[image]}}" (click)="selectImage(user.image[image])">
 </ion-content>

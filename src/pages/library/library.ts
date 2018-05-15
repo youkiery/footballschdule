@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { IonicPage, NavController, NavParams, Events } from 'ionic-angular';
+import { IonicPage, Events } from 'ionic-angular';
 
 import firebase from 'firebase'
 import { UserProvider } from '../../providers/user/user';
@@ -27,34 +27,37 @@ export class LibraryPage2 {
 export class LibraryPage {
   lib = []
   imgRef = firebase.database().ref('image')
+  libRef = firebase.database().ref('library')
   imgsRef = {}
-  libRef
   avatar = '../assets/imgs/logo.png'
 
   file:any;
-  constructor(public navCtrl: NavController, public navParams: NavParams, public user: UserProvider,
-      public event: Events) { 
+  constructor(public user: UserProvider, public event: Events) { 
     this.avatar = this.user.data.avatar
 
-    this.libRef = firebase.database().ref('library').child(this.user.data.userId)
-    this.libRef.once('value').then((snap) => {
-      this.imgsRef = snap.val()
-      //
-      for (const img in this.imgsRef) {
-        if (this.imgsRef.hasOwnProperty(img)) {
-          var imgId = this.imgsRef[img].imgId
-          this.imgRef.child(imgId).once('value').then((snap) => {
-            var img = snap.val()
-            this.lib.push(
-              {
-                imgId: imgId,
-                url: img.url
-              }
-            )
+    var imageRef = firebase.database().ref("image")
+    this.user.library.forEach(libraryList => {
+      
+      libraryList.list.forEach(imageList => {
+        if(this.user.image[imageList.imageId] === undefined) {
+          imageRef.child(imageList.imageId).once("value").then(imageSnap => {
+            var image = imageSnap.val()
+            this.user.image[imageList.imageId] = image
+            
+            if(this.lib.indexOf(imageList.imageId) < 0) {
+              this.lib.push(imageList.imageId)
+              console.log(this.lib)
+            }
+            console.log(this.user.image)
           })
         }
-      }
-      console.log(this.lib)
+        else {
+          if(this.lib.indexOf(imageList.imageId) < 0) {
+            this.lib.push(imageList.imageId)
+            console.log(this.lib)
+          }
+        }
+      })
     })
   }
 
@@ -80,39 +83,31 @@ export class LibraryPage {
         
 
         uploadTask.on('state_changed', (snapshot) => {
-          // Observe state change events such as progress, pause, and resume
-          // Get task progress, including the number of bytes uploaded and the total number of bytes to be uploaded
           var progress = (uploadTask.snapshot.bytesTransferred / uploadTask.snapshot.totalBytes) * 100;
           console.log('Upload is ' + progress + '% done');
           if(progress === 100){
-            var currentTime = Date.now()
             var updateData = {}
             storageRef.getDownloadURL().then(urlsnap => {
               var url = urlsnap
-              updateData[imgId] = {
-                url: url,
-                type: 0
-              }
-              this.imgRef.update(updateData).then(() => {
-                this.libRef.push({
-                  imgId: imgId,
-                  time: Date.now(),
-                }).then(() => {
-                  this.lib.push({
-                    imgId: imgId,
-                    url: url
-                  })
-                  this.event.publish("fail")
+              var imageId = this.imgRef.push().key
+              this.imgRef.child(imageId).set(url).then(() => {
+                this.user.library[0].list.push({
+                  imageId: imageId,
+                  time: Date.now()
                 })
+                this.libRef.child(this.user.data.userId).child("0").child("list")
+                    .set(this.user.library[0].list).then(() => {
+                      this.user.image[imageId] = url
+                      this.lib.push(imageId)
+                      this.event.publish("fail")
+                    })
               })
             })
           }
         }, function(error) {
           console.log(error)
         }, function() {
-          // Handle successful uploads on complete
-          // For instance, get the download URL: https://firebasestorage.googleapis.com/...
-          var downloadURL = uploadTask.snapshot.downloadURL;
+          
         });
 
     }
