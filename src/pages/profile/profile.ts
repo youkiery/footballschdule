@@ -19,6 +19,7 @@ export class ProfilePage {
   displayNew = []
   page = 1
   constructor(public user: UserProvider) {
+    /*
     if(this.user.user[this.user.profileId] === undefined) {
       this.user.event.publish("loading")
       this.user.userRef.child(user.profileId).once("value").then(userSnap => {
@@ -64,7 +65,7 @@ export class ProfilePage {
   }
 
   ionViewDidLoad() {
-    console.log('ionViewDidLoad ProfilePage');
+    console.log('ionViewDidLoad ProfilePage');*/
   }
 
 }

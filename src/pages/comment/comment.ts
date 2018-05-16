@@ -17,7 +17,7 @@ import { UserProvider } from '../../providers/user/user'
 export class CommentPage {
   postData = {}
   constructor(public user: UserProvider) {
-    this.postData = user.post[user.postId]
+    //this.postData = user.post[user.postId]
   }
 
   ionViewDidLoad() {

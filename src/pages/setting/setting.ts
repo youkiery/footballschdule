@@ -24,6 +24,7 @@ export class SettingPage {
   name = ''
   constructor(public navCtrl: NavController, public navParams: NavParams, public toastCtrl: ToastController,
       public user: UserProvider) {
+        /*
 
       }
 
@@ -91,6 +92,6 @@ export class SettingPage {
     this.navCtrl.push(LibraryPage)
   }
   gotoLibrary2() {
-    this.navCtrl.push(LibManPage)
+    this.navCtrl.push(LibManPage)*/
   }
 }

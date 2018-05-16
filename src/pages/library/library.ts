@@ -33,6 +33,7 @@ export class LibraryPage {
 
   file:any;
   constructor(public user: UserProvider, public event: Events) { 
+    /*
     this.avatar = this.user.data.avatar
 
     var imageRef = firebase.database().ref("image")
@@ -125,25 +126,7 @@ export class LibraryPage {
 			let content: string = target.result;
 			(<HTMLInputElement>document.getElementById('blah')).src = content;
 	  	}
-	  	reader.readAsDataURL(this.file[0]);
+      reader.readAsDataURL(this.file[0]);
+      */
   }
-
-  /*
-  preview:any = 'assets/images/1A.jpg';
-  url:any;
-  image:any;
-  downloadURL: string;
-  constructor(public navCtrl: NavController, public navParams: NavParams,public db: AngularFireDatabase, public ev:Events, private authData: AuthServiceProvider) {
-    this.url = navParams.get('url');
-		this.db.list('/Inventory/Image/').forEach(item => {
-      this.file = item;
-      console.log(this.file)
-    })
-  }
-
-
-  
-  
-  */
-
 }

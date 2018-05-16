@@ -84,6 +84,7 @@ export class MyApp {
       })
 
       // control realtime
+      /*
       this.ref.on("child_added").then(logSnap => {
         var log = logSnap.val()
         console.log(log)
@@ -121,7 +122,6 @@ export class MyApp {
             break
           }
         }
-        /*
         switch(log.child) {
           case "user":
             switch(log.type) {
@@ -147,8 +147,8 @@ export class MyApp {
           
           break
         }
-        */
       })
+        */
     });
   }
   dismissLoading() {

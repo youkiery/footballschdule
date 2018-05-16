@@ -27,6 +27,7 @@ export class MainPage {
   page = 1
   msg = ""
   constructor(public navCtrl: NavController, public user: UserProvider, public alertCtrl: AlertController) {
+    /*
     console.log(this.user.post)
     this.loadNew()
   }
@@ -125,6 +126,6 @@ export class MainPage {
             this.displayNew = newTemp
             this.msg = ""
           })
-    })
+    })*/
   }
 }

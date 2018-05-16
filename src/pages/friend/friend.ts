@@ -16,7 +16,7 @@ import { UserProvider } from '../../providers/user/user'
 export class FriendPage {
 
   constructor(public user: UserProvider) {
-    console.log(this.user.friendInactiveList)
+    //console.log(this.user.friendInactiveList)
   }
 
   ionViewDidLoad() {

@@ -17,7 +17,7 @@ import { UserProvider } from '../../providers/user/user'
 export class LibManPage {
 
   constructor(public user: UserProvider) {
-    var imageRef = firebase.database().ref("image")
+    /*var imageRef = firebase.database().ref("image")
     this.user.library.forEach(libraryList => {
       
       libraryList.list.forEach(imageList => {
@@ -32,7 +32,7 @@ export class LibManPage {
   }
 
   ionViewDidLoad() {
-    console.log('ionViewDidLoad LibManPage');
+    console.log('ionViewDidLoad LibManPage');*/
   }
 
 }

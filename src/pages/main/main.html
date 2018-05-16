@@ -11,6 +11,7 @@
 </ion-header>
 
 <ion-content>
+  <!--
   <form (ngSubmit)="submitPost()">
     <ion-avatar item-start>
       <img class="md-icon" src="{{user.data.avatar}}">
@@ -39,18 +40,12 @@
           <span *ngIf="user.post[new].time.getHours() < 10">0</span>{{user.post[new].time.getHours()}}:<span *ngIf="user.post[new].time.getMinutes() < 10">0</span>{{user.post[new].time.getMinutes()}}
         </p>
       </ion-item>
-      <!--
       <div class="right">
         <ion-icon name="menu"></ion-icon>
       </div>
-      -->
       <span *ngIf="user.post[new].image !== undefine">
         {{user.post[new].image.length}} image
       </span>
-      <!--
-        click event view image or video
-        (?) comment in library
-        -->
     </ion-card-header>
     <ion-list>
       <p class="msg">
@@ -85,5 +80,5 @@
       </ion-item>
     </ion-list>
   </ion-card>
-
+-->
 </ion-content>

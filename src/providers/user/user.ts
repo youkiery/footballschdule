@@ -90,6 +90,32 @@ export class UserProvider {
     // catch error
   }
 
+  signup(username, password, name, avatar) {
+    this.service.event.publish('loading')
+    this.ref.orderByChild('username').equalTo(username).once('value').then(snap => {
+      var userInfo = snap.val()
+      if(!this.service.valid(userInfo)) {
+        var userId = this.ref.push().key
+        var currentTime = Date.now()
+        var updateData = {}
+        var signupData = {
+          username: username,
+          password: password,
+          name: name,
+          avatar: avatar,
+          lastLog: currentTime
+        }
+        updateData[userId] = signupData
+        this.ref.update(updateData).then(() => {
+          this.loginSuccess(signupData, userId)
+        })
+      }
+      else {
+        this.service.event.publish("finish-load", "tài khoản này đã tồn tại")
+      }
+    })
+  }
+
   getuserInfo(userList) {
     var end = userList.length - 1
     if(userList.indexOf(this.userId) < 0) {
@@ -176,31 +202,6 @@ export class UserProvider {
   }
 
 
-  signup(username, password, name, avatar) {
-    this.event.publish('loading')
-    this.userRef.orderByChild('username').equalTo(username).once('value').then(snap => {
-      var userInfo = snap.val()
-      if(userInfo === null) {
-        var userId = this.userRef.push().key
-        var currentTime = Date.now()
-        var updateData = {}
-        var signupData = {
-          username: username,
-          password: password,
-          name: name,
-          avatar: avatar,
-          lastLog: currentTime
-        }
-        updateData[userId] = signupData
-        this.userRef.update(updateData).then(snap => {
-          this.loginSuccess()
-        })
-      }
-      else {
-        this.event.publish("fail", "tài khoản này đã tồn tại")
-      }
-    })
-  }
 
   signupFb() {
     this.event.publish('loading')
