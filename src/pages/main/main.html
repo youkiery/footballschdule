@@ -1,9 +1,3 @@
-<!--
-  Generated template for the MainPage page.
-
-  See http://ionicframework.com/docs/components/#navigation for more info on
-  Ionic pages and navigation.
--->
 <ion-header>
   <ion-navbar>
     <ion-title>main</ion-title>
@@ -17,7 +11,6 @@
 </ion-header>
 
 <ion-content>
-
   <form (ngSubmit)="submitPost()">
     <ion-avatar item-start>
       <img class="md-icon" src="{{user.data.avatar}}">
@@ -46,6 +39,11 @@
           <span *ngIf="user.post[new].time.getHours() < 10">0</span>{{user.post[new].time.getHours()}}:<span *ngIf="user.post[new].time.getMinutes() < 10">0</span>{{user.post[new].time.getMinutes()}}
         </p>
       </ion-item>
+      <!--
+      <div class="right">
+        <ion-icon name="menu"></ion-icon>
+      </div>
+      -->
       <span *ngIf="user.post[new].image !== undefine">
         {{user.post[new].image.length}} image
       </span>

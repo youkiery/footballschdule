@@ -20,6 +20,11 @@ import { Facebook } from '@ionic-native/facebook'
 
 import { IonicStorageModule } from '@ionic/storage'
 import { UserProvider } from '../providers/user/user';
+import { PostProvider } from '../providers/post/post';
+import { LibraryProvider } from '../providers/library/library';
+import { ImageProvider } from '../providers/image/image';
+import { FriendProvider } from '../providers/friend/friend';
+import { ServiceProvider } from '../providers/service/service';
 
 var config = {
   apiKey: "AIzaSyCpCVGzJBpxRZumXRMzmm92ijkZUHM3Zds",
@@ -67,7 +72,12 @@ firebase.initializeApp(config);
     SplashScreen,
     {provide: ErrorHandler, useClass: IonicErrorHandler},
     UserProvider,
-    Facebook
+    Facebook,
+    PostProvider,
+    LibraryProvider,
+    ImageProvider,
+    FriendProvider,
+    ServiceProvider
   ]
 })
 export class AppModule {}

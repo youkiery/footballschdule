@@ -61,15 +61,21 @@ export class MainPage {
           this.user.post[this.user.postList[index].postId] = post
           this.displayNew.push(this.user.postList[index].postId)
           console.log(this.user.post)
-        })  
+        })
       }
     })
     this.page ++
   }
   viewLiked(postId) {
     var displayForm = ''
-    console.log(this.user.user)
-    this.user.post[postId].like.forEach((likedUser, index) => {
+    var like = this.user.post[postId]
+    if(like === undefined) {
+      like = []
+    }
+    else {
+      like = like.like
+    }
+    like.forEach((likedUser, index) => {
       displayForm += index + ', ' + this.user.user[likedUser].name + '<br/>'
     });
     let alert = this.alertCtrl.create({
@@ -98,7 +104,8 @@ export class MainPage {
       msg: this.msg
     }
     var length = (this.user.postList.filter(post => {
-      return this.user.post[post.postId].userId === this.user.data.userId
+      console.log(this.user.post, post.postId)
+      return post.userId === this.user.data.userId
     })).length
     postRef.child("detail").child(postId).set(postData).then(() => {
       var postListData = {
@@ -116,6 +123,7 @@ export class MainPage {
             })
             newTemp[0] = postId
             this.displayNew = newTemp
+            this.msg = ""
           })
     })
   }

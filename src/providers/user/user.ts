@@ -1,9 +1,6 @@
 import { Injectable } from '@angular/core';
 
-import { Storage } from '@ionic/storage'
-import { Facebook } from '@ionic-native/facebook'
-import firebase from 'firebase'
-import { Events, Platform } from 'ionic-angular'
+import { ServiceProvider } from '../service/service'
 
 /**
  * forgot password
@@ -12,17 +9,21 @@ import { Events, Platform } from 'ionic-angular'
  * order some new data structure
  * update some function
  * subcribe for friend updae
+ * user, post check if existed
  */
 
 @Injectable()
 export class UserProvider {
-  userRef = firebase.database().ref('user')
-  postRef = firebase.database().ref('post')
+  ref: any
+  /*postRef = firebase.database().ref('post')
   libraryRef = firebase.database().ref('library')
   imageRef = firebase.database().ref('image')
   friendRef = firebase.database().ref('friend')
-  data // CHANGE DATA TO USERID ONLY
-  profileId = ''
+  */
+  data = {}// user datalist
+  userId = ""// logged userId
+  password = ""
+  /*profileId = ''
   libraryId = ''
   postId = ''
   user = {}
@@ -34,17 +35,94 @@ export class UserProvider {
   friendActiveList = []   // in relationship
   friendInactiveList = [] // waiting for a relationship
   friendRequestList = []  // other person want a relationship
+  */
 
-  constructor(public storage: Storage, public event: Events, public fb: Facebook, public platform: Platform) {
-    storage.get('userInfo').then(userInfo => {
-      if(userInfo !== null) {
-        this.data = userInfo
-        this.event.publish("loading")
-        this.loginSuccess()
+  constructor(public service: ServiceProvider) {
+    this.ref = this.service.db.ref("user")
+    var userInfo = this.service.getStorage("userInfo")
+    if(userInfo) {
+      // login
+      this.userId = userInfo.userId
+      // check if below line cause error
+      this.setUser(userInfo.userId, userInfo.userInfo)
+      console.log(this.data)
+    }
+  }
+
+  login(username, password) {
+    this.service.event.publish('loading')
+    this.ref.orderByChild("username").equalTo(username).once('value').then(userInfoSnap => {
+      var userInfo = userInfoSnap.val()
+      var msg = ""
+
+      if(userInfo === null) {
+        msg = "Tài khoản không tồn tại"
+      }
+      else {
+        var userId = Object.keys(userInfo)[0]
+        if(userInfo[userId].password !== password) {
+          msg = "Mật khẩu không đúng"
+        }
+      }
+
+      if(!msg) {
+        this.loginSuccess(userInfo, userId)
+      }
+      else {
+        this.service.event.publish("finish-load", msg)
       }
     })
   }
 
+  loginSuccess(userInfo, userId) {
+    var currentTime = Date.now()
+    userInfo[userId].lastLog = currentTime
+    var storeData = {
+      userId: userId,
+      userInfo: userInfo
+    }
+    this.userId = userId
+    this.data['userId'] = userInfo
+    this.service.storeData("userInfo", storeData)
+    this.ref.child(this.userId).update({lastLog: currentTime}).then(() => {
+      this.service.event.publish("get-friend")
+    })
+    // catch error
+  }
+
+  getuserInfo(userList) {
+    var end = userList.length - 1
+    if(userList.indexOf(this.userId) < 0) {
+      userList.push(this.userId)
+    }
+    userList.forEach((userId, userIndex) => {
+      if(!this.service.valid(this.data[userId])) {
+        this.ref.child(userId).once("value").then(userInfoSnap => {
+          var userInfo = userInfoSnap.val()
+          if(this.service.valid(userInfo)) {
+            this.setUser(userId, userInfo)
+          }
+          // else case
+          if(end === userIndex) {
+            this.service.event.publish("get-library")
+          }
+        })
+      }
+      else if(end === userIndex) {
+        this.service.event.publish("get-library")
+      }
+    })
+  }
+
+  setUser(userId, userInfo) {
+    this.data[userId] = {
+      name: userInfo.name,
+      avatar: userInfo.avatar,
+      lastLog: userInfo.lastLog
+    }
+  }
+
+    /*
   loginSuccess() {
     this.friendRef.child(this.data.userId).once("value").then(friendSnap => {
       var friendList = friendSnap.val()
@@ -75,11 +153,11 @@ export class UserProvider {
             this.userRef.child(friend.userId).once("value").then(friendDataSnap => {
               var friendData = friendDataSnap.val()
               this.user[friend.userId] = friendData
-              if(friend.type === 2) {
                 this.postRef.child("list").child(friend.userId).once("value").then(friendPostSnap => {
                   var friendPost = friendPostSnap.val()
                   if(friendPost !== null) {
                     console.log(this.postList, friendPost)
+                    friendPost.userId = friend.userId
                     this.postList = this.postList.concat(friendPost)
                   }
                   friendNumber --
@@ -90,16 +168,6 @@ export class UserProvider {
                     this.event.publish("login-success")
                   }
                 })
-              }
-              else {
-                friendNumber --
-                if(!friendNumber) {
-                  this.postList.sort((a, b) => {
-                    return b.time - a.time
-                  })
-                  this.event.publish("login-success")
-                }
-              }
             })
           })
         })
@@ -107,30 +175,6 @@ export class UserProvider {
     })
   }
 
-  login(username, password) {
-    this.event.publish('loading')
-    this.userRef.orderByChild("username").equalTo(username).once('value').then(snap => {
-      var userInfo = snap.val()
-      var msg = ""
-
-      if(userInfo === null) {
-        msg = "Tài khoản không tồn tại"
-      }
-      else {
-        var userId = Object.keys(userInfo)[0]
-        if(userInfo[userId].password !== password) {
-          msg = "Mật khẩu không đúng"
-        }
-      }
-
-      if(!msg) {
-        this.updateData(userInfo, userId)
-      }
-      else {
-        this.event.publish("fail", msg)
-      }
-    })
-  }
 
   signup(username, password, name, avatar) {
     this.event.publish('loading')
@@ -210,20 +254,6 @@ export class UserProvider {
     this.storage.remove("userInfo")
   }
 
-  updateData(userInfo, userId) {
-    var currentTime = Date.now()
-    userInfo[userId].lastLog = currentTime
-    this.data = userInfo[userId]
-    this.data['userId'] = userId
-    this.storeData()
-    this.userRef.child(this.data.userId).update({lastLog: currentTime}).then(() => {
-      this.loginSuccess()
-    })
-  }
-
-  storeData() {
-    this.storage.set('userInfo', this.data)
-  }
 
   selectImage(imageUrl) {
     this.event.publish('loading')
@@ -270,7 +300,7 @@ export class UserProvider {
       updateData["password"] = password
       check ++
     }
-    if(name !== this.data.name && password !== '') {
+    if(name !== this.data.name && name !== '') {
       updateData["name"] = name
       check ++
     }
@@ -429,5 +459,7 @@ export class UserProvider {
       }
     }
     return arr
+    
   }
+  */
 }
