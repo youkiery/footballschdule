@@ -1,8 +1,8 @@
 import { Component } from '@angular/core';
-import { IonicPage, Events } from 'ionic-angular';
+import { IonicPage } from 'ionic-angular';
 
-import firebase from 'firebase'
 import { UserProvider } from '../../providers/user/user';
+import { ImageProvider } from '../../providers/image/image';
 
 /**
  * manager image and library
@@ -10,14 +10,6 @@ import { UserProvider } from '../../providers/user/user';
  * user update
  * png, jpg
  */
-@Component({
-  template: ``
-})
-export class LibraryPage2 {
-  constructor() {
-
-  }
-}
 
 @IonicPage()
 @Component({
@@ -25,14 +17,8 @@ export class LibraryPage2 {
   templateUrl: 'library.html',
 })
 export class LibraryPage {
-  lib = []
-  imgRef = firebase.database().ref('image')
-  libRef = firebase.database().ref('library')
-  imgsRef = {}
-  avatar = '../assets/imgs/logo.png'
-
-  file:any;
-  constructor(public user: UserProvider, public event: Events) { 
+  selectedImages = []
+  constructor(public user: UserProvider, public image: ImageProvider) { 
     /*
     this.avatar = this.user.data.avatar
 
