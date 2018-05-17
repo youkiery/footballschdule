@@ -32,9 +32,11 @@ export class PostProvider {
           this.list.concat(userPostList)
         }
         if(userListNumber === userIndex) {
-          this.list = this.list.sort((a, b) => {
-            return b.time - a.time
-          })
+          if(this.list.length > 1) {
+            this.list = this.list.sort((a, b) => {
+              return b.time - a.time
+            })
+          }
           this.service.event.publish("get-post-detail", this.list)
         }
       })
@@ -51,18 +53,21 @@ export class PostProvider {
     adviceUserList.forEach((adviceUserId, adviceUserIndex) => {
       this.ref.child("list/" + adviceUserId).once("value").then(advicePostListSnap => {
         var advicePostList = advicePostListSnap.val()
-        console.log(advicePostList)
+        
         if(this.service.valid(advicePostList)) {
           advicePostList.forEach(advicePostData => {
             advicePostData.userId = adviceUserId
           })
-          this.advice.concat(advicePostList)
+          this.advice = this.advice.concat(advicePostList)
         }
-        console.log(friendListNumber, adviceUserIndex)
+        
         if(friendListNumber === adviceUserIndex) {
-          this.advice = this.list.sort((a, b) => {
-            return b.time - a.time
-          })
+          if(this.advice.length > 1) {
+            this.advice = this.list.sort((a, b) => {
+              console.log(a, b)
+              return b.time - a.time
+            })
+          }
           this.service.event.publish("get-post-detail", this.advice)
         }
       })
@@ -75,29 +80,30 @@ export class PostProvider {
     if(end) {
       var from = 0
       var to = end > 8 ? 8 : end
+      end --
       var postListToLoad = []
       while(from < to) {
         postListToLoad.push(postList[from])
         from ++
       }
-      postListToLoad.forEach((post, index) => {
-          if(!this.service.valid(this.detail[post.postId])) {
-            postRef.child("detail").child(post.postId).once("value").then(postSnap => {
-              var post = postSnap.val()
-              
-              // check if below line cause error
-              if(userList.indexOf(post.userId) < 0) {
-                userList.push(post.userId)    
-              }
-              post.time = new Date(post.time)
-              this.detail[post.postId] = post
-              console.log(post.postId, end)
-              // check if below line cause error
-              if(index === end) {
-                this.service.event.publish("get-user-data", userList)
-              }
-            })
-          }
+      postListToLoad.forEach((postData, index) => {
+        if(userList.indexOf(postData.userId) < 0) {
+          userList.push(postData.userId)    
+        }
+        if(!this.service.valid(this.detail[postData.postId])) {
+          postRef.child("detail").child(postData.postId).once("value").then(postSnap => {
+            var post = postSnap.val()
+            
+            // check if below line cause error
+            post.time = new Date(postData.time)
+            this.detail[postData.postId] = post
+            console.log(postData.postId, end)
+            // check if below line cause error
+            if(index === end) {
+              this.service.event.publish("get-user-data", userList)
+            }
+          })
+        }
       })
     }
     else {

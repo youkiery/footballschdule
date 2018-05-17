@@ -14,7 +14,7 @@
 // To declare rules for a specific mode, create a child rule
 // for the .md, .ios, or .wp mode classes. The mode class is
 // automatically applied to the <body> element in the app.
-ion-navbar, .invol {
+ion-navbar, ion-item, .invol {
 	position: relative;
 }
 ion-navbar ion-icon {
@@ -33,7 +33,7 @@ ion-navbar ion-icon {
 	right: 4px;
 	top: 1em;
 }
-.right button, .right ion-icon {
+.right, .right ion-icon {
 	display: inline;
 	margin-right: 16px
 }
@@ -53,4 +53,7 @@ ion-navbar ion-icon {
 }
 .inline {
 	display: inline;
+}
+.max {
+	width: 100%
 }

@@ -5,9 +5,11 @@ import { SettingPage } from '../../pages/setting/setting';
 import { FriendPage } from '../../pages/friend/friend';
 import { ProfilePage } from '../../pages/profile/profile';
 
+import { PostPage } from '../post/post';
+
 import { UserProvider } from '../../providers/user/user';
 import { PostProvider } from '../../providers/post/post';
-import { PostPage } from '../post/post';
+import { FriendProvider } from '../../providers/friend/friend';
 
 /**
  * filter for data display
@@ -26,7 +28,7 @@ export class MainPage {
   displayNew = []
   page = 1
   constructor(public user: UserProvider, public post: PostProvider, public alertCtrl: AlertController,
-      public navCtrl: NavController) {
+      public navCtrl: NavController, public friend: FriendProvider) {
         console.log(user)
         console.log(post)
         this.displayFirst()
@@ -34,7 +36,9 @@ export class MainPage {
 
   displayFirst() {
     if(this.page === 1 && this.post.advice !== []) {
-      this.displayNew = this.post.advice
+      this.post.advice.forEach(post => {
+        this.displayNew.push(post.postId)
+      })
     }
     else {
       var end = this.post.list.length
@@ -47,7 +51,7 @@ export class MainPage {
           from ++
         }
         postIndexToLoad.forEach(index => {
-          this.displayNew.push(this.post.list[index])
+          this.displayNew.push(this.post.list[index].postId)
         })
         this.page ++
       }
