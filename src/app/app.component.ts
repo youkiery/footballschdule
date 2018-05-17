@@ -95,6 +95,17 @@ export class MyApp {
         this.rootPage = MainPage
       })
       this.event.subscribe('logout', () => {
+        this.user.userId = ""
+        this.user.data = {}
+        this.friend.active = []
+        this.friend.inactive = []
+        this.friend.request = []
+        this.post.list = []
+        this.post.advice = []
+        this.post.detail = {}
+        this.library.list = []
+        this.image.list = []
+        this.image.detail = {}
         this.rootPage = HomePage
       })
 

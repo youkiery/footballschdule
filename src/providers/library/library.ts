@@ -9,7 +9,7 @@ import { ServiceProvider } from "../service/service"
 export class LibraryProvider {
   ref: any
   list = []
-  constructor(public service: ServiceProvider) {
+  constructor(private service: ServiceProvider) {
     this.ref = this.service.db.ref("library")
   }
   getLibraryList(userId) {

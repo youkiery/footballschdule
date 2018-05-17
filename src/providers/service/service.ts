@@ -16,15 +16,6 @@ export class ServiceProvider {
     this.db = firebase.database()
     console.log('Hello ServiceProvider Provider');
   }
-  getStorage(storageName) {
-    this.storage.get(storageName).then(data => {
-      if(data !== null) {
-        return data
-      }
-      return null
-    })
-    return null
-  }
   storeData(name, data) {
     this.storage.set(name, data)
   }

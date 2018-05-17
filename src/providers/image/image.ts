@@ -10,7 +10,7 @@ export class ImageProvider {
   ref: any
   list = []
   detail = {}
-  constructor(public service: ServiceProvider) {
+  constructor(private service: ServiceProvider) {
     this.ref = this.service.db.ref("iamge")
   }
   getImage(libraryList) {

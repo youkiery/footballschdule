@@ -13,7 +13,7 @@ export class PostProvider {
   list = []
   detail = {}
   page = 1
-  constructor(public service: ServiceProvider, public user: UserProvider) {
+  constructor(private service: ServiceProvider, private user: UserProvider) {
     this.ref = this.service.db.ref("post")
     console.log('Hello PostProvider Provider');
   }

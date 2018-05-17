@@ -37,16 +37,20 @@ export class UserProvider {
   friendRequestList = []  // other person want a relationship
   */
 
-  constructor(public service: ServiceProvider) {
+  constructor(private service: ServiceProvider) {
     this.ref = this.service.db.ref("user")
-    /*var userInfo = this.service.getStorage("userInfo")
-    if(userInfo) {
-      // login
-      this.userId = userInfo.userId
-      // check if below line cause error
-      this.setUser(userInfo.userId, userInfo.userInfo)
-      console.log(this.data)
-    }*/
+    this.service.storage.get("userInfo").then(data => {
+      var userInfo = data
+
+      if(this.service.valid(userInfo)) {
+        // login
+        this.userId = userInfo.userId
+        // check if below line cause error
+        this.setUser(userInfo.userId, userInfo.userInfo)
+        this.service.event.publish("loading")
+        this.loginSuccess(userInfo.userInfo, userInfo.userId)
+      }
+    })
   }
 
   login(username, password) {
@@ -75,7 +79,6 @@ export class UserProvider {
   }
 
   loginSuccess(userInfo, userId) {
-    console.log(userInfo, userId)
     var currentTime = Date.now()
     userInfo.lastLog = currentTime
     var storeData = {
@@ -84,7 +87,7 @@ export class UserProvider {
     }
     this.userId = userId
     this.data['userId'] = userInfo
-    //this.service.storeData("userInfo", storeData)
+    this.service.storeData("userInfo", storeData)
     this.ref.child(this.userId).update({lastLog: currentTime}).then(() => {
       this.service.event.publish("get-friend")
     })
@@ -125,6 +128,11 @@ export class UserProvider {
         this.service.event.publish("finish-load", "tài khoản này đã tồn tại")
       }
     })
+  }
+
+  logout() {
+    this.service.event.publish("logout")
+    this.service.storage.remove("userInfo")
   }
 
   getuserInfo(userList) {
@@ -272,11 +280,6 @@ export class UserProvider {
     });
   }
 
-  logout() {
-    this.data = {}
-    this.event.publish("logout")
-    this.storage.remove("userInfo")
-  }
 
 
   selectImage(imageUrl) {

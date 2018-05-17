@@ -11,7 +11,7 @@ export class FriendProvider {
   inactive = []
   request = []
   ref: any
-  constructor(public service: ServiceProvider) {
+  constructor(private service: ServiceProvider) {
     this.ref = this.service.db.ref("friend")
   }
   getFriendList(userId) {
