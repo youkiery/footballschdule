@@ -11,10 +11,11 @@ import firebase from 'firebase'
 @Injectable()
 export class ServiceProvider {
   db: any
-
+  store: any
   constructor(public storage: Storage, public event: Events, public fb: Facebook,
       public platform: Platform, public toastCtrl: ToastController) {
         this.db = firebase.database()
+        this.store = firebase.storage()
         console.log('Hello ServiceProvider Provider');
       }
 

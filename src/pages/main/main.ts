@@ -4,6 +4,7 @@ import { IonicPage, AlertController, NavController } from 'ionic-angular';
 import { SettingPage } from '../../pages/setting/setting';
 import { FriendPage } from '../../pages/friend/friend';
 import { ProfilePage } from '../../pages/profile/profile';
+import { LibraryPage } from '../../pages/library/library';
 
 import { PostPage } from '../post/post';
 
@@ -66,6 +67,9 @@ export class MainPage {
   }
   gotoPost() {
     this.navCtrl.push(PostPage)
+  }
+  gotoLibrary() {
+    this.navCtrl.push(LibraryPage)
   }
   /*
   viewLiked(postId) {

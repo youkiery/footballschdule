@@ -64,7 +64,6 @@ export class PostProvider {
         if(friendListNumber === adviceUserIndex) {
           if(this.advice.length > 1) {
             this.advice = this.list.sort((a, b) => {
-              console.log(a, b)
               return b.time - a.time
             })
           }
@@ -126,7 +125,6 @@ export class PostProvider {
     var ownerList = this.list.filter(post => {
       return post.userId === userId
     })
-    console.log(ownerList)
     ownerList.push(nodePost)
     var updateData = {}
     updateData["post/detail/" + postId] = detailPost

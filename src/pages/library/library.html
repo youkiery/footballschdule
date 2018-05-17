@@ -1,14 +1,22 @@
 <ion-header>
-
   <ion-navbar>
     <ion-title>library</ion-title>
     <div class="right">
-      <ion-icon name="checkmark" (click)="selected()"></ion-icon>
+      <ion-icon name="checkmark" (click)="uploadImage()"></ion-icon>
     </div>
   </ion-navbar>
-
 </ion-header>
 
 <ion-content>
-
+  <div>
+    <label for="file">
+      <img id="blah" class="md-icon" src="{{uploadButton}}">
+      <span class="glyphicon glyphicon-folder-open" aria-hidden="true"></span>
+      <input type="file" id="file" style="display:none" (change)="getFile()" multiple />
+    </label>
+  </div>
+  <span class="inline" *ngFor="let imageId of image.list">
+    <img class="md-icon" src="{{image.detail[imageId]}}" *ngIf="selectedImages.indexOf(imageId) < 0" (click)="tickImage(imageId)">
+    <img class="md-icon selected" src="{{image.detail[imageId]}}" *ngIf="selectedImages.indexOf(imageId) >= 0" (click)="untickImage(imageId)">
+  </span>
 </ion-content>
