@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { Platform, ToastController, Events, LoadingController, ViewController } from 'ionic-angular';
+import { Platform, ToastController, Events, LoadingController } from 'ionic-angular';
 import { StatusBar } from '@ionic-native/status-bar';
 import { SplashScreen } from '@ionic-native/splash-screen';
 
@@ -58,25 +58,40 @@ export class MyApp {
       // control data load
       this.event.subscribe("get-friend", () => {
         this.friend.getFriendList(this.user.userId)
+        console.log("get-friend")
       })
-      this.event.subscribe("get-post-list", () => {
-        this.post.getPostList(this.user.userId, this.friend.active)
+      this.event.subscribe("get-advice", () => {
+        this.user.getAdvice()
+        console.log("get-advice")
       })
-      this.event.subscribe("get-post-detail", () => {
-        this.post.getPostDetail()
+      this.event.subscribe("get-post-list", (userList) => {
+        this.post.getPostList(this.user.userId, userList)
+        console.log("get-post-list")
+      })
+      this.event.subscribe("get-advice-post-list", (adviceUserlist) => {
+        this.post.getAdvicePostList(this.user.userId, adviceUserlist)
+        console.log("get-post-list")
+      })
+      this.event.subscribe("get-post-detail", (postList) => {
+        this.post.getPostDetail(postList, this.friend.active.concat(this.friend.inactive.concat(this.friend.request)))
+        console.log("get-post-detail")
       })
       this.event.subscribe("get-user-data", (userList) => {
-        this.user.getuserInfo(userList)
+        this.user.getuserInfo(userList.concat(this.user.userId))
+        console.log("get-user-data")
       })
       this.event.subscribe("get-library", () => {
         this.library.getLibraryList(this.user.userId)
+        console.log("get-library")
       })
-      this.event.subscribe("get-image", (libraryList) => {
+      this.event.subscribe("get-image-list", (libraryList) => {
         this.image.getImage(libraryList)
+        console.log("get-image-list")
       })
       this.event.subscribe('finish-login', () => {
         this.ref = this.service.db.ref("log/" + this.user.userId)
         this.dismissLoading()
+        console.log('finish-login')
         this.rootPage = MainPage
       })
       this.event.subscribe('logout', () => {

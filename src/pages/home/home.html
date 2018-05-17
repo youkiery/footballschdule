@@ -18,45 +18,27 @@
     <div [ngSwitch]="form">
       <div *ngSwitchCase="'login'">
         <ion-item>
-          <ion-label for="username" col-3>
-            tài khoản
-          </ion-label>
-          <ion-input [(ngModel)]="username" type="text" name="username"></ion-input>
+          <ion-input [(ngModel)]="username" type="text" name="username" placeholder="tài khoản"></ion-input>
         </ion-item>
         <ion-item>
-          <ion-label for="password" col-3>
-            mật khẩu
-          </ion-label>
-          <ion-input [(ngModel)]="password" type="password" name="password"></ion-input>
+          <ion-input [(ngModel)]="password" type="password" name="password" placeholder="mât khẩu"></ion-input>
         </ion-item>
-        <button ion-button color="primary" (click)="login()">xác nhận</button>
+        <button ion-button color="primary" (click)="login()">đăng nhập</button>
       </div>
       <div *ngSwitchCase="'signup'">
         <ion-item>
-          <ion-label for="username" col-3>
-            tài khoản
-          </ion-label>
-          <ion-input [(ngModel)]="username" type="text" name="username"></ion-input>
+          <ion-input [(ngModel)]="username" type="text" name="username" placeholder="tài khoản"></ion-input>
         </ion-item>
         <ion-item>
-          <ion-label for="password" col-3>
-            mật khẩu
-          </ion-label>
-          <ion-input [(ngModel)]="password" type="password" name="password"></ion-input>
+          <ion-input [(ngModel)]="password" type="password" name="password" placeholder="mât khẩu"></ion-input>
         </ion-item>
         <ion-item>
-          <ion-label for="vpassword" col-3>
-            xác nhận mật khẩu
-          </ion-label>
-          <ion-input [(ngModel)]="vpassword" type="password" name="vpassword"></ion-input>
+          <ion-input [(ngModel)]="vpassword" type="password" name="vpassword" placeholder="xác nhận mật khẩu"></ion-input>
         </ion-item>
         <ion-item>
-          <ion-label for="name" col-3>
-            tên hiển thị
-          </ion-label>
-          <ion-input [(ngModel)]="name" type="text" name="name"></ion-input>
+          <ion-input [(ngModel)]="name" type="text" name="name" placeholder="tên hiển thị"></ion-input>
         </ion-item>
-        <button ion-button color="primary" (click)="signup()">xác nhận</button>
+        <button ion-button color="primary" (click)="signup()">đăng ký</button>
         <button ion-button color="secondary" (click)="user.signupFb()">đăng ký với tài khoản Facebook</button>
       </div>
     </div>

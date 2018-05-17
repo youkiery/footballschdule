@@ -9,6 +9,7 @@ import { UserProvider } from "../user/user"
 @Injectable()
 export class PostProvider {
   ref: any
+  advice = []
   list = []
   detail = {}
   page = 1
@@ -16,67 +17,95 @@ export class PostProvider {
     this.ref = this.service.db.ref("post")
     console.log('Hello PostProvider Provider');
   }
-  getPostList(userId, friendList) {
+  getPostList(userId, userList) {
     // check if friendlist vaild
-    var userRef = this.service.db.ref("user")
-    if(friendList.indexOf(userId) < 0) {
-      friendList.push(userId)
+    if(userList.indexOf(userId) < 0) {
+      userList.push(userId)
     }
-    var friendListNumber = friendList.length
+    var userListNumber = userList.length - 1
     
-    friendList.forEach((friendId, friendIndex) => {
-      userRef.child("list/" + friendId).once("value").then(friendPostListSnap => {
-        var friendPostList = friendPostListSnap.val()
-        console.log(friendPostList)
-        if(this.service.valid(friendPostList)) {
-          friendPostList.forEach(friendPostData => {
-            friendPostData.userId = friendId
+    userList.forEach((userId, userIndex) => {
+      this.ref.child("list/" + userId).once("value").then(userPostListSnap => {
+        var userPostList = userPostListSnap.val()
+        console.log(userPostList)
+        if(this.service.valid(userPostList)) {
+          userPostList.forEach(userPostData => {
+            userPostData.userId = userId
           })
-          this.list.concat(friendPostList)
+          this.list.concat(userPostList)
         }
-        if(friendListNumber === friendIndex) {
+        console.log(userListNumber, userIndex)
+        if(userListNumber === userIndex) {
           this.list = this.list.sort((a, b) => {
             return b.time - a.time
           })
-          this.service.event.publish("get-post-detail")
+          this.service.event.publish("get-post-detail", this.list)
         }
       })
     });
   }
-  getPostDetail() {
-    var postRef = this.service.db.ref("post")
-    var userRef = this.service.db.ref("user")
-    var userList = []
-    var end = this.list.length
-    var from = (this.page - 1) * 8
-    var to = this.page * 8
-    var postIndexToLoad = []
-    while(from < to && from < end) {
-      postIndexToLoad.push(from)
-      from ++
+  // this function may error
+  getAdvicePostList(userId, adviceUserList) {
+    // check if friendlist vaild
+    if(adviceUserList.indexOf(userId) < 0) {
+      adviceUserList.push(userId)
     }
-    end = postIndexToLoad.length - 1
-    postIndexToLoad.forEach((postIndex, index) => {
-      if(this.service.valid(this.list[postIndex])) {
-        if(!this.service.valid(this.detail[this.list[postIndex].postId])) {
-          postRef.child("detail").child(this.list[postIndex].postId).once("value").then(postSnap => {
-            var post = postSnap.val()
-            
-            // check if below line cause error
-            if(userList.indexOf(this.list[postIndex].userId) < 0) {
-              userList.push(this.list[postIndex].userId)    
-            }
-            post.time = new Date(this.list[postIndex].time)
-            this.detail[this.list[postIndex].postId] = post
-            console.log(index, end)
-            // check if below line cause error
-            if(index === end) {
-              this.service.event.publish("get-user-data", userList)
-            }
+    var friendListNumber = adviceUserList.length - 1
+    
+    adviceUserList.forEach((adviceUserId, adviceUserIndex) => {
+      this.ref.child("list/" + adviceUserId).once("value").then(advicePostListSnap => {
+        var advicePostList = advicePostListSnap.val()
+        console.log(advicePostList)
+        if(this.service.valid(advicePostList)) {
+          advicePostList.forEach(advicePostData => {
+            advicePostData.userId = adviceUserId
           })
+          this.advice.concat(advicePostList)
         }
+        console.log(friendListNumber, adviceUserIndex)
+        if(friendListNumber === adviceUserIndex) {
+          this.advice = this.list.sort((a, b) => {
+            return b.time - a.time
+          })
+          this.service.event.publish("get-post-detail", this.advice)
+        }
+      })
+    });
+  }
+
+  getPostDetail(postList, userList) {
+    var postRef = this.service.db.ref("post")
+    var end = postList.length
+    if(end) {
+      var from = 0
+      var to = end > 8 ? 8 : end
+      var postListToLoad = []
+      while(from < to) {
+        postListToLoad.push(postList[from])
+        from ++
       }
-    })
-    this.page ++
+      postListToLoad.forEach((post, index) => {
+          if(!this.service.valid(this.detail[post.postId])) {
+            postRef.child("detail").child(post.postId).once("value").then(postSnap => {
+              var post = postSnap.val()
+              
+              // check if below line cause error
+              if(userList.indexOf(post.userId) < 0) {
+                userList.push(post.userId)    
+              }
+              post.time = new Date(post.time)
+              this.detail[post.postId] = post
+              console.log(post.postId, end)
+              // check if below line cause error
+              if(index === end) {
+                this.service.event.publish("get-user-data", userList)
+              }
+            })
+          }
+      })
+    }
+    else {
+      this.service.event.publish("get-user-data", userList)
+    }
   }
 }

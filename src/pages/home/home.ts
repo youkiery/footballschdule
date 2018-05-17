@@ -62,7 +62,7 @@ export class HomePage {
       }).present()
     }
     else {
-      //this.user.signup(this.username, this.password, this.name, this.avatar)
+      this.user.signup(this.username, this.password, this.name, this.avatar)
     }
   }
 }

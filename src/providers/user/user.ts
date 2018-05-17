@@ -39,14 +39,14 @@ export class UserProvider {
 
   constructor(public service: ServiceProvider) {
     this.ref = this.service.db.ref("user")
-    var userInfo = this.service.getStorage("userInfo")
+    /*var userInfo = this.service.getStorage("userInfo")
     if(userInfo) {
       // login
       this.userId = userInfo.userId
       // check if below line cause error
       this.setUser(userInfo.userId, userInfo.userInfo)
       console.log(this.data)
-    }
+    }*/
   }
 
   login(username, password) {
@@ -66,7 +66,7 @@ export class UserProvider {
       }
 
       if(!msg) {
-        this.loginSuccess(userInfo, userId)
+        this.loginSuccess(userInfo[userId], userId)
       }
       else {
         this.service.event.publish("finish-load", msg)
@@ -75,15 +75,16 @@ export class UserProvider {
   }
 
   loginSuccess(userInfo, userId) {
+    console.log(userInfo, userId)
     var currentTime = Date.now()
-    userInfo[userId].lastLog = currentTime
+    userInfo.lastLog = currentTime
     var storeData = {
       userId: userId,
       userInfo: userInfo
     }
     this.userId = userId
     this.data['userId'] = userInfo
-    this.service.storeData("userInfo", storeData)
+    //this.service.storeData("userInfo", storeData)
     this.ref.child(this.userId).update({lastLog: currentTime}).then(() => {
       this.service.event.publish("get-friend")
     })
@@ -105,8 +106,18 @@ export class UserProvider {
           avatar: avatar,
           lastLog: currentTime
         }
-        updateData[userId] = signupData
-        this.ref.update(updateData).then(() => {
+        updateData["user/" + userId] = signupData
+        updateData["library/" + userId] = [{
+          list: [{
+            imageId: "default",
+            time: currentTime
+          }],
+          name: "nameless",
+          type: 0,
+          time: currentTime,
+          describe: ""
+        }]
+        this.ref.parent.update(updateData).then(() => {
           this.loginSuccess(signupData, userId)
         })
       }
@@ -118,9 +129,6 @@ export class UserProvider {
 
   getuserInfo(userList) {
     var end = userList.length - 1
-    if(userList.indexOf(this.userId) < 0) {
-      userList.push(this.userId)
-    }
     userList.forEach((userId, userIndex) => {
       if(!this.service.valid(this.data[userId])) {
         this.ref.child(userId).once("value").then(userInfoSnap => {
@@ -137,6 +145,21 @@ export class UserProvider {
       else if(end === userIndex) {
         this.service.event.publish("get-library")
       }
+    })
+  }
+
+  getAdvice() {
+    this.ref.orderByChild("lastLog").limitToLast(10).once("value").then(userListSnap => {
+      var userList = userListSnap.val()
+      var adviceList = []
+      if(this.service.valid(userList)) {
+        for(const userId in userList) {
+          if(userList.hasOwnProperty(userId)) {
+            adviceList.push(userId)
+          }
+        }
+      }
+      this.service.event.publish("get-advice-post-list", adviceList)
     })
   }
 

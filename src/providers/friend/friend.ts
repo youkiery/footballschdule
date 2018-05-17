@@ -13,7 +13,6 @@ export class FriendProvider {
   ref: any
   constructor(public service: ServiceProvider) {
     this.ref = this.service.db.ref("friend")
-    console.log('Hello FriendProvider Provider');
   }
   getFriendList(userId) {
     this.ref.child(userId).once("value").then(friendSnap => {
@@ -32,7 +31,7 @@ export class FriendProvider {
             break
           }
         })
-        this.service.event.publish("get-post-list")
+        this.service.event.publish("get-post-list", this.active)
       }
       else {
         // run advice by region
