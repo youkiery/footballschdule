@@ -1,11 +1,12 @@
 import { Component } from '@angular/core';
-import { IonicPage, NavController, NavParams } from 'ionic-angular';
+import { IonicPage } from 'ionic-angular';
+
+import { ServiceProvider } from "../../providers/service/service"
+import { UserProvider } from "../../providers/user/user"
+import { PostProvider } from "../../providers/post/post"
 
 /**
- * Generated class for the PostPage page.
- *
- * See https://ionicframework.com/docs/components/#navigation for more info on
- * Ionic pages and navigation.
+ * 
  */
 
 @IonicPage()
@@ -14,12 +15,20 @@ import { IonicPage, NavController, NavParams } from 'ionic-angular';
   templateUrl: 'post.html',
 })
 export class PostPage {
+  msg = ""
+  time = new Date()
+  constructor(public service: ServiceProvider, public user: UserProvider, public post: PostProvider) {
 
-  constructor(public navCtrl: NavController, public navParams: NavParams) {
   }
 
-  ionViewDidLoad() {
-    console.log('ionViewDidLoad PostPage');
+  checkPostContent() {
+    if(this.msg.length < 10) {
+      this.service.warn("Nội dung ngắn hơn 10 kí tự")
+    }
+    else {
+      this.msg = ""
+      this.post.pushAPost(this.user.userId, this.msg)
+    }
   }
 
 }

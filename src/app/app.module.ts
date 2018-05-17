@@ -7,6 +7,7 @@ import { StatusBar } from '@ionic-native/status-bar';
 import { MyApp } from './app.component';
 import { HomePage } from '../pages/home/home';
 import { MainPage } from '../pages/main/main';
+import { PostPage } from '../pages/post/post';
 import { LibraryPage } from '../pages/library/library';
 import { LibManPage } from '../pages/lib-man/lib-man';
 import { LibDetPage } from '../pages/lib-det/lib-det';
@@ -41,6 +42,7 @@ firebase.initializeApp(config);
     MyApp,
     HomePage,
     MainPage,
+    PostPage,
     SettingPage,
     LibraryPage,
     LibManPage,
@@ -59,6 +61,7 @@ firebase.initializeApp(config);
     MyApp,
     HomePage,
     MainPage,
+    PostPage,
     SettingPage,
     LibraryPage,
     LibManPage,

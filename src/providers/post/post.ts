@@ -1,7 +1,6 @@
 import { Injectable } from '@angular/core';
 
 import { ServiceProvider } from "../service/service"
-import { UserProvider } from "../user/user"
 
 /**
  * get limited display post per load
@@ -13,9 +12,8 @@ export class PostProvider {
   list = []
   detail = {}
   page = 1
-  constructor(private service: ServiceProvider, private user: UserProvider) {
+  constructor(private service: ServiceProvider) {
     this.ref = this.service.db.ref("post")
-    console.log('Hello PostProvider Provider');
   }
   getPostList(userId, userList) {
     // check if friendlist vaild
@@ -27,14 +25,12 @@ export class PostProvider {
     userList.forEach((userId, userIndex) => {
       this.ref.child("list/" + userId).once("value").then(userPostListSnap => {
         var userPostList = userPostListSnap.val()
-        console.log(userPostList)
         if(this.service.valid(userPostList)) {
           userPostList.forEach(userPostData => {
             userPostData.userId = userId
           })
           this.list.concat(userPostList)
         }
-        console.log(userListNumber, userIndex)
         if(userListNumber === userIndex) {
           this.list = this.list.sort((a, b) => {
             return b.time - a.time
@@ -107,5 +103,32 @@ export class PostProvider {
     else {
       this.service.event.publish("get-user-data", userList)
     }
+  }
+  // ref error
+  pushAPost(userId, cotent) {
+    this.service.event.publish("loading")
+    var postId = this.ref.child("detail").push().key
+    var currTime = Date.now()
+    var nodePost = {
+      postId: postId,
+      time: currTime
+    }
+    var detailPost = {
+      msg: cotent,
+      userId: userId
+    }
+    var ownerList = this.list.filter(post => {
+      return post.userId === userId
+    })
+    console.log(ownerList)
+    ownerList.push(nodePost)
+    var updateData = {}
+    updateData["post/detail/" + postId] = detailPost
+    updateData["post/list/" + userId] = ownerList
+    this.ref.parent.update(updateData).then(() => {
+      this.list.push(nodePost)
+      this.detail[postId] = detailPost
+      this.service.event.publish("finish-load")
+    })
   }
 }
