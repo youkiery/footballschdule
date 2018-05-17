@@ -1,9 +1,9 @@
 import { Injectable } from '@angular/core';
+import { Events, Platform, ToastController } from 'ionic-angular'
 
 import { Storage } from '@ionic/storage'
 import { Facebook } from '@ionic-native/facebook'
 import firebase from 'firebase'
-import { Events, Platform } from 'ionic-angular'
 
 /**
  * 
@@ -12,10 +12,12 @@ import { Events, Platform } from 'ionic-angular'
 export class ServiceProvider {
   db: any
 
-  constructor(public storage: Storage, public event: Events, public fb: Facebook, public platform: Platform) {
-    this.db = firebase.database()
-    console.log('Hello ServiceProvider Provider');
-  }
+  constructor(public storage: Storage, public event: Events, public fb: Facebook,
+      public platform: Platform, public toastCtrl: ToastController) {
+        this.db = firebase.database()
+        console.log('Hello ServiceProvider Provider');
+      }
+
   storeData(name, data) {
     this.storage.set(name, data)
   }
@@ -30,5 +32,12 @@ export class ServiceProvider {
       return 0
     }
     return 1
+  }
+  warn(text) {
+    this.toastCtrl.create({
+      message: text,
+      duration: 1000,
+      position: "bottom"
+    }).present()
   }
 }

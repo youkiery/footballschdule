@@ -86,7 +86,7 @@ export class UserProvider {
       userInfo: userInfo
     }
     this.userId = userId
-    this.data['userId'] = userInfo
+    this.data[userId] = userInfo
     this.service.storeData("userInfo", storeData)
     this.ref.child(this.userId).update({lastLog: currentTime}).then(() => {
       this.service.event.publish("get-friend")

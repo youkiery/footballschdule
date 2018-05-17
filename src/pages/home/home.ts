@@ -19,10 +19,10 @@ export class HomePage {
   login() {
     var e
     if(this.username.length < 4) {
-      e = "short username"
+      e = "tên đăng nhập ngắn hơn 4 kí tự"
     }
     else if(this.password.length < 4) {
-      e = "short password"      
+      e = "mật khẩu ngắn hơn 4 kí tự"      
     }
 
     if(e !== undefined) {
@@ -39,19 +39,19 @@ export class HomePage {
   signup() {
     var e
     if(this.username.length < 4) {
-      e = "short username"
+      e = "tên đăng nhập ngắn hưn 4 kí tự"
     }
     else if(this.password.length < 4) {
-      e = "short password"      
+      e = "mật khẩu ngắn hơn 4 kí tự"      
     }
     else if(this.vpassword !== this.password) {
-      e = "incorrect verify password"
+      e = "mật khẩu xác nhận không khớp"
     }
     else if(this.name.length < 4) {
-      e = "short name"
+      e = "tên hiển thị ngắn hơn 4 kí tự"
     }
     else if((/[^a-z|A-Z|" " ]/g).test(this.name)) {
-      e = "special character(s) in name"
+      e = "tên hiển thị chỉ dùng kí tự trong bảng chữ cái và dấu cách"
     }
 
     if(e !== undefined) {

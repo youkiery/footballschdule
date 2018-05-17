@@ -1,13 +1,13 @@
 import { Component } from '@angular/core';
-import { IonicPage, NavController, AlertController } from 'ionic-angular';
-
-import firebase from "firebase"
+import { IonicPage, AlertController, NavController } from 'ionic-angular';
 
 import { SettingPage } from '../../pages/setting/setting';
 import { FriendPage } from '../../pages/friend/friend';
 import { ProfilePage } from '../../pages/profile/profile';
 
 import { UserProvider } from '../../providers/user/user';
+import { PostProvider } from '../../providers/post/post';
+import { PostPage } from '../post/post';
 
 /**
  * filter for data display
@@ -25,48 +25,45 @@ import { UserProvider } from '../../providers/user/user';
 export class MainPage {
   displayNew = []
   page = 1
-  msg = ""
-  constructor(public navCtrl: NavController, public user: UserProvider, public alertCtrl: AlertController) {
-    /*
-    console.log(this.user.post)
-    this.loadNew()
-  }
-
-  ionViewDidLoad() {
-    console.log('ionViewDidLoad MainPage');
-  }
-  loadNew() {
-    var end = this.user.postList.length
-    var from = (this.page - 1) * 8
-    var to = this.page * 8
-    var rex = []
-    while(from < to && from < end) {
-      rex.push(from)
-      from ++
-    }
-    var postRef = firebase.database().ref("post")
-    var userRef = firebase.database().ref("user")
-    rex.forEach(index => {
-      if(index < end) {
-        postRef.child("detail").child(this.user.postList[index].postId).once("value").then(postSnap => {
-          var post = postSnap.val()
-          
-          if(this.user.userList.indexOf(post.userId) < 0) {
-            userRef.child(post.userId).once("value").then(userSnap => {
-              var user = userSnap.val()
-              this.user.user[post.userId] = user
-            })
-          }
-          
-          post.time = new Date(this.user.postList[index].time)
-          this.user.post[this.user.postList[index].postId] = post
-          this.displayNew.push(this.user.postList[index].postId)
-          console.log(this.user.post)
-        })
+  constructor(public user: UserProvider, public post: PostProvider, public alertCtrl: AlertController,
+      public navCtrl: NavController) {
+        console.log(user)
+        console.log(post)
+        this.displayFirst()
       }
-    })
-    this.page ++
+
+  displayFirst() {
+    if(this.page === 1 && this.post.advice !== []) {
+      this.displayNew = this.post.advice
+    }
+    else {
+      var end = this.post.list.length
+      if(!end) {
+        var from = (this.page - 1) * 8
+        var to = this.page * 8
+        var postIndexToLoad = []
+        while(from < to && from < end) {
+          postIndexToLoad.push(from)
+          from ++
+        }
+        postIndexToLoad.forEach(index => {
+          this.displayNew.push(this.post.list[index])
+        })
+        this.page ++
+      }
+      else {
+        let alert = this.alertCtrl.create({
+          message: "không còn tin để hiển thị",
+          buttons: ["ok"]
+        }).present()
+      }
+    }
+    console.log(this.displayNew)
   }
+  gotoPost() {
+    this.navCtrl.push(PostPage)
+  }
+  /*
   viewLiked(postId) {
     var displayForm = ''
     var like = this.user.post[postId]
@@ -126,6 +123,6 @@ export class MainPage {
             this.displayNew = newTemp
             this.msg = ""
           })
-    })*/
-  }
+    })
+  }*/
 }
