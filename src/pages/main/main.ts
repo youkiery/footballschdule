@@ -1,13 +1,11 @@
 import { Component } from '@angular/core';
 import { IonicPage, AlertController, NavController } from 'ionic-angular';
 
-import { SettingPage } from '../../pages/setting/setting';
-import { FriendPage } from '../../pages/friend/friend';
-import { ProfilePage } from '../../pages/profile/profile';
 import { LibraryPage } from '../../pages/library/library';
-
 import { PostPage } from '../post/post';
+import { CommentPage } from '../comment/comment';
 
+import { ServiceProvider } from '../../providers/service/service';
 import { UserProvider } from '../../providers/user/user';
 import { PostProvider } from '../../providers/post/post';
 import { FriendProvider } from '../../providers/friend/friend';
@@ -26,55 +24,45 @@ import { FriendProvider } from '../../providers/friend/friend';
   templateUrl: 'main.html',
 })
 export class MainPage {
-  displayNew = []
   page = 1
   constructor(public user: UserProvider, public post: PostProvider, public alertCtrl: AlertController,
-      public navCtrl: NavController, public friend: FriendProvider) {
+      public navCtrl: NavController, public friend: FriendProvider, public service: ServiceProvider) {
         console.log(user)
         console.log(post)
         this.displayFirst()
       }
 
   displayFirst() {
-    if(this.page === 1 && this.post.advice !== []) {
+    if(this.page === 1 && this.post.advice.length > 0) {
       this.post.advice.forEach(post => {
-        this.displayNew.push(post.postId)
+        this.post.displayNew.push(post.postId)
       })
     }
     else {
+      console.log(this.post.list.length)
       var end = this.post.list.length
-      if(!end) {
+      if(end) {
         var from = (this.page - 1) * 8
         var to = this.page * 8
-        var postIndexToLoad = []
         while(from < to && from < end) {
-          postIndexToLoad.push(from)
+          this.post.displayNew.push(this.post.list[from].postId)
           from ++
         }
-        postIndexToLoad.forEach(index => {
-          this.displayNew.push(this.post.list[index].postId)
-        })
-        this.page ++
       }
       else {
         let alert = this.alertCtrl.create({
           message: "không còn tin để hiển thị",
           buttons: ["ok"]
-        }).present()
+        })
+        alert.present()
       }
     }
-    console.log(this.displayNew)
+    console.log(this.post.displayNew)
   }
-  gotoPost() {
-    this.navCtrl.push(PostPage)
-  }
-  gotoLibrary() {
-    this.navCtrl.push(LibraryPage)
-  }
-  /*
+  
   viewLiked(postId) {
     var displayForm = ''
-    var like = this.user.post[postId]
+    var like = this.post.detail[postId]
     if(like === undefined) {
       like = []
     }
@@ -82,7 +70,7 @@ export class MainPage {
       like = like.like
     }
     like.forEach((likedUser, index) => {
-      displayForm += index + ', ' + this.user.user[likedUser].name + '<br/>'
+      displayForm += index + ', ' + this.user.data[likedUser].name + '<br/>'
     });
     let alert = this.alertCtrl.create({
       title: "user liked",
@@ -90,6 +78,18 @@ export class MainPage {
     })
     alert.present()
   }
+  gotoPost() {
+    this.navCtrl.push(PostPage)
+  }
+  gotoLibrary() {
+    this.navCtrl.push(LibraryPage)
+  }
+  gotoDetail(detailId) {
+    this.user.detailId = detailId
+    this.navCtrl.push(CommentPage)
+  }
+  /*
+
 
   gotoSetting() {
     this.navCtrl.push(SettingPage)

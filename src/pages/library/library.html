@@ -1,9 +1,10 @@
 <ion-header>
   <ion-navbar>
-    <ion-title>library</ion-title>
-    <div class="right">
-      <ion-icon name="checkmark" (click)="uploadImage()"></ion-icon>
-    </div>
+    <ion-icon *ngIf="this.files !== undefined" name="cloud-upload" (click)="uploadImage()"></ion-icon>
+    <span *ngIf="this.selectedImages.length > 0">
+      <ion-icon *ngIf="this.service.isSelect === true" name="checkmark" (click)="user.pickAvatar()"></ion-icon>
+      <ion-icon *ngIf="this.service.multi === true" name="checkmark" (click)="selectImages(selectedImages[0])"></ion-icon>
+    </span>
   </ion-navbar>
 </ion-header>
 

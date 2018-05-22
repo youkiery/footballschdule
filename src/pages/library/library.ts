@@ -30,103 +30,13 @@ export class LibraryPage {
   constructor(public service: ServiceProvider, public user: UserProvider, public image: ImageProvider,
       public library: LibraryProvider) { 
         console.log(this.image)
-    /*
-    this.avatar = this.user.data.avatar
+      }
 
-    var imageRef = firebase.database().ref("image")
-    this.user.library.forEach(libraryList => {
-      
-      libraryList.list.forEach(imageList => {
-        if(this.user.image[imageList.imageId] === undefined) {
-          imageRef.child(imageList.imageId).once("value").then(imageSnap => {
-            var image = imageSnap.val()
-            this.user.image[imageList.imageId] = image
-            
-            if(this.lib.indexOf(imageList.imageId) < 0) {
-              this.lib.push(imageList.imageId)
-              console.log(this.lib)
-            }
-            console.log(this.user.image)
-          })
-        }
-        else {
-          if(this.lib.indexOf(imageList.imageId) < 0) {
-            this.lib.push(imageList.imageId)
-            console.log(this.lib)
-          }
-        }
-      })
-    })
-  }
-
-  ionViewDidLoad() {
-    console.log('ionViewDidLoad LibraryPage');
-  }
-  
-  selectImage(imageUrl) {
-		(<HTMLInputElement>document.getElementById('blah')).src = imageUrl
-    this.avatar = imageUrl
-  }
-  updateAvatar() {
-    this.file = undefined
-    this.user.selectImage(this.avatar)
-  }
-
-  uploadImage() {
-      this.event.publish("loading")
-      if(this.file != undefined) {
-        var imgId = this.imgRef.push().key
-        var storageRef = firebase.storage().ref().child(imgId);
-        var uploadTask = storageRef.put(this.file[0]);
-        
-
-        uploadTask.on('state_changed', (snapshot) => {
-          var progress = (uploadTask.snapshot.bytesTransferred / uploadTask.snapshot.totalBytes) * 100;
-          console.log('Upload is ' + progress + '% done');
-          if(progress === 100){
-            var updateData = {}
-            storageRef.getDownloadURL().then(urlsnap => {
-              var url = urlsnap
-              var imageId = this.imgRef.push().key
-              this.imgRef.child(imageId).set(url).then(() => {
-                this.user.library[0].list.push({
-                  imageId: imageId,
-                  time: Date.now()
-                })
-                this.libRef.child(this.user.data.userId).child("0").child("list")
-                    .set(this.user.library[0].list).then(() => {
-                      this.user.image[imageId] = url
-                      this.lib.push(imageId)
-                      this.event.publish("fail")
-                    })
-              })
-            })
-          }
-        }, function(error) {
-          console.log(error)
-        }, function() {
-          
-        });
-
-    }
-    else {
-      this.event.publish("fail", "chưa chọn ảnh nào")
+  selectImages() {
+    if(this.selectedImages.length > 0) {
+      this.image.selected = this.selectedImages
     }
   }
-
-	getFile() {
-		this.file = (<HTMLInputElement>document.getElementById('file')).files;
-		console.log(this.file[0])
-		var reader = new FileReader();
-	 	reader.onload = function(e) {
-			let target: any = e.target;
-			let content: string = target.result;
-			(<HTMLInputElement>document.getElementById('blah')).src = content;
-	  	}
-      reader.readAsDataURL(this.file[0]);
-      */
-  }
-
   uploadImage() {
     if(this.files != undefined) {
       var error = 0
@@ -165,7 +75,6 @@ export class LibraryPage {
             var progress = (uploadTask.snapshot.bytesTransferred / uploadTask.snapshot.totalBytes) * 100;
             console.log('Upload is ' + progress + '% done');
             if(progress === 100){
-              var updateData = {}
               storageRef.getDownloadURL().then(urlsnap => {
                 var url = urlsnap
                 var currTime = Date.now()
@@ -241,11 +150,30 @@ export class LibraryPage {
       reader.readAsDataURL(this.files[0]);
   }
   tickImage(imageId) {
-    this.selectedImages.push(imageId)
+    if(this.service.isSelect) {
+      if(this.service.multi) {
+        this.selectedImages.push(imageId)
+      }
+      else {
+        this.selectedImages[0] = imageId
+      }
+    }
   }
   untickImage(imageId) {
-    this.selectedImages = this.selectedImages.filter(imageIdList => {
-      return imageIdList !== imageId
-    })
+    if(this.service.isSelect) {
+      if(this.service.multi) {
+        this.selectedImages = this.selectedImages.filter(imageIdList => {
+          return imageIdList !== imageId
+        })
+      }  
+    }
+  }
+  selectImageToPost() {
+    this.service.multi = true
+    this.service.isSelect = true
+  }
+  diselectImageToPost() {
+    this.service.multi = false
+    this.service.isSelect = false
   }
 }

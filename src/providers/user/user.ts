@@ -15,27 +15,33 @@ import { ServiceProvider } from '../service/service'
 @Injectable()
 export class UserProvider {
   ref: any
-  /*postRef = firebase.database().ref('post')
-  libraryRef = firebase.database().ref('library')
-  imageRef = firebase.database().ref('image')
-  friendRef = firebase.database().ref('friend')
-  */
-  data = {}// user datalist
-  userId = ""// logged userId
+  position = [
+      {
+        name: "đăklăk",
+        list: ["buôn đôn", "ea súp", "ea leo", "cư m'gar", "buôn ma thuột", "krông búk", "krông ana", "krông păk", "lăk", "krông bông", "ea kar", "m'đrăk"]
+      },
+      {
+        name: "lâm đồng",
+        list: ["cát tiên", "đạ tểh", "đạ huoại", "bảo lâm", "bảo lộc", "di linh", "lâm hà", "đam rông", "lạc dương", "đà lạt", "đơn dương", "đức trọng"]
+      },
+      {
+        name: "đăk nông",
+        list: ["tuy đức", "đăk r'lắp", "gia nghĩa", "đăk song", "đăk glong", "đăk mil", "krông nô", "cư jút"]
+      },
+      {
+        name: "kon tum",
+        list: ["đăk tô", "đăk glei", "tu mơ rông", "kon plông", "đăk hà", "ngọc hồi", "sa thầy", "ia h'dra", "kon rẫy", "kon tum"]
+      },
+      {
+        name: "gia lai",
+        list: ["chư păh", "chư prông", "chư sê", "chư pưh", "đắk đoa", "đắk pơ", "đức cơ", "ia grai", "ia pa", "k'bang", "kông chro", "krông pa", "mang yang", "phú thiện"]
+      }
+  ]
+  data = {}
+  userId = ""
   password = ""
-  /*profileId = ''
-  libraryId = ''
-  postId = ''
-  user = {}
-  userList = []
-  post = {}
-  postList = []
-  library = []
-  image = {}
-  friendActiveList = []   // in relationship
-  friendInactiveList = [] // waiting for a relationship
-  friendRequestList = []  // other person want a relationship
-  */
+  profileId = ""
+  detailId = ""
 
   constructor(private service: ServiceProvider) {
     this.ref = this.service.db.ref("user")
@@ -44,7 +50,6 @@ export class UserProvider {
 
       if(this.service.valid(userInfo)) {
         // login
-        this.userId = userInfo.userId
         // check if below line cause error
         this.setUser(userInfo.userId, userInfo.userInfo)
         this.service.event.publish("loading")
@@ -70,6 +75,11 @@ export class UserProvider {
       }
 
       if(!msg) {
+        var storeData = {
+          userId: userId,
+          userInfo: userInfo
+        }
+        this.service.storeData("userInfo", storeData)
         this.loginSuccess(userInfo[userId], userId)
       }
       else {
@@ -79,15 +89,12 @@ export class UserProvider {
   }
 
   loginSuccess(userInfo, userId) {
+    console.log(userInfo, userId)
     var currentTime = Date.now()
     userInfo.lastLog = currentTime
-    var storeData = {
-      userId: userId,
-      userInfo: userInfo
-    }
     this.userId = userId
-    this.data[userId] = userInfo
-    this.service.storeData("userInfo", storeData)
+    this.password = userInfo.password
+    this.setUser(userId, userInfo)
     this.ref.child(this.userId).update({lastLog: currentTime}).then(() => {
       this.service.event.publish("get-friend")
     })
@@ -179,61 +186,15 @@ export class UserProvider {
     }
   }
 
-    /*
-  loginSuccess() {
-    this.friendRef.child(this.data.userId).once("value").then(friendSnap => {
-      var friendList = friendSnap.val()
-      var friendNumber = 0
-      if(friendList !== undefined) {
-        friendNumber = friendList.length
-      }
-
-      this.libraryRef.child(this.data.userId).once("value").then(librarySnap => {
-        this.library = librarySnap.val()
-
-        this.postRef.child("list").child(this.data.userId).once("value").then(userPostSnap => {
-          this.postList = userPostSnap.val()
-
-          friendList.forEach(friend => {
-            switch(friend.type) {
-              case 0:
-                this.friendInactiveList.push(friend.userId)
-                break
-              case 1:
-                this.friendRequestList.push(friend.userId)
-                break
-              case 2:
-                this.friendActiveList.push(friend.userId)
-                break
-            }
-            
-            this.userRef.child(friend.userId).once("value").then(friendDataSnap => {
-              var friendData = friendDataSnap.val()
-              this.user[friend.userId] = friendData
-                this.postRef.child("list").child(friend.userId).once("value").then(friendPostSnap => {
-                  var friendPost = friendPostSnap.val()
-                  if(friendPost !== null) {
-                    console.log(this.postList, friendPost)
-                    friendPost.userId = friend.userId
-                    this.postList = this.postList.concat(friendPost)
-                  }
-                  friendNumber --
-                  if(!friendNumber) {
-                    this.postList.sort((a, b) => {
-                      return b.time - a.time
-                    })
-                    this.event.publish("login-success")
-                  }
-                })
-            })
-          })
-        })
-      })
+  selectImage(imageUrl) {
+    this.service.event.publish('loading')
+    this.data[this.userId].avatar = imageUrl
+    this.service.storeData(this.data[this.userId], "userInfo")
+    this.ref.child(this.userId).update({avatar: imageUrl}).then(() => {
+      this.service.event.publish('fail')
     })
   }
-
-
-
+  /*
   signupFb() {
     this.event.publish('loading')
     var provider = new firebase.auth.FacebookAuthProvider();
@@ -282,14 +243,7 @@ export class UserProvider {
 
 
 
-  selectImage(imageUrl) {
-    this.event.publish('loading')
-    this.data.avatar = imageUrl
-    this.storeData()
-    this.userRef.child(this.data.userId).update({avatar: imageUrl}).then(() => {
-      this.event.publish('fail')
-    })
-  }
+
 
   confirmAccount(username, password) {
     this.event.publish('loading')
@@ -415,30 +369,6 @@ export class UserProvider {
               this.event.publish('fail')
             })
           })
-    })
-  }
-
-  like(userId, postId, like) {
-    this.event.publish('loading')
-    if(like === undefined) {
-      like = []
-    }
-    like.push(this.data.userId)
-    console.log(userId, postId, like)
-    this.postRef.child("detail").child(postId).child("like").set(like).then(() => {
-      this.post[postId].like = like
-      this.event.publish('fail')
-    })
-  }
-
-  unlike(userId, postId, like) {
-    this.event.publish('loading')
-    like = like.filter(likedUser => {
-      return likedUser !== this.data.userId
-    })
-    this.postRef.child("detail").child(postId).child("like").set(like).then(() => {
-      this.post[postId].like = like
-      this.event.publish('fail')
     })
   }
 

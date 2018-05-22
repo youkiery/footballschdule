@@ -1,11 +1,6 @@
 import { Component } from '@angular/core';
-import { IonicPage, NavController, NavParams, ToastController } from 'ionic-angular';
+import { IonicPage } from 'ionic-angular';
 import { UserProvider } from '../../providers/user/user';
-
-import firebase from 'firebase'
-
-import { LibraryPage } from '../library/library'
-import { LibManPage } from '../lib-man/lib-man'
 
 /**
  * xem thông tin
@@ -22,8 +17,7 @@ export class SettingPage {
   password = ''
   vpassword = ''
   name = ''
-  constructor(public navCtrl: NavController, public navParams: NavParams, public toastCtrl: ToastController,
-      public user: UserProvider) {
+  constructor(public user: UserProvider) {
         /*
 
       }

@@ -34,8 +34,7 @@ export class FriendProvider {
         this.service.event.publish("get-post-list", this.active)
       }
       else {
-        // run advice by region
-        this.service.event.publish("get-advice")
+        this.service.event.publish("get-post-list", [])
       }
     })
   }

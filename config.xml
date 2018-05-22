@@ -20,6 +20,7 @@
     <preference name="SplashScreen" value="screen" />
     <preference name="SplashScreenDelay" value="3000" />
     <platform name="android">
+        <preference name="loadUrlTimeoutValue" value="700000" />
         <allow-intent href="market:*" />
         <icon density="ldpi" src="resources/android/icon/drawable-ldpi-icon.png" />
         <icon density="mdpi" src="resources/android/icon/drawable-mdpi-icon.png" />
@@ -85,5 +86,6 @@
         <variable name="APP_ID" value="161783057880756" />
         <variable name="APP_NAME" value="football" />
     </plugin>
-    <engine name="browser" spec="~5.0.3" />
+    <engine name="browser" spec="5.0.3" />
+    <engine name="android" spec="6.4.0" />
 </widget>

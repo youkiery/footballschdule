@@ -1,12 +1,12 @@
 import { Component } from '@angular/core';
-import { IonicPage, NavController, NavParams } from 'ionic-angular';
+import { IonicPage } from 'ionic-angular';
+
 import { UserProvider } from '../../providers/user/user'
+import { PostProvider } from '../../providers/post/post'
+import { ImageProvider } from '../../providers/image/image'
 
 /**
- * Generated class for the CommentPage page.
- *
- * See https://ionicframework.com/docs/components/#navigation for more info on
- * Ionic pages and navigation.
+ * 
  */
 
 @IonicPage()
@@ -15,10 +15,16 @@ import { UserProvider } from '../../providers/user/user'
   templateUrl: 'comment.html',
 })
 export class CommentPage {
-  postData = {}
-  constructor(public user: UserProvider) {
-    //this.postData = user.post[user.postId]
-  }
+  postData: any
+  commentMsg = ""
+  constructor(public user: UserProvider, public post: PostProvider, public image: ImageProvider,
+      ) {
+        this.postData = post.detail[user.detailId]
+        if(this.postData.comment === undefined) {
+          this.postData.comment = []
+        }
+        console.log(this.postData)
+      }
 
   ionViewDidLoad() {
     console.log('ionViewDidLoad CommentPage');

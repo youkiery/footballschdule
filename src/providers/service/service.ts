@@ -12,6 +12,8 @@ import firebase from 'firebase'
 export class ServiceProvider {
   db: any
   store: any
+  isSelect = false
+  multi = false
   constructor(public storage: Storage, public event: Events, public fb: Facebook,
       public platform: Platform, public toastCtrl: ToastController) {
         this.db = firebase.database()
