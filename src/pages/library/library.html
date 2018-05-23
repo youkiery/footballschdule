@@ -1,23 +1,57 @@
 <ion-header>
   <ion-navbar>
-    <ion-icon *ngIf="this.files !== undefined" name="cloud-upload" (click)="uploadImage()"></ion-icon>
+    <span *ngIf="service.libraryIndex !== null" >
+      <ion-icon name="arrow-round-back" (click)="goback()"></ion-icon>
+      <ion-icon *ngIf="isDelete === true" name="ios-trash" (click)="delete()"></ion-icon>
+      <ion-icon *ngIf="isDelete === false" name="ios-trash" (click)="goDelete()"></ion-icon>
+      <ion-icon *ngIf="isDelete === true" name="ios-trash-outline" (click)="cancelDelete()"></ion-icon>
+      <ion-icon name="create" (click)="modifyLibrary()"></ion-icon>
+      <ion-icon *ngIf="service.libraryIndex !== 0" name="remove" (click)="deleteThisLibrary()"></ion-icon>
+    </span>
+    <label for="file">
+      <ion-icon name="cloud-upload"></ion-icon>
+      <span class="glyphicon glyphicon-folder-open" aria-hidden="true"></span>
+      <input type="file" id="file" style="display:none" (change)="getFile()" multiple />
+    </label>
+    <ion-icon *ngIf="this.files !== undefined" name="cloud-done" (click)="uploadImage()"></ion-icon>
     <span *ngIf="this.selectedImages.length > 0">
       <ion-icon *ngIf="this.service.isSelect === true" name="checkmark" (click)="user.pickAvatar()"></ion-icon>
       <ion-icon *ngIf="this.service.multi === true" name="checkmark" (click)="selectImages(selectedImages[0])"></ion-icon>
     </span>
+    <ion-icon name="add" (click)="newLibrary()"></ion-icon>
   </ion-navbar>
 </ion-header>
-
+<!--
+  dùng libIndex để hiển thị
+-->
 <ion-content>
-  <div>
-    <label for="file">
-      <img id="blah" class="md-icon" src="{{uploadButton}}">
-      <span class="glyphicon glyphicon-folder-open" aria-hidden="true"></span>
-      <input type="file" id="file" style="display:none" (change)="getFile()" multiple />
-    </label>
+  <p *ngIf="isDelete === true" color="warning">
+    chọn ảnh để xóa
+  </p>  
+  <div *ngIf="service.libraryIndex !== null">
+    <p>
+      {{selectedLibrary.name}}
+    </p>
+    <p>
+      {{selectedLibrary.describe}}      
+    </p>
+    <p>
+      {{selectedLibrary.time | date: "yyyy/MM/dd HH:mm"}}   
+    </p>
+    <span class="inline" *ngFor="let imageInfo of selectedLibrary.list">
+      <img class="md-icon" src="{{image.detail[imageInfo.imageId]}}" *ngIf="selectedImages.indexOf(imageInfo.imageId) < 0" (click)="tickImage(imageInfo.imageId)">
+      <img class="md-icon selected" src="{{image.detail[imageInfo.imageId]}}" *ngIf="selectedImages.indexOf(imageInfo.imageId) >= 0" (click)="untickImage(imageInfo.imageId)">
+    </span>
   </div>
-  <span class="inline" *ngFor="let imageId of image.list">
-    <img class="md-icon" src="{{image.detail[imageId]}}" *ngIf="selectedImages.indexOf(imageId) < 0" (click)="tickImage(imageId)">
-    <img class="md-icon selected" src="{{image.detail[imageId]}}" *ngIf="selectedImages.indexOf(imageId) >= 0" (click)="untickImage(imageId)">
-  </span>
+  <div *ngIf="service.libraryIndex === null">
+    <div *ngFor="let libraryList of library.list; let libraryIndex = index">
+      <img class="md-icon" src="{{image.detail[libraryList.list[0].imageId]}}" *ngIf="libraryList.list.length > 0" (click)="gotoLibrary(libraryIndex)">
+      <img class="md-icon" src="{{uploadButton}}" *ngIf="libraryList.list.length === 0 || libraryList.list !== undefined" (click)="gotoLibrary(libraryIndex)">
+      <p>{{libraryList.name}}</p>
+    </div>
+    <span class="inline" *ngFor="let imageId of image.list">
+      <img class="md-icon" src="{{image.detail[imageId]}}" *ngIf="selectedImages.indexOf(imageId) < 0" (click)="tickImage(imageId)">
+      <img class="md-icon selected" src="{{image.detail[imageId]}}" *ngIf="selectedImages.indexOf(imageId) >= 0" (click)="untickImage(imageId)">
+    </span>
+  </div>
 </ion-content>

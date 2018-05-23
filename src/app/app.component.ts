@@ -46,6 +46,11 @@ export class MyApp {
         this.load.present()
         this.isload = true
       })
+
+      this.event.subscribe("update-load", (msg) => {
+        this.load.setContent(msg)
+      })
+      
       this.event.subscribe('finish-load', msg => {
         this.dismissLoading()
         this.toastCtrl.create({

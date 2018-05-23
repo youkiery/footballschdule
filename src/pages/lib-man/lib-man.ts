@@ -1,8 +1,6 @@
 import { Component } from '@angular/core';
 import { IonicPage } from 'ionic-angular';
 
-import { UserProvider } from '../../providers/user/user'
-
 /**
  * 
  */
@@ -13,8 +11,7 @@ import { UserProvider } from '../../providers/user/user'
   templateUrl: 'lib-man.html',
 })
 export class LibManPage {
-
-  constructor(public user: UserProvider) {
+  constructor() {
     /*var imageRef = firebase.database().ref("image")
     this.user.library.forEach(libraryList => {
       
@@ -32,5 +29,4 @@ export class LibManPage {
   ionViewDidLoad() {
     console.log('ionViewDidLoad LibManPage');*/
   }
-
 }

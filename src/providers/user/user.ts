@@ -137,6 +137,61 @@ export class UserProvider {
     })
   }
 
+  
+  signupFb() {
+    this.service.event.publish('loading')
+    var provider = new this.service.fb.FacebookAuthProvider();
+    this.service.fb.auth().signInWithPopup(provider).then(result => {
+      var currentTime = Date.now()
+      var user = result.user;
+      var userId = user.uid
+      var signupData = {
+        username: "",
+        password: "",
+        name: user.displayName,
+        avatar: user.photoURL,
+        lastLog: currentTime
+      }
+      this.ref.child(userId).once("value").then(userInfoSnap => {
+        var userInfo = userInfoSnap.val()
+        if(this.service.valid(userInfo)) {
+          this.ref.child(userId).set(signupData).then(snap => {
+            var storeData = {
+              userId: userId,
+              userInfo: signupData
+            }
+            this.service.storeData("userInfo", storeData)
+            this.loginSuccess(signupData, userId)
+          })
+        }
+        else {
+          var updateData = {}
+          updateData["user/" + userId] = signupData
+          updateData["library/" + userId] = [{
+            list: [{
+              imageId: "default",
+              time: currentTime
+            }],
+            name: "nameless",
+            type: 0,
+            time: currentTime,
+            describe: ""
+          }]
+          this.ref.parent.update(updateData).then(() => {
+            var storeData = {
+              userId: userId,
+              userInfo: signupData
+            }
+            this.service.storeData("userInfo", storeData)
+            this.loginSuccess(signupData, userId)
+          })
+        }
+      })
+    }).catch(error => {
+      this.service.event.publish("finish", "lỗi mạng")          
+    });
+  }
+
   logout() {
     this.service.event.publish("logout")
     this.service.storage.remove("userInfo")
@@ -195,55 +250,6 @@ export class UserProvider {
     })
   }
   /*
-  signupFb() {
-    this.event.publish('loading')
-    var provider = new firebase.auth.FacebookAuthProvider();
-    firebase.auth().signInWithPopup(provider).then(result => {
-      var currentTime = Date.now()
-      var user = result.user;
-      var userId = user.uid
-      var checkSignup = false
-      var signupData = {
-        username: "",
-        password: "",
-        name: user.displayName,
-        avatar: user.photoURL,
-        lastLog: currentTime
-      }
-
-      this.userRef.child(userId).once("value").then((snap) => {
-        var userInfo = snap.val()
-        if(userInfo === null) {
-          checkSignup = true
-        }
-        else {
-          if(userInfo.username !== "") {
-            checkSignup = true
-          }
-          else {
-            this.event.publish("fail", "tài khoản facebook này đã đăng ký")            
-          }
-        }
-        if(checkSignup) {
-          var updateData = {}
-          updateData[userId] = signupData
-          this.userRef.update(updateData).then(snap => {
-            this.data = signupData
-            this.loginSuccess()
-          })
-        }
-        else {
-          this.event.publish("fail", "lỗi mạng") 
-        }
-      })
-    }).catch(error => {
-      this.event.publish("fail", "lỗi mạng")          
-    });
-  }
-
-
-
-
 
   confirmAccount(username, password) {
     this.event.publish('loading')

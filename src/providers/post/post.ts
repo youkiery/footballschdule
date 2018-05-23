@@ -136,7 +136,7 @@ export class PostProvider {
     updateData["post/list/" + userId] = this.list
     this.ref.parent.update(updateData).then(() => {
       this.list.push(nodePost)
-      detailPost["time"] = nodePost.time
+      detailPost["time"] = new Date(nodePost.time)
       this.detail[postId] = detailPost
       var temp = []
       this.displayNew.forEach((newId, newIndex) => {

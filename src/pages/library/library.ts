@@ -1,5 +1,7 @@
 import { Component } from '@angular/core';
-import { IonicPage } from 'ionic-angular';
+import { IonicPage, NavController, AlertController } from 'ionic-angular';
+
+import { LibManPage } from "../lib-man/lib-man"
 
 import { ServiceProvider } from '../../providers/service/service';
 import { UserProvider } from '../../providers/user/user';
@@ -22,20 +24,155 @@ export class LibraryPage {
   selectedImages = []
   uploadButton = "../assets/imgs/logo.png"
   files: any
+  selectedLibrary: any
+  isDelete = false
+  // templist, selectedlist
   allowed = [
     "png",
     "jpeg",
     "bmp",
   ]
   constructor(public service: ServiceProvider, public user: UserProvider, public image: ImageProvider,
-      public library: LibraryProvider) { 
+      public library: LibraryProvider, public navCtrl: NavController, public alertCtrl: AlertController) { 
         console.log(this.image)
+        console.log(this.library)
       }
 
   selectImages() {
     if(this.selectedImages.length > 0) {
       this.image.selected = this.selectedImages
     }
+  }
+  delete() {
+    if(this.selectedImages.length > 0) {
+      this.library.deleteImage(this.user.userId, this.service.libraryIndex, this.selectedImages)
+      this.cancelDelete()
+    }
+    else {
+      this.service.event.publish("finish-load", "chưa chọn ảnh nào")
+    }
+  }
+  goDelete() {
+    this.isDelete = true
+  }
+  cancelDelete() {
+    this.selectedImages = []
+    this.isDelete = false
+  }
+  gotoLibrary(libraryIndex) {
+    this.service.libraryIndex = libraryIndex
+    this.selectedLibrary = this.library.list[libraryIndex]
+    this.selectedLibrary.time = new Date(this.selectedLibrary.time)
+    console.log(this.selectedLibrary)
+  }
+  goback() {
+    this.service.libraryIndex = null
+    this.selectedLibrary = {}
+    this.cancelDelete()
+  }
+  newLibrary() {
+    let alert = this.alertCtrl.create({
+      inputs: [
+        {
+          name: "name",
+          placeholder: "tên thư viện"
+        },
+        {
+          name: "describe",
+          placeholder: "giới thiệu"          
+        }
+      ],
+      buttons: [
+        {
+          text: 'Hủy',
+          role: 'cancel',
+        },
+        {
+          text: 'Thêm',
+          handler: (data) => {
+            this.library.newLibrary(this.user.userId, data.name, data.describe)
+          }
+        }
+      ]
+    })
+    alert.present()
+  }
+  modifyLibrary() {
+    let alert = this.alertCtrl.create({
+      inputs: [
+        {
+          name: "name",
+          placeholder: "tên thư viện"
+        },
+        {
+          name: "describe",
+          placeholder: "giới thiệu"          
+        }
+      ],
+      buttons: [
+        {
+          text: 'Hủy',
+          role: 'cancel',
+        },
+        {
+          text: 'Thêm',
+          handler: (data) => {
+            this.library.changeLibraryName(this.user.userId, this.service.libraryIndex, data.name, data.describe)
+          }
+        }
+      ]
+    })
+    alert.present()
+  }
+  moveImage() {
+    var radioBox = []
+    this.library.list.forEach((libraryList, libraryIndex) => {
+      if(libraryIndex !== this.selectedLibrary) {
+        radioBox.push({
+          type: 'radio',
+          label: libraryList.name,
+          value: libraryIndex
+        })
+      }
+    })
+    let alert = this.alertCtrl.create({
+      inputs: radioBox,
+      buttons: [
+        {
+          text: 'Hủy',
+          role: 'cancel',
+        },
+        {
+          text: 'Chuyển',
+          handler: (data) => {
+            if(this.selectedImages.length > 0) {
+              this.library.moveImage(this.user.userId, this.selectedImages, this.selectedLibrary, data)
+            }
+            else {
+              this.service.event.publish("finish-load", "Chưa chọn ảnh nào!")
+            }
+          }
+        }
+      ]
+    })
+    alert.present()
+  }
+  deleteThisLibrary() {
+    let alert = this.alertCtrl.create({
+      buttons: [
+        {
+          text: 'Hủy',
+          role: 'cancel',
+        },
+        {
+          text: 'Xóa',
+          handler: () => {
+            this.library.deleteLibrary(this.user.userId, this.selectedLibrary)
+          }
+        }
+      ]
+    })
+    alert.present()
   }
   uploadImage() {
     if(this.files != undefined) {
@@ -67,6 +204,7 @@ export class LibraryPage {
           end --
         }
         fileIdToLoad.forEach((fileId, fileIndex) => {
+          this.service.event.publish("update-load", (fileIndex + 1) + "/" + (end + 1))
           var imageId = this.image.ref.push().key
           var storageRef = this.service.store.ref().child(imageId);
           var uploadTask = storageRef.put(this.files[fileId]);
@@ -94,6 +232,9 @@ export class LibraryPage {
                   this.image.list.push(imageId)
                   this.image.detail[imageId] = url
                   if(end === fileIndex) {
+                    this.selectedImages = []
+                    this.image.selected = []
+                    this.files = undefined
                     this.service.event.publish("finish-load")
                   }
                 })
@@ -106,52 +247,22 @@ export class LibraryPage {
     else {
       this.service.event.publish("finish-load", "chưa chọn ảnh nào")
     }
-      /*
-      var imgId = this.imgRef.push().key
-      var storageRef = firebase.storage().ref().child(imgId);
-      var uploadTask = storageRef.put(this.file[0]);
-      
-      uploadTask.on('state_changed', (snapshot) => {
-        var progress = (uploadTask.snapshot.bytesTransferred / uploadTask.snapshot.totalBytes) * 100;
-        console.log('Upload is ' + progress + '% done');
-        if(progress === 100){
-          var updateData = {}
-          storageRef.getDownloadURL().then(urlsnap => {
-            var url = urlsnap
-            var imageId = this.imgRef.push().key
-            this.imgRef.child(imageId).set(url).then(() => {
-              this.user.library[0].list.push({
-                imageId: imageId,
-                time: Date.now()
-              })
-              this.libRef.child(this.user.data.userId).child("0").child("list")
-                  .set(this.user.library[0].list).then(() => {
-                    this.user.image[imageId] = url
-                    this.lib.push(imageId)
-                    this.event.publish("fail")
-                  })
-            })
-          })
-        }
-      }, function(error) {
-        console.log(error)
-      }, function() {
-        
-      });*/
   }
   getFile() {
-		this.files = (<HTMLInputElement>document.getElementById('file')).files;
+    this.files = (<HTMLInputElement>document.getElementById('file')).files;
+    /*
 		var reader = new FileReader();
 	 	reader.onload = function(e) {
 			let target: any = e.target;
 			let content: string = target.result;
 			(<HTMLInputElement>document.getElementById('blah')).src = content;
-	  	}
-      reader.readAsDataURL(this.files[0]);
+	  }
+    reader.readAsDataURL(this.files[0]);
+    */
   }
   tickImage(imageId) {
-    if(this.service.isSelect) {
-      if(this.service.multi) {
+    if(this.service.isSelect || this.isDelete) {
+      if(this.service.multi || this.isDelete) {
         this.selectedImages.push(imageId)
       }
       else {
@@ -160,8 +271,8 @@ export class LibraryPage {
     }
   }
   untickImage(imageId) {
-    if(this.service.isSelect) {
-      if(this.service.multi) {
+    if(this.service.isSelect || this.isDelete) {
+      if(this.service.multi || this.isDelete) {
         this.selectedImages = this.selectedImages.filter(imageIdList => {
           return imageIdList !== imageId
         })

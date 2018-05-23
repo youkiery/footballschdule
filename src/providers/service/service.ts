@@ -12,12 +12,15 @@ import firebase from 'firebase'
 export class ServiceProvider {
   db: any
   store: any
+  fb: any
   isSelect = false
   multi = false
-  constructor(public storage: Storage, public event: Events, public fb: Facebook,
+  libraryIndex = null
+  constructor(public storage: Storage, public event: Events, 
       public platform: Platform, public toastCtrl: ToastController) {
         this.db = firebase.database()
         this.store = firebase.storage()
+        this.fb = firebase.auth
         console.log('Hello ServiceProvider Provider');
       }
 
