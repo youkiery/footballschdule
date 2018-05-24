@@ -5,8 +5,7 @@
 </ion-header>
 
 <ion-content>
-  
-  <ion-card>
+  <ion-card *ngIf="service.postId === ''">
     <ion-card-header>
       <ion-item>
         <ion-avatar item-start>
@@ -16,14 +15,36 @@
           {{user.data[user.userId].name}}
         </P>
         <p>
-          <span *ngIf="time.getDate() < 10">0</span>{{time.getDate()}}/<span *ngIf="time.getMonth() < 9">0</span>{{time.getMonth() + 1}}/<span>{{time.getFullYear()}}</span>
-          <span *ngIf="time.getHours() < 10">0</span>{{time.getHours()}}:<span *ngIf="time.getMinutes() < 10">0</span>{{time.getMinutes()}}
+          {{time | date: "yyyy/MM/dd HH:mm"}}
         </p>
       </ion-item>
     </ion-card-header>
     <ion-list>
       <form (onSubmit)="checkPostContent()">
-        <textarea class="max" [(ngModel)]="msg" name="msg" rows="5"></textarea><br/>
+        <ion-textarea class="max" [(ngModel)]="msg" name="msg" rows="5"></ion-textarea><br/>
+        <button ion-button (click)="checkPostContent()">
+          post bài
+        </button>
+      </form>
+    </ion-list>
+  </ion-card>
+  <ion-card *ngIf="service.postId !== ''">
+    <ion-card-header>
+      <ion-item>
+        <ion-avatar item-start>
+          <img class="md-icon" src="{{user.data[user.userId].avatar}}">
+        </ion-avatar>
+        <P>
+          {{user.data[user.userId].name}}
+        </P>
+        <p>
+          {{post.detail[this.service.postId].time | date: "yyyy/MM/dd HH:mm"}}
+        </p>
+      </ion-item>
+    </ion-card-header>
+    <ion-list>
+      <form (onSubmit)="checkPostContent()">
+        <ion-textarea class="max" [(ngModel)]="msg" name="msg" rows="5"></ion-textarea><br/>
         <button ion-button (click)="checkPostContent()">
           post bài
         </button>

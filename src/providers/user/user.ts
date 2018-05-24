@@ -15,33 +15,10 @@ import { ServiceProvider } from '../service/service'
 @Injectable()
 export class UserProvider {
   ref: any
-  position = [
-      {
-        name: "đăklăk",
-        list: ["buôn đôn", "ea súp", "ea leo", "cư m'gar", "buôn ma thuột", "krông búk", "krông ana", "krông păk", "lăk", "krông bông", "ea kar", "m'đrăk"]
-      },
-      {
-        name: "lâm đồng",
-        list: ["cát tiên", "đạ tểh", "đạ huoại", "bảo lâm", "bảo lộc", "di linh", "lâm hà", "đam rông", "lạc dương", "đà lạt", "đơn dương", "đức trọng"]
-      },
-      {
-        name: "đăk nông",
-        list: ["tuy đức", "đăk r'lắp", "gia nghĩa", "đăk song", "đăk glong", "đăk mil", "krông nô", "cư jút"]
-      },
-      {
-        name: "kon tum",
-        list: ["đăk tô", "đăk glei", "tu mơ rông", "kon plông", "đăk hà", "ngọc hồi", "sa thầy", "ia h'dra", "kon rẫy", "kon tum"]
-      },
-      {
-        name: "gia lai",
-        list: ["chư păh", "chư prông", "chư sê", "chư pưh", "đắk đoa", "đắk pơ", "đức cơ", "ia grai", "ia pa", "k'bang", "kông chro", "krông pa", "mang yang", "phú thiện"]
-      }
-  ]
   data = {}
   userId = ""
+  username = ""
   password = ""
-  profileId = ""
-  detailId = ""
 
   constructor(private service: ServiceProvider) {
     this.ref = this.service.db.ref("user")
@@ -51,7 +28,6 @@ export class UserProvider {
       if(this.service.valid(userInfo)) {
         // login
         // check if below line cause error
-        this.setUser(userInfo.userId, userInfo.userInfo)
         this.service.event.publish("loading")
         this.loginSuccess(userInfo.userInfo, userInfo.userId)
       }
@@ -93,8 +69,10 @@ export class UserProvider {
     var currentTime = Date.now()
     userInfo.lastLog = currentTime
     this.userId = userId
+    this.username = userInfo.username
     this.password = userInfo.password
-    this.setUser(userId, userInfo)
+    
+    this.data[userId] = userInfo
     this.ref.child(this.userId).update({lastLog: currentTime}).then(() => {
       this.service.event.publish("get-friend")
     })
@@ -241,13 +219,53 @@ export class UserProvider {
     }
   }
 
-  selectImage(imageUrl) {
+  changeAvatar(imageUrl) {
     this.service.event.publish('loading')
     this.data[this.userId].avatar = imageUrl
-    this.service.storeData(this.data[this.userId], "userInfo")
+    var storeData = {
+      userId: this.userId,
+      userInfo: this.data[this.userId]
+    }
+    this.service.storeData("userInfo", storeData)
     this.ref.child(this.userId).update({avatar: imageUrl}).then(() => {
       this.service.event.publish('fail')
     })
+  }
+  
+  changeUserInfo(username, password, name) {
+    this.service.event.publish('loading')
+    var updateData = {}
+    var check = 0
+    if(username !== this.data[this.userId].username && username !== '') {
+      updateData["username"] = username
+      check ++
+    }
+    if(password !== this.password && password !== '') {
+      updateData["password"] = password
+      check ++
+    }
+    if(name !== this.data[this.userId].name && name !== '') {
+      updateData["name"] = name
+      check ++
+    }
+    if(check) {
+      this.ref.child(this.userId).update(updateData).then(() => {
+        for (const key in updateData) {
+          if (updateData.hasOwnProperty(key)) {
+            this.data[key] = updateData[key]
+          }
+        }
+        var storeData = {
+          userId: this.userId,
+          userInfo: this.data[this.userId]
+        }
+        this.service.storeData("userInfo", storeData)
+        this.service.event.publish('finish-load')
+      })
+    }
+    else {
+      this.service.event.publish('finish-load')
+    }
   }
   /*
 
@@ -275,108 +293,7 @@ export class UserProvider {
     })
   }
 
-  changeUserInfo(username, password, name) {
-    this.event.publish('loading')
-    var updateData = {}
-    var check = 0
-    if(username !== this.data.username && username !== '') {
-      updateData["username"] = username
-      check ++
-    }
-    if(password !== this.data.password && password !== '') {
-      updateData["password"] = password
-      check ++
-    }
-    if(name !== this.data.name && name !== '') {
-      updateData["name"] = name
-      check ++
-    }
-    if(check) {
-      this.userRef.child(this.data.userId).update(updateData).then(() => {
-        for (const key in updateData) {
-          if (updateData.hasOwnProperty(key)) {
-            this.data[key] = updateData[key]
-          }
-        }
-        this.storeData()
-        this.event.publish('fail')
-      })
-    }
-    else {
-      this.event.publish('fail')
-    }
-  }
 
-  acceptFriend(friendId, friendIndex) {
-    this.event.publish('loading')
-    console.log(friendId, friendIndex)
-    this.friendRef.child(this.data.userId).child(friendIndex).update({
-      type: 2,
-    }).then(() => {
-      this.friendRef.child(friendId).orderByChild("userId").equalTo(this.data.userId).once("value")
-          .then(friendDataSnap => {
-            var friendDataIndex = Object.keys(friendDataSnap.val())[0]
-            this.friendRef.child(friendId).child(friendDataIndex).update({
-              type: 2,
-            })
-
-            this.friendRequestList = this.friendRequestList.filter(friend => {
-              return friend !== friendId
-            })
-            this.friendActiveList.push(friendId)
-            this.event.publish('fail')
-          })
-      })
-  }
-
-  deleteFriendRequest(friendId, friendIndex) {
-    this.event.publish('loading')
-    
-    this.friendRequestList = this.friendRequestList.filter(friend => {
-      return friend !== friendId
-    })
-    this.friendRef.child(this.data.userId).set(this.friendRequestList).then(() => {
-      
-      this.friendRef.child(friendId).once("value")
-          .then(friendDataSnap => {
-            var friendData = friendDataSnap.val().filter(friend => {
-              return friend !== this.data.userId
-            })
-            this.friendRef.child(friendId).set(friendData).then(() => {
-
-              this.friendRequestList = this.friendRequestList.filter(friend => {
-                return friend !== friendId
-              })
-              this.event.publish('fail')
-            })
-          })
-    })    
-  }
-
-  addFriend(friendId) {
-    this.event.publish('loading')
-    var currentTime = Date.now()
-    
-    this.friendInactiveList.push({
-      type: 0,
-      time: currentTime,
-      userId: friendId
-    })
-    this.userRef.child(this.data.userId).set(this.friendInactiveList).then(() => {
-      
-      this.friendRef.child(friendId).once("value").then(friendDataSnap => {
-            var friendData = friendDataSnap.val()
-            friendData.push({
-              type: 1,
-              time: currentTime,
-              userId: this.data.userId
-            })
-            this.friendRef.child(friendId).set(friendData).then(() => {
-              this.event.publish('fail')
-            })
-          })
-    })
-  }
 
   gotoProfile(id) {
     this.profileId = id

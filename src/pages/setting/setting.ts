@@ -1,6 +1,8 @@
 import { Component } from '@angular/core';
-import { IonicPage } from 'ionic-angular';
+import { IonicPage, NavController } from 'ionic-angular';
+
 import { UserProvider } from '../../providers/user/user';
+import { ServiceProvider } from '../../providers/service/service';
 
 /**
  * xem thông tin
@@ -17,15 +19,14 @@ export class SettingPage {
   password = ''
   vpassword = ''
   name = ''
-  constructor(public user: UserProvider) {
-        /*
-
+  constructor(public user: UserProvider, public service: ServiceProvider, public navCtrl: NavController) {
+    
       }
 
   ionViewDidLoad() {
     console.log('ionViewDidLoad SettingPage');
   }
-  confirmAccount() {
+  /*confirmAccount() {
     var e
     if(this.username.length < 4) {
       e = "tên người dùng quá ngắn"
@@ -38,14 +39,14 @@ export class SettingPage {
     }
 
     if(e !== undefined) {
-      this.toastCtrl.create({
+      this.service.toastCtrl.create({
         message: e,
         duration: 1000,
         position: 'bottom'
       }).present()
     }
     this.user.confirmAccount(this.username, this.password)
-  }
+  }*/
   changeUserInfo() {
     var e
     if(this.username.length < 4 && this.username !== '') {
@@ -65,7 +66,7 @@ export class SettingPage {
     }
 
     if(e !== undefined) {
-      this.toastCtrl.create({
+      this.service.toastCtrl.create({
         message: e,
         duration: 1000,
         position: 'bottom'
@@ -73,19 +74,15 @@ export class SettingPage {
     }
     this.user.changeUserInfo(this.username, this.password, this.name)
   }
+  
   resetForm() {
-    firebase.database().ref('user').child(this.user.data.userId).once('value').then((snap) => {
-      var userInfo = snap.val()
-      this.username = userInfo.username
-      this.name = userInfo.name
+      this.username = ""
+      this.name = this.user.data[this.user.userId].name
       this.password = ''
       this.vpassword = ''
-    })
   }
-  gotoLibrary() {
-    this.navCtrl.push(LibraryPage)
-  }
-  gotoLibrary2() {
-    this.navCtrl.push(LibManPage)*/
+
+  goback() {
+    this.navCtrl.pop()
   }
 }

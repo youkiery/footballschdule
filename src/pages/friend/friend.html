@@ -8,18 +8,18 @@
     <ion-item color="primary">
       yêu cầu kết bạn
     </ion-item>
-    <ion-item *ngFor="let friendId of user.friendRequestList; let i = index">
+    <ion-item *ngFor="let friendId of friend.request; let i = index">
       <ion-avatar item-start>
-        <img src="{{user.user[friendId].avatar}}">
+        <img src="{{user.data[friendId].avatar}}">
       </ion-avatar>
       <b>
-        {{user.user[friendId].name}}
+        {{user.data[friendId].name}}
       </b>
       <p>
-        <span ion-button (click)="user.acceptFriend(friendId, i)">
+        <span ion-button (click)="friend.acceptFriend(user.userId, friendId, i)">
           đồng ý
         </span>
-        <span ion-button (click)="user.deleteFriendRequest(friendId, i)">
+        <span ion-button (click)="friend.deleteFriendRequest(user.userId, friendId)">
           từ chối
         </span>
       </p>
@@ -29,25 +29,28 @@
     <ion-item color="primary">
       danh sách bạn
     </ion-item>
-    <ion-item *ngFor="let friendId of user.friendActiveList">
+    <ion-item *ngFor="let friendId of friend.active">
       <ion-avatar item-start>
-        <img src="{{user.user[friendId].avatar}}">
+        <img src="{{user.data[friendId].avatar}}">
       </ion-avatar>
       <b>
-        {{user.user[friendId].name}}
+        {{user.data[friendId].name}}
       </b>
+      <span ion-button (click)="friend.unfriend(user.userId, friendId)">
+        unfriend
+      </span>
     </ion-item>
   </ion-list>
   <ion-list>
     <ion-item color="primary">
       danh sách đang được chờ xác nhận
     </ion-item>
-    <ion-item *ngFor="let friendId of user.friendInactiveList">
+    <ion-item *ngFor="let friendId of friend.inactive">
       <ion-avatar item-start>
-        <img src="{{user.user[friendId].avatar}}">
+        <img src="{{user.data[friendId].avatar}}">
       </ion-avatar>
       <b>
-        {{user.user[friendId].name}}
+        {{user.data[friendId].name}}
       </b>
     </ion-item>
   </ion-list>

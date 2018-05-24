@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { IonicPage, AlertController, NavController } from 'ionic-angular';
+import { IonicPage, AlertController, NavController, ViewController, NavParams } from 'ionic-angular';
 
 import { LibraryPage } from '../../pages/library/library';
 import { PostPage } from '../post/post';
@@ -16,8 +16,47 @@ import { FriendProvider } from '../../providers/friend/friend';
  * subscribe data
  * group list
  * msglist
+ * avatar
  */
-
+@Component({
+  template: `
+    <ion-list>
+      <button ion-item (click)="changeContent()">Đổi nội dung</button>
+      <button ion-item (click)="deletePost()">Xóa bài viết</button>
+    </ion-list>
+  `
+})
+export class PostOption {
+  postId = ""
+  constructor(public service: ServiceProvider, public viewCtrl: ViewController, public navParam: NavParams,
+    public navCtrl: NavController, public post: PostProvider, public alertCtrl: AlertController,
+    public user: UserProvider) {
+      this.postId = this.navParam.get("postId")
+    }
+  changeContent() {
+    this.service.postId = this.postId
+    this.navCtrl.push(PostPage)
+    this.viewCtrl.dismiss()
+  }
+  deletePost() {
+    let alert = this.alertCtrl.create({
+      buttons: [
+        {
+          text: 'Hủy',
+          role: 'cancel',
+        },
+        {
+          text: 'Xóa',
+          handler: () => {
+            this.post.deletePost(this.user.userId, this.postId)
+          }
+        }
+      ]
+    })
+    alert.present()
+    this.viewCtrl.dismiss()
+  }
+}
 @IonicPage()
 @Component({
   selector: 'page-main',
@@ -85,8 +124,16 @@ export class MainPage {
     this.navCtrl.push(LibraryPage)
   }
   gotoDetail(detailId) {
-    this.user.detailId = detailId
+    this.service.detailId = detailId
     this.navCtrl.push(CommentPage)
+  }
+  thisPostOption(event, postId) {
+    let popover = this.service.popoverCtrl.create(PostOption, {
+      postId: postId
+    });
+    popover.present({
+      ev: event
+    });
   }
   /*
 

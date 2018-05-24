@@ -19,10 +19,17 @@ import { ImageProvider } from "../../providers/image/image"
 })
 export class PostPage {
   msg = ""
+  postData: any
   time = new Date()
   constructor(public service: ServiceProvider, public user: UserProvider, public post: PostProvider,
       public image: ImageProvider, public navCtrl: NavController) {
-        
+        if(this.service.postId !== "") {
+          console.log()
+          this.service.selectImages = []
+          this.postData = this.post.detail[this.service.postId]
+          this.msg = this.postData.msg
+          console.log(this.postData)
+        }
       }
 
   checkPostContent() {
@@ -30,13 +37,19 @@ export class PostPage {
       this.service.warn("Nội dung ngắn hơn 10 kí tự")
     }
     else {
-      this.post.pushAPost(this.user.userId, this.msg, this.image.selected)
-      this.msg = ""
+      if(this.service.postId !== "") {
+        if(this.postData.image !== undefined) {
+          this.service.selectImages.concat(this.postData.image)
+        }
+        this.post.changePostContent(this.user.userId, this.service.postId, this.msg, this.service.selectImages)
+      }
+      else {
+        this.post.pushAPost(this.user.userId, this.msg, this.service.selectImages)
+      }
       this.navCtrl.pop()
     }
   }
   selectImageToPost() {
-    this.service.isSelect = true
     this.service.multi = true
     this.navCtrl.push(LibraryPage)
   }

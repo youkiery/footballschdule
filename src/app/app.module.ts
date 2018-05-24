@@ -6,7 +6,7 @@ import { StatusBar } from '@ionic-native/status-bar';
 
 import { MyApp } from './app.component';
 import { HomePage } from '../pages/home/home';
-import { MainPage } from '../pages/main/main';
+import { MainPage, PostOption } from '../pages/main/main';
 import { PostPage } from '../pages/post/post';
 import { LibraryPage } from '../pages/library/library';
 import { LibManPage } from '../pages/lib-man/lib-man';
@@ -14,7 +14,7 @@ import { LibDetPage } from '../pages/lib-det/lib-det';
 import { SettingPage } from '../pages/setting/setting'
 import { FriendPage } from '../pages/friend/friend'
 import { ProfilePage } from '../pages/profile/profile'
-import { CommentPage } from '../pages/comment/comment'
+import { CommentPage, DetailOption } from '../pages/comment/comment'
 
 import  firebase from 'firebase'
 import { Facebook } from '@ionic-native/facebook'
@@ -42,6 +42,7 @@ firebase.initializeApp(config);
     MyApp,
     HomePage,
     MainPage,
+    PostOption,
     PostPage,
     SettingPage,
     LibraryPage,
@@ -49,7 +50,8 @@ firebase.initializeApp(config);
     LibDetPage,
     FriendPage,
     ProfilePage,
-    CommentPage
+    CommentPage,
+    DetailOption
   ],
   imports: [
     BrowserModule,
@@ -61,6 +63,7 @@ firebase.initializeApp(config);
     MyApp,
     HomePage,
     MainPage,
+    PostOption,
     PostPage,
     SettingPage,
     LibraryPage,
@@ -68,7 +71,8 @@ firebase.initializeApp(config);
     LibDetPage,
     FriendPage,
     ProfilePage,
-    CommentPage
+    CommentPage,
+    DetailOption
   ],
   providers: [
     StatusBar,

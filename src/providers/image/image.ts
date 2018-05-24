@@ -10,7 +10,6 @@ export class ImageProvider {
   ref: any
   list = []
   detail = {}
-  selected = []
   constructor(private service: ServiceProvider) {
     this.ref = this.service.db.ref("image")
   }

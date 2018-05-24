@@ -97,6 +97,9 @@ export class PostProvider {
             var post = postSnap.val()
             
             // check if below line cause error
+            if(post.image === undefined) {
+              post.image = []
+            }
             post.time = new Date(postData.time)
             this.detail[postData.postId] = post
             console.log(index, end)
@@ -113,7 +116,7 @@ export class PostProvider {
     }
   }
   // ref error
-  pushAPost(userId, cotent, image) {
+  pushAPost(userId, content, image) {
     this.service.event.publish("loading")
     var postId = this.ref.child("detail").push().key
     var currTime = Date.now()
@@ -122,7 +125,7 @@ export class PostProvider {
       time: currTime
     }
     var detailPost = {
-      msg: cotent,
+      msg: content,
       userId: userId
     }
     if(image.length > 0) {
@@ -147,7 +150,53 @@ export class PostProvider {
       this.service.event.publish("finish-load")
     })
   }
+  changeComment(userId, postId, commentIndex, msg) {
+    this.service.event.publish("loading")
+    var currTime = Date.now()
+    this.ref.child("detail/" + postId).update({msg: msg}).then(() => {
+      this.list[postId].comment[commentIndex].msg = msg
+      this.service.event.publish("finish-load")
+    })
+  }
+  changePostContent(userId, postId, content, image) {
+    this.service.event.publish("loading")
+    if(image === undefined) {
+      image = []
+    }
+    var currTime = Date.now()
+    var detailPost = {
+      msg: content,
+      image: image,
+      modTIme: currTime
+    }
+    this.ref.child("detail/" + postId).update(detailPost).then(() => {
+      this.detail[postId].msg = content
+      this.detail[postId].image = image
+      this.service.event.publish("finish-load")
+    })
+  }
 
+  deletePost(userId, postId) {
+    this.ref.child("detail/" + postId).remove().then(() => {
+      var list = this.list.filter(postList => {
+        return postList.postId !== postId
+      })
+      this.ref.child("list/" + userId).set(list).then(() => {
+        if(this.displayNew.indexOf(postId) >= 0) {
+          this.displayNew = this.displayNew.filter(postIdList => {
+            return postIdList !== postId 
+          })
+        }
+        if(this.list.indexOf(postId) >= 0) {
+          this.list = this.list.filter(postListData => {
+            return postListData.postId !== postId 
+          })
+        }
+        this.detail[postId] = null
+        this.service.event.publish("finish-load")  
+      })
+    })
+  }
   
   like(userId, postId, like) {
     this.service.event.publish('loading')
@@ -173,12 +222,13 @@ export class PostProvider {
   }
   
   likeComment(userId, postId, commentIndex, like) {
+    console.log(userId, postId, commentIndex, like)
     this.service.event.publish('loading')
     if(like === undefined) {
       like = []
     }
     like.push(userId)
-    this.ref.child("detail/comment/" + commentIndex + "/like").set(like).then(() => {
+    this.ref.child("detail/" + postId + "/comment/" + commentIndex + "/like").set(like).then(() => {
       this.detail[postId].comment[commentIndex].like = like
       this.service.event.publish('finish-load')
     })
@@ -189,7 +239,7 @@ export class PostProvider {
     like = like.filter(likedUser => {
       return likedUser !== userId
     })
-    this.ref.child("detail/comment/" + commentIndex + "/like").set(like).then(() => {
+    this.ref.child("detail/" + postId + "/comment/" + commentIndex + "/like").set(like).then(() => {
       this.detail[postId].comment[commentIndex].like = like
       this.service.event.publish('finish-load')
     })
@@ -230,16 +280,21 @@ export class PostProvider {
       msg: msg,
       time: currTime
     }
+    
+    console.log(commentData)
     // realtime issue
-    this.ref.child("detail/" + postId + "/comment/" + comment.length).set(comment).then(() => {
-          commentData.time = new Date(currTime)
-          this.detail[postId].comment.push(comment)
-          this.service.event.publish('finish-load')
-        })
+    this.ref.child("detail/" + postId + "/comment/" + comment.length).set(commentData).then(() => {
+      commentData.time = new Date(currTime)
+      this.detail[postId].comment.push(commentData)
+      
+      this.service.event.publish('finish-load')
+
+    })
   }
 
-  delComment(postId, comment, commentIndex, msg) {
+  delComment(postId, commentIndex) {
     this.service.event.publish('loading')
+    var comment = this.list[postId].comment
     comment = comment.filter((commentData, index) => {
       return commentIndex !== index
     })

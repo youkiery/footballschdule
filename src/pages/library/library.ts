@@ -21,65 +21,69 @@ import { ImageProvider } from '../../providers/image/image';
   templateUrl: 'library.html',
 })
 export class LibraryPage {
-  selectedImages = []
+  controller: number
   uploadButton = "../assets/imgs/logo.png"
   files: any
+
+  isSelect = false
+  selectImages = []
+
   selectedLibrary: any
-  isDelete = false
   // templist, selectedlist
-  allowed = [
-    "png",
-    "jpeg",
-    "bmp",
-  ]
   constructor(public service: ServiceProvider, public user: UserProvider, public image: ImageProvider,
-      public library: LibraryProvider, public navCtrl: NavController, public alertCtrl: AlertController) { 
+      public library: LibraryProvider, public navCtrl: NavController, public alertCtrl: AlertController) {
+        if(service.imageToPost) {
+          this.controller = 1
+        }
+        else if(this.service.libraryIndex === null) {
+          this.controller = 2
+        }
         console.log(this.image)
         console.log(this.library)
       }
 
-  selectImages() {
-    if(this.selectedImages.length > 0) {
-      this.image.selected = this.selectedImages
-    }
+  selectOn() {
+    this.isSelect = true
+    this.selectImages = []
+  }
+  selectOff() {
+    this.isSelect = false
+    this.selectImages = []
   }
   delete() {
-    if(this.selectedImages.length > 0) {
-      this.library.deleteImage(this.user.userId, this.service.libraryIndex, this.selectedImages)
-      this.cancelDelete()
+    if(this.selectImages.length > 0) {
+      this.library.deleteImage(this.user.userId, this.service.libraryIndex, this.selectImages)
+      this.selectOff()
     }
     else {
       this.service.event.publish("finish-load", "chưa chọn ảnh nào")
     }
   }
-  goDelete() {
-    this.isDelete = true
-  }
-  cancelDelete() {
-    this.selectedImages = []
-    this.isDelete = false
-  }
   gotoLibrary(libraryIndex) {
     this.service.libraryIndex = libraryIndex
     this.selectedLibrary = this.library.list[libraryIndex]
     this.selectedLibrary.time = new Date(this.selectedLibrary.time)
+    this.controller = 3
     console.log(this.selectedLibrary)
+  }
+  returnBack() {
+    this.navCtrl.pop()
   }
   goback() {
     this.service.libraryIndex = null
+    this.controller = 2
     this.selectedLibrary = {}
-    this.cancelDelete()
   }
   newLibrary() {
     let alert = this.alertCtrl.create({
       inputs: [
         {
           name: "name",
-          placeholder: "tên thư viện"
+          label: "tên thư viện"
         },
         {
           name: "describe",
-          placeholder: "giới thiệu"          
+          label: "giới thiệu"          
         }
       ],
       buttons: [
@@ -101,12 +105,14 @@ export class LibraryPage {
     let alert = this.alertCtrl.create({
       inputs: [
         {
+          label: "tên thư viện",
           name: "name",
-          placeholder: "tên thư viện"
+          value: this.library[this.service.libraryIndex].name
         },
         {
+          label: "giới thiệu",
           name: "describe",
-          placeholder: "giới thiệu"          
+          value: this.library[this.service.libraryIndex].describe   
         }
       ],
       buttons: [
@@ -145,8 +151,9 @@ export class LibraryPage {
         {
           text: 'Chuyển',
           handler: (data) => {
-            if(this.selectedImages.length > 0) {
-              this.library.moveImage(this.user.userId, this.selectedImages, this.selectedLibrary, data)
+            console.log(data)
+            if(this.selectImages.length > 0) {
+              this.library.moveImage(this.user.userId, this.selectImages, this.service.libraryIndex, data)
             }
             else {
               this.service.event.publish("finish-load", "Chưa chọn ảnh nào!")
@@ -167,7 +174,7 @@ export class LibraryPage {
         {
           text: 'Xóa',
           handler: () => {
-            this.library.deleteLibrary(this.user.userId, this.selectedLibrary)
+            this.library.deleteLibrary(this.user.userId, this.service.libraryIndex)
           }
         }
       ]
@@ -181,7 +188,7 @@ export class LibraryPage {
       
       for(var i = 0; i < fileLength; i ++) {
         var extension = this.files[i].type.substring(this.files[i].type.lastIndexOf("/") + 1)
-        if(this.files[i].size > 2000000 || this.allowed.indexOf(extension) < 0) {
+        if(this.files[i].size > 2000000 || this.service.allowed.indexOf(extension) < 0) {
           error = 1
           break
         }
@@ -226,14 +233,17 @@ export class LibraryPage {
                 console.log(newLibrary)
                 var updateData = {}
                 updateData["image/" + imageId] = url
-                updateData["library/" + this.user.userId + "/0/list"] = newLibrary
+                if(this.service.valid(this.service.libraryIndex)) {
+                  updateData["library/" + this.user.userId + "/" + this.service.libraryIndex + "/list"] = newLibrary
+                }
+                else {
+                  updateData["library/" + this.user.userId + "/0/list"] = newLibrary
+                }
                 this.image.ref.parent.update(updateData).then(() => {
                   this.library.list[0].list = newLibrary
                   this.image.list.push(imageId)
                   this.image.detail[imageId] = url
                   if(end === fileIndex) {
-                    this.selectedImages = []
-                    this.image.selected = []
                     this.files = undefined
                     this.service.event.publish("finish-load")
                   }
@@ -261,30 +271,51 @@ export class LibraryPage {
     */
   }
   tickImage(imageId) {
-    if(this.service.isSelect || this.isDelete) {
-      if(this.service.multi || this.isDelete) {
-        this.selectedImages.push(imageId)
-      }
-      else {
-        this.selectedImages[0] = imageId
+    if(this.isSelect) {
+      this.selectImages.push(imageId)
+    }
+    else {
+      if(this.service.imageToPost) {
+        if(this.service.multi) {
+          this.service.selectImages.push(imageId)
+        }
+        else {
+          this.service.selectImages[0] = imageId
+        }
       }
     }
   }
   untickImage(imageId) {
-    if(this.service.isSelect || this.isDelete) {
-      if(this.service.multi || this.isDelete) {
-        this.selectedImages = this.selectedImages.filter(imageIdList => {
-          return imageIdList !== imageId
-        })
-      }  
+    if(this.isSelect) {
+      this.selectImages = this.selectImages.filter(imageIdList => {
+        return imageIdList !== imageId
+      })
+    }
+    else {
+      if(this.service.imageToPost) {
+        if(this.service.multi) {
+          this.service.selectImages = this.service.selectImages.filter(imageIdList => {
+            return imageIdList !== imageId
+          })
+        }
+      }
+    }
+  }
+  viewImage() {
+
+  }
+  changeAvatar() {
+    if(this.service.valid(this.service.selectImages[0])) {
+      this.user.changeAvatar(this.service.selectImages[0])
+      this.navCtrl.pop()
     }
   }
   selectImageToPost() {
-    this.service.multi = true
-    this.service.isSelect = true
-  }
-  diselectImageToPost() {
-    this.service.multi = false
-    this.service.isSelect = false
+    if(this.service.valid(this.service.selectImages[0])) {
+      this.navCtrl.pop()
+    }
+    else {
+      this.service.event.publish("finish-load", "chưa chọn ảnh nào")
+    }
   }
 }
