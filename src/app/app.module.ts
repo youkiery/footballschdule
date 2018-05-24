@@ -26,6 +26,7 @@ import { LibraryProvider } from '../providers/library/library';
 import { ImageProvider } from '../providers/image/image';
 import { FriendProvider } from '../providers/friend/friend';
 import { ServiceProvider } from '../providers/service/service';
+import { GroupProvider } from '../providers/group/group';
 
 var config = {
   apiKey: "AIzaSyCpCVGzJBpxRZumXRMzmm92ijkZUHM3Zds",
@@ -65,6 +66,8 @@ firebase.initializeApp(config);
     MainPage,
     PostOption,
     PostPage,
+    SettingPage,
+    LibraryPage,
     LibManPage,
     LibDetPage,
     FriendPage,
@@ -82,7 +85,8 @@ firebase.initializeApp(config);
     LibraryProvider,
     ImageProvider,
     FriendProvider,
-    ServiceProvider
+    ServiceProvider,
+    GroupProvider
   ]
 })
 export class AppModule {}

@@ -8,7 +8,6 @@ import { ServiceProvider } from "../service/service"
 @Injectable()
 export class PostProvider {
   ref: any
-  advice = []
   list = []
   displayNew = []
   detail = {}
@@ -16,12 +15,8 @@ export class PostProvider {
   constructor(private service: ServiceProvider) {
     this.ref = this.service.db.ref("post")
   }
-  getPostList(userId, userList) {
+  getPostUserList(userId, userList) {
     // check if friendlist vaild
-    if(userList.indexOf(userId) < 0) {
-      userList.push(userId)
-    }
-    console.log(userList)
     var userListNumber = userList.length - 1
     userList.forEach((userId, userIndex) => {
       this.ref.child("list/" + userId).once("value").then(userPostListSnap => {
@@ -29,10 +24,9 @@ export class PostProvider {
         if(this.service.valid(userPostList)) {
           userPostList.forEach(userPostData => {
             userPostData.userId = userId
+            userPostData.type = 0 // user
           })
-          console.log(this.list)
           this.list = this.list.concat(userPostList)
-          console.log(this.list)
         }
         if(userListNumber === userIndex) {
           if(this.list.length > 1) {
@@ -40,41 +34,36 @@ export class PostProvider {
               return b.time - a.time
             })
           }
-          this.service.event.publish("get-post-detail", this.list)
+          this.service.event.publish("get-group-list")
+        }
+      })
+    });
+  }
+  getPostGroupList(userId, groupList) {
+    // check if friendlist vaild
+    var groupListNumber = groupList.length - 1
+    groupList.forEach((userId, userIndex) => {
+      this.ref.child("list/" + userId).once("value").then(userPostListSnap => {
+        var userPostList = userPostListSnap.val()
+        if(this.service.valid(userPostList)) {
+          userPostList.forEach(userPostData => {
+            userPostData.userId = userId
+            userPostData.type = 0 // user
+          })
+          this.list = this.list.concat(userPostList)
+        }
+        if(groupListNumber === userIndex) {
+          if(this.list.length > 1) {
+            this.list = this.list.sort((a, b) => {
+              return b.time - a.time
+            })
+          }
+          this.service.event.publish("get-group-list")
         }
       })
     });
   }
   // this function may error
-  getAdvicePostList(userId, adviceUserList) {
-    // check if friendlist vaild
-    if(adviceUserList.indexOf(userId) < 0) {
-      adviceUserList.push(userId)
-    }
-    var friendListNumber = adviceUserList.length - 1
-    
-    adviceUserList.forEach((adviceUserId, adviceUserIndex) => {
-      this.ref.child("list/" + adviceUserId).once("value").then(advicePostListSnap => {
-        var advicePostList = advicePostListSnap.val()
-        
-        if(this.service.valid(advicePostList)) {
-          advicePostList.forEach(advicePostData => {
-            advicePostData.userId = adviceUserId
-          })
-          this.advice = this.advice.concat(advicePostList)
-        }
-        
-        if(friendListNumber === adviceUserIndex) {
-          if(this.advice.length > 1) {
-            this.advice = this.list.sort((a, b) => {
-              return b.time - a.time
-            })
-          }
-          this.service.event.publish("get-post-detail", this.advice)
-        }
-      })
-    });
-  }
 
   getPostDetail(postList, userList) {
     var postRef = this.service.db.ref("post")

@@ -12,6 +12,7 @@ import { FriendProvider } from '../providers/friend/friend';
 import { PostProvider } from '../providers/post/post';
 import { LibraryProvider } from '../providers/library/library';
 import { ImageProvider } from '../providers/image/image';
+import { GroupProvider } from '../providers/group/group';
 
 /**
  * loading
@@ -31,74 +32,76 @@ export class MyApp {
   constructor(platform: Platform, statusBar: StatusBar, splashScreen: SplashScreen, public event: Events,
       public user: UserProvider, public toastCtrl: ToastController, public loadCtrl: LoadingController,
       public service:  ServiceProvider,public friend: FriendProvider, public post: PostProvider,
-      public library: LibraryProvider, public image: ImageProvider) {
+      public library: LibraryProvider, public image: ImageProvider, public group: GroupProvider) {
     platform.ready().then(() => {
       // Okay, so the platform is ready and our plugins are available.
       // Here you can do any higher level native things you might need.
       statusBar.styleDefault();
       splashScreen.hide();
 
-      this.ref = this.service.db.ref("off")
-
       // loading
-      this.event.subscribe("loading", () => {
+      this.event.subscribe("loading-start", () => {
         this.load = this.loadCtrl.create()
         this.load.present()
         this.isload = true
       })
 
-      this.event.subscribe("update-load", (msg) => {
+      this.event.subscribe("loading-update", (msg) => {
         this.load.setContent(msg)
       })
       
-      this.event.subscribe('finish-load', msg => {
+      this.event.subscribe('loading-finish', msg => {
         this.dismissLoading()
-        this.toastCtrl.create({
-          message: msg,
-          duration: 1000,
-          position: 'bottom'
-        }).present()
+        this.service.warning(msg)
       })
 
       // control data load
-      this.event.subscribe("get-friend", () => {
-        this.friend.getFriendList(this.user.userId)
-        console.log("get-friend")
-      })
-      this.event.subscribe("get-advice", () => {
-        this.user.getAdvice()
-        console.log("get-advice")
-      })
-      this.event.subscribe("get-post-list", (userList) => {
-        this.post.getPostList(this.user.userId, userList)
-        console.log("get-post-list")
-      })
-      this.event.subscribe("get-advice-post-list", (adviceUserlist) => {
-        this.post.getAdvicePostList(this.user.userId, adviceUserlist)
-        console.log("get-post-list")
-      })
-      this.event.subscribe("get-post-detail", (postList) => {
-        this.post.getPostDetail(postList, this.friend.active.concat(this.friend.inactive.concat(this.friend.request)))
-        console.log("get-post-detail")
-      })
-      this.event.subscribe("get-user-data", (userList) => {
-        this.user.getuserInfo(userList.concat(this.user.userId))
-        console.log("get-user-data")
-      })
-      this.event.subscribe("get-library", () => {
-        this.library.getLibraryList(this.user.userId)
-        console.log("get-library")
-      })
-      this.event.subscribe("get-image-list", (libraryList) => {
-        this.image.getImage(libraryList)
-        console.log("get-image-list")
-      })
-      this.event.subscribe('finish-login', () => {
-        this.ref = this.service.db.ref("log/" + this.user.userId)
-        this.dismissLoading()
-        console.log('finish-login')
+      
+      this.event.subscribe('login-success', () => {
+        this.dismissLoading()      
         this.rootPage = MainPage
       })
+
+      this.event.subscribe("get-friend", () => {
+        this.friend.getFriendList(this.user.userId)
+        this.load.setContent("get-friend")
+      })
+
+      this.event.subscribe("get-post-user-list", (userList) => {
+        this.post.getPostUserList(this.user.userId, userList)
+        this.load.setContent("get-post-list")
+      })
+
+      this.event.subscribe("get-group-list", () => {
+        this.group.getGroupList(this.user.userId)
+        this.load.setContent("get-group-list")
+      })
+      
+      this.event.subscribe("get-post-group-list", (groupList) => {
+        this.post.getPostGroupList(this.user.userId, groupList)
+        this.load.setContent("get-post-group-list")
+      })
+
+      this.event.subscribe("get-post-detail", (postList) => {
+        this.post.getPostDetail(postList, this.friend.active.concat(this.friend.inactive.concat(this.friend.request)))
+        this.load.setContent("get-post-detail")
+      })
+
+      this.event.subscribe("get-user-data", (userList) => {
+        this.user.getuserInfo(userList.concat(this.user.userId))
+        this.load.setContent("get-user-data")
+      })
+
+      this.event.subscribe("get-library", () => {
+        this.library.getLibraryList(this.user.userId)
+        this.load.setContent("get-library")
+      })
+
+      this.event.subscribe("get-image-list", (libraryList) => {
+        this.image.getImage(libraryList)
+        this.load.setContent("get-image-list")
+      })
+
       this.event.subscribe('logout', () => {
         this.user.userId = ""
         this.user.data = {}
@@ -106,7 +109,6 @@ export class MyApp {
         this.friend.inactive = []
         this.friend.request = []
         this.post.list = []
-        this.post.advice = []
         this.post.detail = {}
         this.library.list = []
         this.image.list = []

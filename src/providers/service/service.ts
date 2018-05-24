@@ -71,11 +71,12 @@ export class ServiceProvider {
     }
     return 1
   }
-  warn(text) {
+  warning(text) {
     this.toastCtrl.create({
       message: text,
       duration: 1000,
       position: "bottom"
     }).present()
   }
+  
 }

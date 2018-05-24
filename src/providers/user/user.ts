@@ -17,8 +17,6 @@ export class UserProvider {
   ref: any
   data = {}
   userId = ""
-  username = ""
-  password = ""
 
   constructor(private service: ServiceProvider) {
     this.ref = this.service.db.ref("user")
@@ -49,7 +47,6 @@ export class UserProvider {
           msg = "Mật khẩu không đúng"
         }
       }
-
       if(!msg) {
         var storeData = {
           userId: userId,
@@ -59,22 +56,19 @@ export class UserProvider {
         this.loginSuccess(userInfo[userId], userId)
       }
       else {
-        this.service.event.publish("finish-load", msg)
+        this.service.event.publish("loading-finish", msg)
       }
     })
   }
 
   loginSuccess(userInfo, userId) {
-    console.log(userInfo, userId)
     var currentTime = Date.now()
     userInfo.lastLog = currentTime
     this.userId = userId
-    this.username = userInfo.username
-    this.password = userInfo.password
     
     this.data[userId] = userInfo
     this.ref.child(this.userId).update({lastLog: currentTime}).then(() => {
-      this.service.event.publish("get-friend")
+      this.service.event.publish("login-success")
     })
     // catch error
   }
@@ -240,7 +234,7 @@ export class UserProvider {
       updateData["username"] = username
       check ++
     }
-    if(password !== this.password && password !== '') {
+    if(password !== this.data[this.userId].password && password !== '') {
       updateData["password"] = password
       check ++
     }

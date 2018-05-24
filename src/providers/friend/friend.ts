@@ -17,6 +17,7 @@ export class FriendProvider {
   getFriendList(userId) {
     this.ref.child(userId).once("value").then(friendSnap => {
       var friend = friendSnap.val()
+      var userList = [userId]
       if(this.service.valid(friend)) {
         friend.forEach(friendData => {
           switch(friendData.type) {
@@ -31,11 +32,9 @@ export class FriendProvider {
             break
           }
         })
-        this.service.event.publish("get-post-list", this.active)
+        userList = userList.concat(this.active)
       }
-      else {
-        this.service.event.publish("get-post-list", [])
-      }
+      this.service.event.publish("get-post-user-list", userList)
     })
   }
   
