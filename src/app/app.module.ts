@@ -65,8 +65,6 @@ firebase.initializeApp(config);
     MainPage,
     PostOption,
     PostPage,
-    SettingPage,
-    LibraryPage,
     LibManPage,
     LibDetPage,
     FriendPage,
