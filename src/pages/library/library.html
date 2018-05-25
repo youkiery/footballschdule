@@ -10,6 +10,7 @@
     </div>
 
     <div *ngIf="controller === 2">
+      <ion-icon name="arrow-round-back" (click)="returnBack()"></ion-icon>
       <label for="file">
         <ion-icon name="cloud-upload"></ion-icon>
         <span aria-hidden="true"></span>
@@ -33,26 +34,25 @@
       <ion-icon *ngIf="isSelect === false" name="ios-checkbox" (click)="selectOn()"></ion-icon>
       <ion-icon *ngIf="isSelect === true" name="ios-trash" (click)="delete()"></ion-icon>
       <ion-icon name="create" (click)="modifyLibrary()"></ion-icon>
-      <ion-icon *ngIf="service.libraryIndex !== 0" name="remove-circle" (click)="deleteThisLibrary()"></ion-icon>
+      <ion-icon *ngIf="service.libraryIndex !== 0" name="remove-circle" (click)="deleteLibrary(user.userId, service.libraryIndex)"></ion-icon>
     </div>    
   </div>
 
   <div class="content">
     <div *ngIf="controller === 1">
-      <span class="inline" *ngFor="let imageId of image.list">
-        <img class="md-icon" src="{{image.detail[imageId]}}" *ngIf="service.selecteImages.indexOf(imageId) < 0" (click)="tickImage(imageId)">
-        <img class="md-icon selected" src="{{image.detail[imageId]}}" *ngIf="service.selecteImages.indexOf(imageId) >= 0" (click)="untickImage(imageId)">
+      <span class="inline" *ngFor="let imageData of library.displayImage">
+        <img class="md-icon" src="{{imageData.url}}" *ngIf="service.selecteImages.indexOf(imageData.url) < 0" (click)="tickImage(imageData)">
+        <img class="md-icon selected" src="{{imageData.url}}" *ngIf="service.selecteImages.indexOf(imageData.url) >= 0" (click)="untickImage(imageData)">
       </span>
     </div>
 
     <div *ngIf="controller === 2">
       <div *ngFor="let libraryList of library.list; let libraryIndex = index">
-        <img class="md-icon" src="{{image.detail[libraryList.list[0].imageId]}}" *ngIf="libraryList.list.length > 0" (click)="gotoLibrary(libraryIndex)">
-        <img class="md-icon" src="{{uploadButton}}" *ngIf="libraryList.list.length === 0 || libraryList.list !== undefined" (click)="gotoLibrary(libraryIndex)">
+        <img class="md-icon" src="{{libraryList.last.url}}" (click)="gotoLibrary(libraryList.libraryId, libraryIndex)">
         <p>{{libraryList.name}}</p>
       </div>
-      <span class="inline" *ngFor="let imageId of image.list">
-        <img class="md-icon selected" src="{{image.detail[imageInfo.imageId]}}" *ngIf="isSelect === false" (click)="viewImage(imageIndex, service.libraryIndex)">
+      <span class="inline" *ngFor="let imageData of library.displayImage">
+        <img class="md-icon" src="{{imageData.url}}" (click)="viewImage(imageData.url)">
       </span>
     </div>
 
@@ -61,15 +61,15 @@
         {{selectedLibrary.name}}
       </p>
       <p>
-        {{selectedLibrary.describe}}      
+        {{selectedLibrary.describe}}
       </p>
       <p>
         {{selectedLibrary.time | date: "yyyy/MM/dd HH:mm"}}   
       </p>
-      <span class="inline" *ngFor="let imageInfo of selectedLibrary.list; let imageIndex = index">
-        <img class="md-icon" src="{{image.detail[imageInfo.imageId]}}" *ngIf="selectedImages.indexOf(imageInfo.imageId) < 0" (click)="tickImage(imageInfo.imageId)">
-        <img class="md-icon selected" src="{{image.detail[imageInfo.imageId]}}" *ngIf="selectedImages.indexOf(imageInfo.imageId) >= 0" (click)="untickImage(imageInfo.imageId)">
-        <img class="md-icon selected" src="{{image.detail[imageInfo.imageId]}}" *ngIf="isSelect === false" (click)="viewImage(imageIndex, service.libraryIndex)">
+      <span class="inline" *ngFor="let imageData of displayLibraryImage; let imageIndex = index">
+        <img class="md-icon" src="{{imageData.url}}" *ngIf="selectedImages.indexOf(imageData.url) < 0" (click)="tickImage(imageData)">
+        <img class="md-icon selected" src="{{imageData.url}}" *ngIf="selectedImages.indexOf(imageData.url) >= 0" (click)="untickImage(imageData)">
+        <img class="md-icon selected" src="{{imageData.url}}" *ngIf="isSelect === false" (click)="viewImage(imageData.url)">
       </span>
     </div>
   </div>

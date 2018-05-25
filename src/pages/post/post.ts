@@ -6,7 +6,6 @@ import { LibraryPage } from '../library/library'
 import { ServiceProvider } from "../../providers/service/service"
 import { PostProvider } from "../../providers/post/post"
 import { UserProvider } from "../../providers/user/user"
-import { ImageProvider } from "../../providers/image/image"
 
 /**
  * 
@@ -22,7 +21,7 @@ export class PostPage {
   postData: any
   time = new Date()
   constructor(public service: ServiceProvider, public user: UserProvider, public post: PostProvider,
-      public image: ImageProvider, public navCtrl: NavController) {
+      public navCtrl: NavController) {
         if(this.service.postId !== "") {
           console.log()
           this.service.selectImages = []
@@ -34,7 +33,7 @@ export class PostPage {
 
   checkPostContent() {
     if(this.msg.length < 10) {
-      this.service.warn("Nội dung ngắn hơn 10 kí tự")
+      this.service.warning("Nội dung ngắn hơn 10 kí tự")
     }
     else {
       if(this.service.postId !== "") {

@@ -38,6 +38,12 @@
         <ion-item>
           <ion-input [(ngModel)]="name" type="text" name="name" placeholder="tên hiển thị"></ion-input>
         </ion-item>
+        <ion-item>
+          <ion-label>Vùng</ion-label>
+          <ion-select [(ngModel)]="position" name="position">
+            <ion-option *ngFor="let pos of user.position; let i = index" value="{{i}}">{{pos}}</ion-option>
+          </ion-select>
+        </ion-item>
         <button ion-button color="primary" (click)="signup()">đăng ký</button>
         <button ion-button color="secondary" (click)="user.signupFb()">đăng ký với tài khoản Facebook</button>
       </div>

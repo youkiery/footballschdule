@@ -14,12 +14,12 @@ export class FriendProvider {
   constructor(private service: ServiceProvider) {
     this.ref = this.service.db.ref("friend")
   }
-  getFriendList(userId) {
-    this.ref.child(userId).once("value").then(friendSnap => {
-      var friend = friendSnap.val()
-      var userList = [userId]
-      if(this.service.valid(friend)) {
-        friend.forEach(friendData => {
+  initiaze(userId) {
+    this.ref.child(userId).once("value").then(friendDataListSnap => {
+      var friendDataList = friendDataListSnap.val()
+      if(this.service.valid(friendDataList)) {
+        var friendList = this.service.objToList(friendDataList).list
+        friendList.forEach(friendData => {
           switch(friendData.type) {
             case 0:
               this.active.push(friendData.userId)
@@ -32,9 +32,9 @@ export class FriendProvider {
             break
           }
         })
-        userList = userList.concat(this.active)
       }
-      this.service.event.publish("get-post-user-list", userList)
+      console.log(this.active, this.inactive, this.request)
+      this.service.event.publish("get-group-list",)
     })
   }
   

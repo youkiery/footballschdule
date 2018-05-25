@@ -15,57 +15,68 @@ export class PostProvider {
   constructor(private service: ServiceProvider) {
     this.ref = this.service.db.ref("post")
   }
-  getPostUserList(userId, userList) {
+  getUserPost(userList) {
     // check if friendlist vaild
+    this.list = []
     var userListNumber = userList.length - 1
     userList.forEach((userId, userIndex) => {
-      this.ref.child("list/" + userId).once("value").then(userPostListSnap => {
-        var userPostList = userPostListSnap.val()
-        if(this.service.valid(userPostList)) {
-          userPostList.forEach(userPostData => {
-            userPostData.userId = userId
-            userPostData.type = 0 // user
-          })
+      this.ref.child("list/" + userId).once("value").then(userPostDataListSnap => {
+        var userPostDataList = userPostDataListSnap.val()
+        if(this.service.valid(userPostDataList)) {
+          var userPostData = this.service.objToList(userPostDataList)
+          var userPostList = userPostData.list
           this.list = this.list.concat(userPostList)
         }
         if(userListNumber === userIndex) {
-          if(this.list.length > 1) {
-            this.list = this.list.sort((a, b) => {
-              return b.time - a.time
-            })
-          }
-          this.service.event.publish("get-group-list")
+          console.log(this.list)
+          this.service.event.publish("get-group-post-list")
         }
       })
     });
   }
-  getPostGroupList(userId, groupList) {
+  getGroupPost(groupList) {
     // check if friendlist vaild
-    var groupListNumber = groupList.length - 1
-    groupList.forEach((userId, userIndex) => {
-      this.ref.child("list/" + userId).once("value").then(userPostListSnap => {
-        var userPostList = userPostListSnap.val()
-        if(this.service.valid(userPostList)) {
-          userPostList.forEach(userPostData => {
-            userPostData.userId = userId
-            userPostData.type = 0 // user
-          })
-          this.list = this.list.concat(userPostList)
-        }
-        if(groupListNumber === userIndex) {
-          if(this.list.length > 1) {
-            this.list = this.list.sort((a, b) => {
-              return b.time - a.time
-            })
+    var groupListNumber = groupList.length
+    if(groupListNumber) {
+      var end = groupListNumber - 1
+      groupList.forEach((groupId, groupIndex) => {
+        this.ref.child("list/" + groupId).once("value").then(groupPostDataListSnap => {
+          var groupPostDataList = groupPostDataListSnap.val()
+          if(this.service.valid(groupPostDataList)) {
+            var groupPostData = this.service.objToList(groupPostDataList)
+            var groupPostList = groupPostData.list
+            this.list = this.list.concat(groupPostList)
           }
-          this.service.event.publish("get-group-list")
-        }
-      })
-    });
+          if(end === groupIndex) {
+            console.log(this.list)
+            this.service.event.publish("get-initiaze-finish")
+          }
+        })
+      });  
+    }
+    else {
+      this.service.event.publish("get-initiaze-finish")
+    }
   }
   // this function may error
+  getPostDetail(postId, postIndex) {
 
-  getPostDetail(postList, userList) {
+    this.ref.child("detail/" + postId).once("value").then(postDataSnap => {
+      var postData = postDataSnap.val()
+      
+      // check if below line cause error
+      if(postData.image === undefined) {
+        postData.image = []
+      }
+      postData.time = new Date(this.list[postIndex].time)
+      this.detail[postId] = postData
+      this.displayNew[postIndex].display = true
+      console.log(this.detail)
+      // check if below line cause error
+    })
+  }
+
+  getPostDetailList(postList, userList) {
     var postRef = this.service.db.ref("post")
     var end = postList.length
     if(end) {
@@ -108,34 +119,42 @@ export class PostProvider {
   pushAPost(userId, content, image) {
     this.service.event.publish("loading")
     var postId = this.ref.child("detail").push().key
+    var listId = this.ref.child("list").push().key
     var currTime = Date.now()
-    var nodePost = {
+    var listData = {
       postId: postId,
-      time: currTime
+      userId: userId,
+      type: 0, //userpost
+      time: currTime,
+      like: 0,
+      comment: 0
     }
-    var detailPost = {
+    var detailData = {
       msg: content,
       userId: userId
     }
+    detailData["image"] = []
     if(image.length > 0) {
-      detailPost["image"] = image
+      detailData["image"] = image
     }
-    console.log(this.list)
-    console.log(nodePost)
-    this.list.push(nodePost)
     var updateData = {}
-    updateData["post/detail/" + postId] = detailPost
-    updateData["post/list/" + userId] = this.list
+    updateData["post/detail/" + postId] = detailData
+    updateData["post/list/" + userId + "/" + listId] = listData
     this.ref.parent.update(updateData).then(() => {
-      this.list.push(nodePost)
-      detailPost["time"] = new Date(nodePost.time)
-      this.detail[postId] = detailPost
+      this.list.push(listData)
+      detailData["time"] = new Date(listData.time)
+      this.detail[postId] = detailData
       var temp = []
       this.displayNew.forEach((newId, newIndex) => {
         temp[newIndex + 1] = newId
       })
-      temp[0] = postId
+      temp[0] = {
+        postId: postId,
+        type: 0,
+        display: true
+      }
       this.displayNew = temp
+      console.log(this.displayNew)
       this.service.event.publish("finish-load")
     })
   }

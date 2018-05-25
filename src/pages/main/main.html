@@ -19,54 +19,56 @@
     </p>
     <ion-textarea (click)="gotoPost()"></ion-textarea>
   </ion-item>
-  <ion-card *ngFor="let postId of post.displayNew; let i of index">
-    <ion-card-header *ngIf="user.data[post.detail[postId].userId] !== undefine">
-      <ion-item>
-        <ion-avatar item-start>
-          <img class="md-icon" src="{{user.data[post.detail[postId].userId].avatar}}">
-        </ion-avatar>
-        <p>
-          <b>
-            {{user.data[post.detail[postId].userId].name}}
-          </b>
+  <ion-card *ngFor="let displayData of post.displayNew; let i of index">
+    <span *ngIf="displayData.display === true">
+      <ion-card-header *ngIf="user.data[post.detail[displayData.postId].userId] !== undefine">
+        <ion-item>
+          <ion-avatar item-start>
+            <img class="md-icon" src="{{user.data[post.detail[displayData.postId].userId].avatar}}">
+          </ion-avatar>
+          <p>
+            <b>
+              {{user.data[post.detail[displayData.postId].userId].name}}
+            </b>
+          </p>
+          {{post.detail[displayData.postId].time | date: "yyyy/MM/dd HH:mm"}}
+          <ion-icon class="right" name="menu" (click)="thisPostOption($event, displayData.postId)" *ngIf="user.userId === post.detail[displayData.postId].userId"></ion-icon>
+        </ion-item>
+        <span *ngIf="post.detail[displayData.postId].image.length > 0">
+          {{image.detail[post.detail[displayData.postId].image[0]]}}
+        </span>
+      </ion-card-header>
+      <ion-list>
+        <p class="msg" (click)="gotoDetail(displayData.postId)">
+          {{post.detail[displayData.postId].msg}}
         </p>
-        {{post.detail[postId].time | date: "yyyy/MM/dd HH:mm"}}
-        <ion-icon class="right" name="menu" (click)="thisPostOption($event, postId)" *ngIf="user.userId === post.detail[postId].userId"></ion-icon>
-      </ion-item>
-      <span *ngIf="post.detail[postId].image.length > 0">
-        {{image.detail[post.detail[postId].image[0]]}}
-      </span>
-    </ion-card-header>
-    <ion-list (click)="gotoDetail(postId)">
-      <p class="msg">
-        {{post.detail[postId].msg}}
-      </p>
-      <ion-item>
-        <span *ngIf="post.detail[postId].like !== undefine">
-          <button ion-button (click)="viewLiked(postId)">
-            {{post.detail[postId].like.length}}
-          </button>
-          <button ion-button color="primary" *ngIf='post.detail[postId].like.indexOf(user.userId) === -1' (click)="post.like(post.detail[postId].userId, postId, post.detail[postId].like)">
-            like
-          </button>
-          <button ion-button color="secondary" *ngIf='post.detail[postId].like.indexOf(user.userId) !== -1' (click)="post.unlike(post.detail[postId].userId, postId, post.detail[postId].like)">
-            like
-          </button>
-        </span>
-        <span *ngIf="post.detail[postId].like === undefine">
-          <button ion-button>
-            0
-          </button>
-          <button ion-button color="primary" (click)="post.like(post.detail[postId].userId, postId, post.detail[postId].like)">
-            like
-          </button>
-        </span>
-        <span>
-          <button ion-button *ngIf="post.detail[postId].userId !== user.userId && friend.active.indexOf(post.detail[postId].userId) === -1 && friend.inactive.indexOf(post.detail[postId].userId) === -1" (click)="user.addFriend(post.detail[postId].userId)">
-            +
-          </button>
-        </span>
-      </ion-item>
-    </ion-list>
+        <ion-item>
+          <span *ngIf="post.detail[displayData.postId].like !== undefine">
+            <button ion-button (click)="viewLiked(displayData.postId)">
+              {{post.detail[displayData.postId].like.length}}
+            </button>
+            <button ion-button color="primary" *ngIf='post.detail[displayData.postId].like.indexOf(user.userId) === -1' (click)="post.like(post.detail[displayData.postId].userId, displayData.postId, post.detail[displayData.postId].like)">
+              like
+            </button>
+            <button ion-button color="secondary" *ngIf='post.detail[displayData.postId].like.indexOf(user.userId) !== -1' (click)="post.unlike(post.detail[displayData.postId].userId, displayData.postId, post.detail[displayData.postId].like)">
+              like
+            </button>
+          </span>
+          <span *ngIf="post.detail[displayData.postId].like === undefine">
+            <button ion-button>
+              0
+            </button>
+            <button ion-button color="primary" (click)="post.like(post.detail[displayData.postId].userId, displayData.postId, post.detail[displayData.postId].like)">
+              like
+            </button>
+          </span>
+          <span>
+            <button ion-button *ngIf="post.detail[displayData.postId].userId !== user.userId && friend.active.indexOf(post.detail[displayData.postId].userId) === -1 && friend.inactive.indexOf(post.detail[displayData.postId].userId) === -1" (click)="user.addFriend(post.detail[displayData.postId].userId)">
+              +
+            </button>
+          </span>
+        </ion-item>
+      </ion-list>
+    </span>
   </ion-card>
 </ion-content>

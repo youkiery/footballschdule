@@ -7,7 +7,6 @@ import { PostOption } from '../main/main';
 import { ServiceProvider } from '../../providers/service/service'
 import { UserProvider } from '../../providers/user/user'
 import { PostProvider } from '../../providers/post/post'
-import { ImageProvider } from '../../providers/image/image'
 
 /**
  * 
@@ -122,7 +121,7 @@ export class CommentPage {
   postData: any
   commentMsg = ""
   constructor(public service: ServiceProvider, public user: UserProvider, public post: PostProvider,
-    public image: ImageProvider, public alertCtrl: AlertController, public viewCtrl: ViewController,
+    public alertCtrl: AlertController, public viewCtrl: ViewController,
     public navCtrl: NavController) {
         this.postData = post.detail[service.detailId]
         if(this.postData.comment === undefined) {

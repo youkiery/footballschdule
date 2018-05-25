@@ -16,14 +16,15 @@ export class GroupProvider {
     this.ref = this.service.db.ref("group")
     console.log('Hello GroupProvider Provider');
   }
-  getGroupList(userId) {
+  initiaze(userId) {
     this.ref.child(userId).once("value").then(groupDataListSnap => {
       var groupDataList = groupDataListSnap.val()
-      var groupList = []
       if(this.service.valid(groupDataList)) {
-        groupList.concat(this.list)
+        var groupData = this.service.objToList(groupDataList)
+        this.list = groupData.list
       }
-      this.service.event.publish("get-post-group-data")
+      console.log(this.list)
+      this.service.event.publish("get-user-post-list")
     })
   }
 

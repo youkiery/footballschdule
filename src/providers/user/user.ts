@@ -17,7 +17,8 @@ export class UserProvider {
   ref: any
   data = {}
   userId = ""
-
+  defaultImage = "../../assets/imgs/logo.png"
+  position = ["Cư Êbur", "Tân Lợi", "Tân An", "Ea Tu", "Hòa Thuận", "Thành Nhất", "Thành Công", "Thắng Lợi", "Thống Nhất", "Tân Tiến", "Tân Thành", "Tự An", "Tân Lập", "Tân Hòa" ,"Khánh Xuân", "Ea Tam" ,"Hòa Thắng", "Hòa Xuân", "Hòa Phú", "Hòa Khánh", "Ea Kao"]
   constructor(private service: ServiceProvider) {
     this.ref = this.service.db.ref("user")
     this.service.storage.get("userInfo").then(data => {
@@ -26,14 +27,14 @@ export class UserProvider {
       if(this.service.valid(userInfo)) {
         // login
         // check if below line cause error
-        this.service.event.publish("loading")
+        this.service.event.publish("loading-start")
         this.loginSuccess(userInfo.userInfo, userInfo.userId)
       }
     })
   }
 
   login(username, password) {
-    this.service.event.publish('loading')
+    this.service.event.publish('loading-start')
     this.ref.orderByChild("username").equalTo(username).once('value').then(userInfoSnap => {
       var userInfo = userInfoSnap.val()
       var msg = ""
@@ -50,18 +51,19 @@ export class UserProvider {
       if(!msg) {
         var storeData = {
           userId: userId,
-          userInfo: userInfo
+          userInfo: userInfo[userId]
         }
         this.service.storeData("userInfo", storeData)
         this.loginSuccess(userInfo[userId], userId)
       }
       else {
-        this.service.event.publish("loading-finish", msg)
+        this.service.event.publish("loading-end", msg)
       }
     })
   }
 
   loginSuccess(userInfo, userId) {
+    console.log(userInfo)
     var currentTime = Date.now()
     userInfo.lastLog = currentTime
     this.userId = userId
@@ -73,8 +75,8 @@ export class UserProvider {
     // catch error
   }
 
-  signup(username, password, name, avatar) {
-    this.service.event.publish('loading')
+  signup(username, password, name, avatar, position) {
+    this.service.event.publish('loading-start')
     this.ref.orderByChild('username').equalTo(username).once('value').then(snap => {
       var userInfo = snap.val()
       if(!this.service.valid(userInfo)) {
@@ -86,47 +88,72 @@ export class UserProvider {
           password: password,
           name: name,
           avatar: avatar,
+          position: position,
+          describe: "",
           lastLog: currentTime
         }
+        
+        var libraryId = this.ref.parent.child("library").push().key
+        var imageId = this.ref.parent.child("library").push().key
+        var imageData = {        
+          time: currentTime,
+          url: this.defaultImage
+        }
         updateData["user/" + userId] = signupData
-        updateData["library/" + userId] = [{
-          list: [{
-            imageId: "default",
-            time: currentTime
-          }],
-          name: "nameless",
+        updateData["library/" + userId + "/list/" + libraryId] = {
+          libraryId: libraryId,
+          last: imageData,
+          name: "không tên",
           type: 0,
           time: currentTime,
           describe: ""
-        }]
+        }
+        updateData["library/" + userId + "/detail/" + libraryId] = {
+          key: imageData
+        }
+        updateData["library/" + userId + "/detail/all"] = {
+          key: imageData
+        }
+
         this.ref.parent.update(updateData).then(() => {
+          var storeData = {
+            userId: userId,
+            userInfo: signupData
+          }
+          this.service.storeData("userInfo", storeData)
           this.loginSuccess(signupData, userId)
         })
       }
       else {
-        this.service.event.publish("finish-load", "tài khoản này đã tồn tại")
+        this.service.event.publish("loading-end", "tài khoản này đã tồn tại")
       }
     })
   }
 
   
   signupFb() {
-    this.service.event.publish('loading')
+    this.service.event.publish('loading-start')
     var provider = new this.service.fb.FacebookAuthProvider();
     this.service.fb.auth().signInWithPopup(provider).then(result => {
       var currentTime = Date.now()
       var user = result.user;
       var userId = user.uid
+      
       var signupData = {
         username: "",
         password: "",
         name: user.displayName,
         avatar: user.photoURL,
-        lastLog: currentTime
+        lastLog: currentTime,
+        position: 0,
+        describe: ""
       }
+      
       this.ref.child(userId).once("value").then(userInfoSnap => {
         var userInfo = userInfoSnap.val()
         if(this.service.valid(userInfo)) {
+          signupData.position = userInfo.position
+          signupData.describe = userInfo.describe
           this.ref.child(userId).set(signupData).then(snap => {
             var storeData = {
               userId: userId,
@@ -138,17 +165,42 @@ export class UserProvider {
         }
         else {
           var updateData = {}
+          var libraryId = this.ref.parent.child("library").push().key
+          var imageId = this.ref.parent.child("library").push().key
+          var imageData = {        
+            time: currentTime,
+            url: this.defaultImage
+          }
           updateData["user/" + userId] = signupData
-          updateData["library/" + userId] = [{
-            list: [{
-              imageId: "default",
-              time: currentTime
-            }],
-            name: "nameless",
+          updateData["library/" + userId + "/list/" + libraryId] = {
+            libraryId: libraryId,
+            last: imageData,
+            name: "không tên",
             type: 0,
             time: currentTime,
             describe: ""
-          }]
+          }
+          updateData["library/" + userId + "/detail/" + libraryId] = {
+            key: imageData
+          }
+          updateData["library/" + userId + "/detail/all"] = {
+            key: imageData
+          }
+          updateData["user/" + userId] = signupData
+          updateData["library/" + userId + "/list/" + libraryId] = {
+            libraryId: libraryId,
+            last: imageData,
+            name: "không tên",
+            type: 0,
+            time: currentTime,
+            describe: ""
+          }
+          updateData["library/" + userId + "/detail/" + libraryId] = {
+            key: imageData
+          }
+          updateData["library/" + userId + "/detail/all"] = {
+            key: imageData
+          }
           this.ref.parent.update(updateData).then(() => {
             var storeData = {
               userId: userId,
@@ -159,9 +211,7 @@ export class UserProvider {
           })
         }
       })
-    }).catch(error => {
-      this.service.event.publish("finish", "lỗi mạng")          
-    });
+    })
   }
 
   logout() {
@@ -214,7 +264,7 @@ export class UserProvider {
   }
 
   changeAvatar(imageUrl) {
-    this.service.event.publish('loading')
+    this.service.event.publish('loading-start')
     this.data[this.userId].avatar = imageUrl
     var storeData = {
       userId: this.userId,
@@ -222,12 +272,12 @@ export class UserProvider {
     }
     this.service.storeData("userInfo", storeData)
     this.ref.child(this.userId).update({avatar: imageUrl}).then(() => {
-      this.service.event.publish('fail')
+      this.service.event.publish('loading-end')
     })
   }
   
   changeUserInfo(username, password, name) {
-    this.service.event.publish('loading')
+    this.service.event.publish('loading-start')
     var updateData = {}
     var check = 0
     if(username !== this.data[this.userId].username && username !== '') {
@@ -254,12 +304,23 @@ export class UserProvider {
           userInfo: this.data[this.userId]
         }
         this.service.storeData("userInfo", storeData)
-        this.service.event.publish('finish-load')
+        this.service.event.publish('loading-end')
       })
     }
     else {
-      this.service.event.publish('finish-load')
+      this.service.event.publish('loading-end')
     }
+  }
+
+  getUserData(userId) {
+    console.log("load-user")
+    this.ref.child(userId).then(userDataSnap => {
+      var userData = userDataSnap.val()
+      if(this.service.valid(userData)) {
+        console.log("load-user-finish")
+        this.setUser(userId, userData)
+      }
+    })
   }
   /*
 

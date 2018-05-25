@@ -1,5 +1,7 @@
 import { Component } from '@angular/core';
 import { NavController, ToastController } from 'ionic-angular';
+
+import { ServiceProvider } from '../../providers/service/service';
 import { UserProvider } from '../../providers/user/user';
 
 @Component({
@@ -12,12 +14,13 @@ export class HomePage {
   password = ''
   vpassword = ''
   name = ''
+  position = 0
   avatar = '../assets/imgs/logo.png'
-  constructor(public navCtrl: NavController, public user: UserProvider, public toastCtrl: ToastController) {
+  constructor(public navCtrl: NavController, public user: UserProvider, public service: ServiceProvider) {
     console.log(user)
   }
   login() {
-    var e
+    var e = ""
     if(this.username.length < 4) {
       e = "tên đăng nhập ngắn hơn 4 kí tự"
     }
@@ -25,19 +28,15 @@ export class HomePage {
       e = "mật khẩu ngắn hơn 4 kí tự"      
     }
 
-    if(e !== undefined) {
-      this.toastCtrl.create({
-        message: e,
-        duration: 1000,
-        position: 'bottom'
-      }).present()
+    if(e) {
+      this.service.warning(e)
     }
     else {
       this.user.login(this.username, this.password)
     }
   }
   signup() {
-    var e
+    var e = ""
     if(this.username.length < 4) {
       e = "tên đăng nhập ngắn hưn 4 kí tự"
     }
@@ -54,15 +53,11 @@ export class HomePage {
       e = "tên hiển thị chỉ dùng kí tự trong bảng chữ cái và dấu cách"
     }
 
-    if(e !== undefined) {
-      this.toastCtrl.create({
-        message: e,
-        duration: 1000,
-        position: 'bottom'
-      }).present()
+    if(e) {
+      this.service.warning(e)
     }
     else {
-      this.user.signup(this.username, this.password, this.name, this.avatar)
+      this.user.signup(this.username, this.password, this.name, this.avatar, this.position)
     }
   }
 }

@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { IonicPage, AlertController, NavController, ViewController, NavParams } from 'ionic-angular';
+import { IonicPage, NavController, ViewController, NavParams, AlertController } from 'ionic-angular';
 
 import { LibraryPage } from '../../pages/library/library';
 import { PostPage } from '../post/post';
@@ -9,6 +9,7 @@ import { ServiceProvider } from '../../providers/service/service';
 import { UserProvider } from '../../providers/user/user';
 import { PostProvider } from '../../providers/post/post';
 import { FriendProvider } from '../../providers/friend/friend';
+import { GroupProvider } from '../../providers/group/group';
 
 /**
  * filter for data display
@@ -25,33 +26,105 @@ import { FriendProvider } from '../../providers/friend/friend';
 })
 export class MainPage {
   page = 1
-  constructor(public user: UserProvider, public post: PostProvider, public alertCtrl: AlertController,
-      public navCtrl: NavController, public friend: FriendProvider, public service: ServiceProvider) {
-        console.log(user)
-        console.log(post)
-        this.service.event.publish("loading-start")
-        this.service.event.publish("get-friend")
-      }
+  postPerLoad = 6
+  constructor(public user: UserProvider, public post: PostProvider, public group: GroupProvider,
+    public navCtrl: NavController, public friend: FriendProvider, public service: ServiceProvider) {
+      console.log(user)
+      console.log(post)
 
-  displayFirst() {
-      var end = this.post.list.length
-      if(end) {
-        var from = (this.page - 1) * 8
-        var to = this.page * 8
-        while(from < to && from < end) {
-          this.post.displayNew.push(this.post.list[from].postId)
-          from ++
+      this.service.event.subscribe("get-friend-list", () => {
+        this.service.event.publish("loading-update", "đang tải danh sách bạn bè")
+        this.friend.initiaze(this.user.userId)
+      })
+      this.service.event.subscribe("get-group-list", () => {
+        this.service.event.publish("loading-update", "đang tải danh sách nhóm")
+        this.group.initiaze(this.user.userId)
+      })
+      this.service.event.subscribe("get-user-post-list", () => {
+        this.service.event.publish("loading-update", "đang tải danh sách bài viết")
+        this.post.getUserPost(this.friend.active.concat([this.user.userId]))
+      })
+      this.service.event.subscribe("get-group-post-list", () => {
+        this.service.event.publish("loading-update", "đang tải danh sách bài viết")
+        this.post.getGroupPost(this.group.list)
+      })
+      this.service.event.subscribe("get-initiaze-finish", () => {
+        var end = this.post.list.length
+        console.log(this.post.list)
+        if(end) {
+          var from = 0//(this.page - 1) * this.postPerLoad
+          var to = this.postPerLoad//this.page * this.postPerLoad
+          var indexToLoad = []
+          while(from < to && from < end) {
+            indexToLoad.push(from)
+            from ++
+          }
+          end --
+          this.page = 2
+          indexToLoad.forEach(index => {
+            this.post.displayNew.push({
+              postId: this.post.list[index].postId,
+              type: this.post.list[index].type,
+              display: false
+            })
+            // quere load
+            console.log(user.data[this.post.list[index].userId])
+            if(user.data[this.post.list[index].userId] === undefined) {
+              this.user.getUserData(this.post.list[index].userId)
+            }
+            this.post.getPostDetail(this.post.list[index].postId, index)
+            if(index === end) {
+              console.log(this.post.displayNew)
+              this.service.event.publish("loading-end")
+            }
+          })
         }
-      }
-      else {
-        let alert = this.alertCtrl.create({
-          message: "không còn tin để hiển thị",
-          buttons: ["ok"]
-        })
-        alert.present()
-      }
-    console.log(this.post.displayNew)
+        else {
+          this.service.event.publish("loading-end")
+        }
+      })
+      
+      this.service.event.publish("get-friend-list")
   }
+
+  reload() {
+    this.post.displayNew = []
+    this.post.list = []
+    this.post.detail = {}
+    this.post.getUserPost(this.friend.active.concat([this.user.userId]))
+  }
+
+  loadMore() {
+    this.service.event.publish("loading-start")
+    var end = this.post.list.length
+    if(end) {
+      var from = (this.page - 1) * this.postPerLoad
+      var to = this.page * this.postPerLoad
+      var indexToLoad = []
+      while(from < to && from < end) {
+        indexToLoad.push(from)
+        from ++
+      }
+      end --
+      this.page = 2
+      indexToLoad.forEach(index => {
+        this.post.displayNew.push({
+          postId: this.post.list[index].postId,
+          type: this.post.list[index].type,
+          display: false
+        })
+        // quere load
+        this.post.getPostDetail(this.post.list[index].postId, index)
+        if(index === end) {
+          this.service.event.publish("loading-end")
+        }
+      })
+    }
+    else {
+      this.service.event.publish("loading-end")
+    }
+  }
+
   
   viewLiked(postId) {
     var displayForm = ''
@@ -65,11 +138,7 @@ export class MainPage {
     like.forEach((likedUser, index) => {
       displayForm += index + ', ' + this.user.data[likedUser].name + '<br/>'
     });
-    let alert = this.alertCtrl.create({
-      title: "user liked",
-      message: displayForm
-    })
-    alert.present()
+    // popover
   }
   gotoPost() {
     this.navCtrl.push(PostPage)

@@ -11,7 +11,6 @@ import { UserProvider } from '../providers/user/user';
 import { FriendProvider } from '../providers/friend/friend';
 import { PostProvider } from '../providers/post/post';
 import { LibraryProvider } from '../providers/library/library';
-import { ImageProvider } from '../providers/image/image';
 import { GroupProvider } from '../providers/group/group';
 
 /**
@@ -32,7 +31,7 @@ export class MyApp {
   constructor(platform: Platform, statusBar: StatusBar, splashScreen: SplashScreen, public event: Events,
       public user: UserProvider, public toastCtrl: ToastController, public loadCtrl: LoadingController,
       public service:  ServiceProvider,public friend: FriendProvider, public post: PostProvider,
-      public library: LibraryProvider, public image: ImageProvider, public group: GroupProvider) {
+      public library: LibraryProvider, public group: GroupProvider) {
     platform.ready().then(() => {
       // Okay, so the platform is ready and our plugins are available.
       // Here you can do any higher level native things you might need.
@@ -50,7 +49,7 @@ export class MyApp {
         this.load.setContent(msg)
       })
       
-      this.event.subscribe('loading-finish', msg => {
+      this.event.subscribe('loading-end', msg => {
         this.dismissLoading()
         this.service.warning(msg)
       })
@@ -58,10 +57,11 @@ export class MyApp {
       // control data load
       
       this.event.subscribe('login-success', () => {
-        this.dismissLoading()      
+        this.dismissLoading()
         this.rootPage = MainPage
       })
 
+      /*
       this.event.subscribe("get-friend", () => {
         this.friend.getFriendList(this.user.userId)
         this.load.setContent("get-friend")
@@ -80,8 +80,9 @@ export class MyApp {
       this.event.subscribe("get-post-group-list", (groupList) => {
         this.post.getPostGroupList(this.user.userId, groupList)
         this.load.setContent("get-post-group-list")
-      })
+      })*/
 
+      /*
       this.event.subscribe("get-post-detail", (postList) => {
         this.post.getPostDetail(postList, this.friend.active.concat(this.friend.inactive.concat(this.friend.request)))
         this.load.setContent("get-post-detail")
@@ -101,6 +102,7 @@ export class MyApp {
         this.image.getImage(libraryList)
         this.load.setContent("get-image-list")
       })
+      */
 
       this.event.subscribe('logout', () => {
         this.user.userId = ""
@@ -109,10 +111,10 @@ export class MyApp {
         this.friend.inactive = []
         this.friend.request = []
         this.post.list = []
+        this.post.displayNew = []
         this.post.detail = {}
         this.library.list = []
-        this.image.list = []
-        this.image.detail = {}
+        this.service.storage.remove("userInfo")
         this.rootPage = HomePage
       })
 
