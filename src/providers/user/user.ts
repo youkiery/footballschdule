@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 
 import { ServiceProvider } from '../service/service'
+import firebase from 'firebase'
 
 /**
  * forgot password
@@ -63,7 +64,6 @@ export class UserProvider {
   }
 
   loginSuccess(userInfo, userId) {
-    console.log(userInfo)
     var currentTime = Date.now()
     userInfo.lastLog = currentTime
     this.userId = userId
@@ -133,8 +133,8 @@ export class UserProvider {
   
   signupFb() {
     this.service.event.publish('loading-start')
-    var provider = new this.service.fb.FacebookAuthProvider();
-    this.service.fb.auth().signInWithPopup(provider).then(result => {
+    var provider = new firebase.auth.FacebookAuthProvider();
+    firebase.auth().signInWithPopup(provider).then(result => {
       var currentTime = Date.now()
       var user = result.user;
       var userId = user.uid
@@ -313,11 +313,10 @@ export class UserProvider {
   }
 
   getUserData(userId) {
-    console.log("load-user")
-    this.ref.child(userId).then(userDataSnap => {
+    console.log(userId)
+    this.ref.child(userId).once("value").then(userDataSnap => {
       var userData = userDataSnap.val()
       if(this.service.valid(userData)) {
-        console.log("load-user-finish")
         this.setUser(userId, userData)
       }
     })

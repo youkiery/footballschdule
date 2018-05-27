@@ -2,7 +2,6 @@ import { Injectable } from '@angular/core';
 import { Events, Platform, ToastController, PopoverController } from 'ionic-angular'
 
 import { Storage } from '@ionic/storage'
-import { Facebook } from '@ionic-native/facebook'
 import firebase from 'firebase'
 
 /**
@@ -43,12 +42,6 @@ export class ServiceProvider {
     }
     return 0
   }
-  isChild(list, value) {
-    if(list.indexOf(value) < 0) {
-      return 0
-    }
-    return 1
-  }
   warning(text) {
     this.toastCtrl.create({
       message: text,
@@ -58,13 +51,22 @@ export class ServiceProvider {
   }
   
   objToList(obj) {
-    var res = {key: [], list: []}
+    var res = []
     for (const key in obj) {
       if (obj.hasOwnProperty(key)) {
         var element = obj[key]
-        res.list.push(obj[key])
         element.id = key
-        res.key.push(element)
+        res.push(element)
+      }
+    }
+    return res
+  }
+  objToKeyList(obj) {
+    var res = []
+    for (const key in obj) {
+      if (obj.hasOwnProperty(key)) {
+        var element = obj[key]
+        res.push(element)
       }
     }
     return res

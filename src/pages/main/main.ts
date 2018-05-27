@@ -10,6 +10,9 @@ import { UserProvider } from '../../providers/user/user';
 import { PostProvider } from '../../providers/post/post';
 import { FriendProvider } from '../../providers/friend/friend';
 import { GroupProvider } from '../../providers/group/group';
+import { SettingPage } from '../setting/setting';
+import { FriendPage } from '../friend/friend';
+import { ProfilePage } from '../profile/profile';
 
 /**
  * filter for data display
@@ -27,10 +30,9 @@ import { GroupProvider } from '../../providers/group/group';
 export class MainPage {
   page = 1
   postPerLoad = 6
+  like = true
   constructor(public user: UserProvider, public post: PostProvider, public group: GroupProvider,
     public navCtrl: NavController, public friend: FriendProvider, public service: ServiceProvider) {
-      console.log(user)
-      console.log(post)
 
       this.service.event.subscribe("get-friend-list", () => {
         this.service.event.publish("loading-update", "đang tải danh sách bạn bè")
@@ -68,13 +70,11 @@ export class MainPage {
               display: false
             })
             // quere load
-            console.log(user.data[this.post.list[index].userId])
-            if(user.data[this.post.list[index].userId] === undefined) {
+            if(this.user.data[this.post.list[index].userId] === undefined) {
               this.user.getUserData(this.post.list[index].userId)
             }
             this.post.getPostDetail(this.post.list[index].postId, index)
             if(index === end) {
-              console.log(this.post.displayNew)
               this.service.event.publish("loading-end")
             }
           })
@@ -106,13 +106,17 @@ export class MainPage {
         from ++
       }
       end --
-      this.page = 2
+      this.page ++
       indexToLoad.forEach(index => {
         this.post.displayNew.push({
           postId: this.post.list[index].postId,
           type: this.post.list[index].type,
           display: false
         })
+        
+        if(this.user.data[this.post.list[index].userId] === undefined) {
+          this.user.getUserData(this.post.list[index].userId)
+        }
         // quere load
         this.post.getPostDetail(this.post.list[index].postId, index)
         if(index === end) {
@@ -121,30 +125,56 @@ export class MainPage {
       })
     }
     else {
-      this.service.event.publish("loading-end")
+      this.service.event.publish("loading-end", "không có tin để hiển thị")
     }
   }
 
-  
   viewLiked(postId) {
-    var displayForm = ''
+    var nameList = []
     var like = this.post.detail[postId]
-    if(like === undefined) {
+    var missing = []
+    if(like.like === undefined) {
       like = []
     }
     else {
       like = like.like
     }
-    like.forEach((likedUser, index) => {
-      displayForm += index + ', ' + this.user.data[likedUser].name + '<br/>'
+    
+    like.forEach((userId, index) => {
+      if(!this.service.valid(userId)) {
+        missing.push(userId)
+      }
     });
-    // popover
+    var count = missing.length
+    missing.forEach(userId => {
+      this.user.ref.child(userId).once("value").then(userDataSnap => {
+        var userData = userDataSnap.val()
+        if(this.service.valid(userData)) {
+          this.user.setUser(userId, userData)
+          nameList.push(this.user.data[userId].name)
+        }
+        count --
+        if(!count) {
+          this.service.warning(nameList.join(", "))
+        }
+      })  
+    })
+  // popover
+  }
+  gotoSetting() {
+    this.navCtrl.push(SettingPage)
+  }
+  gotoFriend() {
+    this.navCtrl.push(FriendPage)
   }
   gotoPost() {
     this.navCtrl.push(PostPage)
   }
   gotoLibrary() {
     this.navCtrl.push(LibraryPage)
+  }
+  gotoProfile(userId) {
+    this.navCtrl.push(ProfilePage, {userId: userId})
   }
   gotoDetail(detailId) {
     this.service.detailId = detailId

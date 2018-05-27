@@ -1,72 +1,71 @@
-<ion-header>
-  <ion-navbar>
-      <ion-icon name="images" (click)="gotoLibrary()"></ion-icon>
-      <ion-icon name="log-out" (click)="user.logout()"></ion-icon>
-  </ion-navbar>
-</ion-header>
-
 <ion-content>
-  <ion-item *ngIf="service.profileId === user.userId">
-    <ion-avatar item-start>
-      <img class="md-icon" src="{{user.data[user.userId].avatar}}">
-    </ion-avatar>
-    <p>
+  <div class="header">
+    <ion-icon name="log-out" (click)="user.logout()"></ion-icon>
+  </div>
+  <div class="container">
+    <ion-item *ngIf="userId === user.userId">
+      <ion-avatar item-start>
+        <img class="md-icon" src="{{user.data[user.userId].avatar}}">
+      </ion-avatar>
       <b>
         {{user.data[user.userId].name}}
       </b>
-    </p>
-    <textarea (click)="gotoPost()"></textarea>
-  </ion-item>
-  <ion-card *ngFor="let new of post.displayNew; let i of index">
-    <ion-card-header *ngIf="user.data[post.detail[new].userId] !== undefine">
-      <ion-item>
-        <ion-avatar item-start>
-          <img class="md-icon" src="{{user.data[post.detail[new].userId].avatar}}">
-        </ion-avatar>
-        <p>
-          <b>
-            {{user.data[post.detail[new].userId].name}}
-          </b>
-        </p>
-        {{post.detail[new].time | date: "yyyy/MM/dd HH:mm"}}
-        <div class="right">
-          <ion-icon name="menu" (click)="gotoDetail(new)"></ion-icon>
-        </div>
-      </ion-item>
-      <span *ngIf="post.detail[new].image !== undefine">
-        {{image.detail[post.detail[new].image[0]]}}
+      <textarea (click)="gotoPost()"></textarea>
+    </ion-item>
+    <ion-card *ngFor="let displayData of post.displayNew; let i of index">
+      <span *ngIf="displayData.display === true">
+        <ion-card-header *ngIf="user.data[post.detail[displayData.postId].userId] !== undefine">
+          <ion-item>
+            <ion-avatar item-start>
+              <img class="md-icon" src="{{user.data[post.detail[displayData.postId].userId].avatar}}">
+            </ion-avatar>
+            <p>
+              <b>
+                {{user.data[post.detail[displayData.postId].userId].name}}
+              </b>
+            </p>
+            {{post.detail[displayData.postId].time | date: "yyyy/MM/dd HH:mm"}}
+            <ion-icon class="right" name="menu" (click)="thisPostOption($event, displayData.postId)" *ngIf="user.userId === post.detail[displayData.postId].userId"></ion-icon>
+          </ion-item>
+          <span *ngIf="post.detail[displayData.postId].image.length > 0">
+            {{image.detail[post.detail[displayData.postId].image[0]]}}
+          </span>
+        </ion-card-header>
+        <ion-list>
+          <p class="msg" (click)="gotoDetail(displayData.postId)">
+            {{post.detail[displayData.postId].msg}}
+          </p>
+          <ion-item>
+            <span *ngIf="post.detail[displayData.postId].like !== undefine">
+              <button ion-button (click)="viewLiked(displayData.postId)">
+                {{post.detail[displayData.postId].like.length}}
+              </button>
+              <button ion-button color="primary" *ngIf='post.detail[displayData.postId].like.indexOf(user.userId) === -1' (click)="post.like(post.detail[displayData.postId].userId, displayData.postId, post.detail[displayData.postId].like)">
+                like
+              </button>
+              <button ion-button color="secondary" *ngIf='post.detail[displayData.postId].like.indexOf(user.userId) !== -1' (click)="post.unlike(post.detail[displayData.postId].userId, displayData.postId, post.detail[displayData.postId].like)">
+                like
+              </button>
+            </span>
+            <span *ngIf="post.detail[displayData.postId].like === undefine">
+              <button ion-button>
+                0
+              </button>
+              <button ion-button color="primary" (click)="post.like(post.detail[displayData.postId].userId, displayData.postId, post.detail[displayData.postId].like)">
+                like
+              </button>
+            </span>
+            <span>
+              <button ion-button *ngIf="post.detail[displayData.postId].userId !== user.userId && friend.active.indexOf(post.detail[displayData.postId].userId) === -1 && friend.inactive.indexOf(post.detail[displayData.postId].userId) === -1" (click)="user.addFriend(post.detail[displayData.postId].userId)">
+                +
+              </button>
+            </span>
+          </ion-item>
+        </ion-list>
       </span>
-    </ion-card-header>
-    <ion-list>
-      <p class="msg">
-        {{post.detail[new].msg}}
-      </p>
-      <ion-item>
-        <span *ngIf="post.detail[new].like !== undefine">
-          <button ion-button (click)="viewLiked(new)">
-            {{post.detail[new].like.length}}
-          </button>
-          <button ion-button color="primary" *ngIf='post.detail[new].like.indexOf(user.userId) === -1' (click)="post.like(post.detail[new].userId, new, post.detail[new].like)">
-            like
-          </button>
-          <button ion-button color="secondary" *ngIf='post.detail[new].like.indexOf(user.userId) !== -1' (click)="post.unlike(post.detail[new].userId, new, post.detail[new].like)">
-            like
-          </button>
-        </span>
-        <span *ngIf="post.detail[new].like === undefine">
-          <button ion-button>
-            0
-          </button>
-          <button ion-button color="primary" (click)="post.like(post.detail[new].userId, new, post.detail[new].like)">
-            like
-          </button>
-        </span>
-        <span>
-          <button ion-button *ngIf="post.detail[new].userId !== user.userId && friend.active.indexOf(post.detail[new].userId) === -1 && friend.inactive.indexOf(post.detail[new].userId) === -1" (click)="user.addFriend(post.detail[new].userId)">
-            +
-          </button>
-        </span>
-      </ion-item>
-    </ion-list>
-  </ion-card>
+    </ion-card>
+    <button ion-button (clic)="loadMore()" *ngIf="(page - 1) * postPerLoad < post.list.length">
+      Xem thêm
+    </button>
+  </div>
 </ion-content>

@@ -40,7 +40,7 @@ export class PostPage {
         if(this.postData.image !== undefined) {
           this.service.selectImages.concat(this.postData.image)
         }
-        this.post.changePostContent(this.user.userId, this.service.postId, this.msg, this.service.selectImages)
+        this.post.changePostContent(this.service.postId, this.msg, this.service.selectImages)
       }
       else {
         this.post.pushAPost(this.user.userId, this.msg, this.service.selectImages)
@@ -51,5 +51,8 @@ export class PostPage {
   selectImageToPost() {
     this.service.multi = true
     this.navCtrl.push(LibraryPage)
+  }
+  goback() {
+    this.navCtrl.pop()
   }
 }

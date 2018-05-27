@@ -17,7 +17,7 @@ export class HomePage {
   position = 0
   avatar = '../assets/imgs/logo.png'
   constructor(public navCtrl: NavController, public user: UserProvider, public service: ServiceProvider) {
-    console.log(user)
+
   }
   login() {
     var e = ""

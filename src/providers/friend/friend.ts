@@ -10,120 +10,103 @@ export class FriendProvider {
   active = []
   inactive = []
   request = []
+  data = {}
   ref: any
   constructor(private service: ServiceProvider) {
     this.ref = this.service.db.ref("friend")
   }
   initiaze(userId) {
+    console.log(userId)
     this.ref.child(userId).once("value").then(friendDataListSnap => {
       var friendDataList = friendDataListSnap.val()
       if(this.service.valid(friendDataList)) {
-        var friendList = this.service.objToList(friendDataList).list
+        var friendList = this.service.objToList(friendDataList)
         friendList.forEach(friendData => {
           switch(friendData.type) {
             case 0:
-              this.active.push(friendData.userId)
+              this.active.push(friendData.ckey)
             break
             case 1:
-              this.inactive.push(friendData.userId)
+              this.inactive.push(friendData.ckey)
             break
             case 2:
-              this.request.push(friendData.userId)
+              this.request.push(friendData.ckey)
             break
           }
+          this.data[friendData.ckey] = friendData
         })
       }
-      console.log(this.active, this.inactive, this.request)
+      console.log(this.data)
       this.service.event.publish("get-group-list",)
-    })
-  }
-  
-  acceptFriend(userId, friendId, friendIndex) {
-    this.service.event.publish('loading')
-    var updateData = {}
-    this.ref.child(friendId).orderByChild("userId").equalTo(friendId).once("value").then(friendDataSnap => {
-      var friendDataIndex = Object.keys(friendDataSnap.val())[0]
-      updateData[userId + "/" + friendIndex + "/type"] = 0 
-      updateData[friendId + "/" + friendDataIndex + "/type"] = 0 
-      this.ref.update(updateData).then(() => {
-        this.request = this.request.filter(friend => {
-          return friend !== friendId
-        })
-        this.active.push(friendId)
-        this.service.event.publish('fail')
-      })
-    })
-  }
-
-  deleteFriendRequest(userId, friendId) {
-    this.service.event.publish('loading')
-    this.ref.child(friendId).once("value").then(friendDataSnap => {
-      var friendData = friendDataSnap.val()
-      friendData = friendData.filter(friendDataList => {
-        return friendDataList.userId !== userId
-      })
-      var list = this.request.filter(friendDataList => {
-        return friendDataList.userId !== friendId
-      })
-
-      this.ref.child(userId).set(list).then(() => {
-        this.ref.child(friendId).set(friendData).then(() => {
-          this.request = list
-          this.service.event.publish('finish-load')
-        })
-      })
     })
   }
 
   addFriend(userId, friendId) {
-    this.service.event.publish('loading')
-    var currentTime = Date.now()
+    this.service.event.publish('loading-start')
+    var friendInactiveKey = this.ref.push().key
+    var friendRequestKey = this.ref.push().key
     
     var updateData = {}
-    var inactive = this.inactive
-    inactive.push({
+    var inactiveData = {
+      ckey: friendRequestKey,
       type: 1,
-      time: currentTime,
       userId: friendId
-    })
-    this.ref.child(friendId).once("value").then(friendDataSnap => {
-      var friendData = friendDataSnap.val()
-      friendData.push({
-        type: 2,
-        time: currentTime,
-        userId: userId
-      })
-      updateData[userId] = inactive
-      updateData[friendId] = friendData
-
-      this.ref.update(updateData).then(() => {
-        this.inactive = inactive
-        this.service.event.publish('finish-load')
-      })
+    }
+    var requestData = {
+      ckey: friendInactiveKey,
+      type: 2,
+      userId: userId
+    }
+    updateData[userId + "/" + friendInactiveKey] = inactiveData
+    updateData[userId + "/" + friendRequestKey] = requestData
+    this.ref.update(updateData).then(() => {
+      this.inactive.push(friendId)
+      this.service.event.publish('loading-end')
     })
   }
+  
+  acceptFriend(userId, friendId) {
+    this.service.event.publish('loading-start')
+    var updateData = {}
+
+    updateData[userId + "/" + this.data[friendId].id + "/type"] = 0 
+    updateData[friendId + "/" + this.data[friendId].ckey + "/type"] = 0
+    this.ref.update(updateData).then(() => {
+      this.request = this.request.filter(friend => {
+        return friend !== friendId
+      })
+      this.active.push(friendId)
+      this.service.event.publish('loading-end')  
+    })
+  }
+
+  deleteFriendRequest(userId, friendId) {
+    this.service.event.publish('loading-start')
+    var updateData = {}
+
+    updateData[userId + "/" + this.data[friendId].id] = null
+    updateData[friendId + "/" + this.data[friendId].ckey] = null
+    this.ref.update(updateData).then(() => {
+      this.request = this.request.filter(friend => {
+        return friend !== friendId
+      })
+      this.service.event.publish('loading-end')  
+    })
+  }
+
+
   // check if error
   unfriend(userId, friendId) {
-    this.service.event.publish('loading')
-    var currentTime = Date.now()
-    
+    this.service.event.publish('loading-start')
     var updateData = {}
-    var active = this.active
-    active = active.filter(friendDataList => {
-      return friendDataList.userId !== friendId
-    })
-    this.ref.child(friendId).once("value").then(friendDataSnap => {
-      var friendData = friendDataSnap.val()
-      friendData = friendData.filter(friendDataList => {
-        return friendDataList.userId !== friendId
-      })
-      updateData[userId] = active
-      updateData[friendId] = friendData
 
-      this.ref.set(updateData).then(() => {
-        this.active = active
-        this.service.event.publish('finish-load')
+    updateData[userId + "/" + this.data[friendId].id] = null
+    updateData[friendId + "/" + this.data[friendId].ckey] = null
+    this.ref.update(updateData).then(() => {
+      this.request = this.request.filter(friend => {
+        return friend !== friendId
       })
+      this.service.event.publish('loading-end')  
     })
   }
 }

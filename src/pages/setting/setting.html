@@ -1,85 +1,31 @@
 <ion-content>
   <div class="header">
-    <ion-icon name="arrow-round-back" click="goback()"></ion-icon>
+    <ion-icon name="arrow-round-back" (click)="goback()"></ion-icon>
   </div>
-  <!--
-  <ion-list>
-    <ion-item color="primary">
-      thư viện
-    </ion-item>
-    <ion-item (click)="gotoLibrary()">
-      đổi avatar
-    </ion-item>
-    <ion-item (click)="gotoLibrary2()">
-      Thư viện
-    </ion-item>
-  </ion-list>
-  -->
-  <ion-list *ngIf="user.username === ''">
-    <ion-item color="primary">
-      cập nhật thông tin người dùng
-    </ion-item>
-    <form>
-      <ion-item>
-        <ion-label col-3>
-          người dùng
-        </ion-label>
-        <ion-input [(ngModel)]="username" type="text" name="username"></ion-input>
+  <div class="container">
+    <ion-list *ngIf="user.username !== ''">
+      <ion-item color="primary">
+        cập nhật thông tin người dùng
       </ion-item>
-      <ion-item>
-        <ion-label col-3>
-          mật khẩu
-        </ion-label>
-        <ion-input [(ngModel)]="password" type="password" name="password"></ion-input>
-      </ion-item>
-      <ion-item>
-        <ion-label col-3>
-          xác nhận mật khẩu
-        </ion-label>
-        <ion-input [(ngModel)]="vpassword" type="password" name="vpassword"></ion-input>
-      </ion-item>
-      <button ion-button (click)="confirmAccount">
-        cập nhật
-      </button>
-    </form>
-  </ion-list>
-  <!--
-  <ion-list *ngIf="user.username !== ''">
-    <ion-item color="primary">
-      cập nhật thông tin người dùng
-    </ion-item>
-    <form>
-      <ion-item>
-        <ion-label col-3>
-          người dùng
-        </ion-label>
-        <ion-input [(ngModel)]="username" type="text" name="username"> {{user.data.username}} </ion-input>
-      </ion-item>
-      <ion-item>
-        <ion-label col-3>
-          tên hiển thị
-        </ion-label>
-        <ion-input [(ngModel)]="name" type="text" name="name"> {{user.data.name}} </ion-input>
-      </ion-item>
-      <ion-item>
-        <ion-label col-3>
-          mật khẩu
-        </ion-label>
-        <ion-input [(ngModel)]="password" type="password" name="password"></ion-input>
-      </ion-item>
-      <ion-item>
-        <ion-label col-3>
-          xác nhận mật khẩu
-        </ion-label>
-        <ion-input [(ngModel)]="vpassword" type="password" name="vpassword"></ion-input>
-      </ion-item>
-      <button ion-button (click)="changeUserInfo()">
-        cập nhật
-      </button>
-      <button ion-button (click)="resetForm()">
-        đặt lại trường
-      </button>
-    </form>
-  </ion-list>
-  -->
+      <form>
+        <ion-item>
+          <ion-input [(ngModel)]="username" type="text" name="username" placeholder="tên tài khoản"></ion-input>
+        </ion-item>
+        <ion-item>
+          <ion-input [(ngModel)]="name" type="text" name="name" placeholder="tên hiển thị"></ion-input>
+        </ion-item>
+        <ion-item>
+          <ion-input [(ngModel)]="password" type="password" name="password" placeholder="mật khẩu"></ion-input>
+        </ion-item>
+        <ion-item>
+          <ion-input [(ngModel)]="vpassword" type="password" name="vpassword" placeholder="xác nhận mật khẩu"></ion-input>
+        </ion-item>
+        <ion-item>
+          <button ion-button (click)="changeUserInfo()">
+            cập nhật
+          </button>
+        </ion-item>
+      </form>
+    </ion-list>
+  </div>
 </ion-content>

@@ -20,8 +20,8 @@ export class SettingPage {
   vpassword = ''
   name = ''
   constructor(public user: UserProvider, public service: ServiceProvider, public navCtrl: NavController) {
-    
-      }
+    this.name = this.user.data[this.user.userId].name
+  }
 
   ionViewDidLoad() {
     console.log('ionViewDidLoad SettingPage');
@@ -50,19 +50,19 @@ export class SettingPage {
   changeUserInfo() {
     var e
     if(this.username.length < 4 && this.username !== '') {
-      e = "tên người dùng quá ngắn"
+      e = "tên người dùng tối thiểu 4 kí tự"
     }
     else if(this.password.length < 4 && this.password !== '') {
-      e = "mật khẩu quá ngắn"      
+      e = "mật khẩu tối thiểu 4 kí tự"      
     }
     else if(this.vpassword !== this.password && this.password !== '') {
       e = "xác nhận mật khẩu không khớp"
     }
-    else if(this.name.length < 4 && this.username !== '') {
-      e = "tên quá ngắn"
+    else if(this.name.length < 4 && this.name !== '') {
+      e = "tên hiển thị tối thiểu 4 kí tự"
     }
     else if((/[^a-z|A-Z|" " ]/g).test(this.name) && this.name !== '') {
-      e = "tên có ký tự đặc biệt"
+      e = "tên hiển thị chỉ chứa chữ cái vài dấu cách"
     }
 
     if(e !== undefined) {
@@ -74,15 +74,9 @@ export class SettingPage {
     }
     this.user.changeUserInfo(this.username, this.password, this.name)
   }
-  
-  resetForm() {
-      this.username = ""
-      this.name = this.user.data[this.user.userId].name
-      this.password = ''
-      this.vpassword = ''
-  }
 
   goback() {
+    console.log("xxx")
     this.navCtrl.pop()
   }
 }

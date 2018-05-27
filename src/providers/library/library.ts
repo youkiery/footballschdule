@@ -21,17 +21,14 @@ export class LibraryProvider {
       var libraryDatalist = libraryDataListSnap.val()
       
       if(this.service.valid(libraryDatalist)) {
-        var listData = this.service.objToList(libraryDatalist)
-        this.list = listData.list
+        this.list = this.service.objToList(libraryDatalist)
         
         this.ref.child(userId + "/detail/all").limitToFirst(6).once("value").then(libraryDataListSnap => {
           var libraryDatalist = libraryDataListSnap.val()
           if(this.service.valid(libraryDatalist)) {
             
             console.log(libraryDatalist)
-            var listData = this.service.objToList(libraryDatalist)
-            console.log(listData)
-            this.displayImage = listData.key
+            this.displayImage = this.service.objToList(libraryDatalist)
             this.service.event.publish("loading-end")
           }
         })
@@ -45,13 +42,15 @@ export class LibraryProvider {
     var deleteList = {}
     var libraryId = this.list[libraryIndex].libraryId
     imageList.forEach(imageData => {
-      deleteList[userId + "/detail/" + libraryId + "/" + imageData.id] = null
-      deleteList[userId + "/detail/all/" + imageData.id] = null
+      deleteList[userId + "/detail/" + libraryId + "/" + imageData] = null
+      deleteList[userId + "/detail/all/" + imageData] = null
     })
+    
+    console.log(deleteList)
     this.ref.update(deleteList).then(() => {
       imageList.forEach(imageData => {
         this.displayLibraryImage = this.displayLibraryImage.filter(imageLibraryData => {
-          return imageLibraryData.id !== imageData.id
+          return imageLibraryData.id !== imageData
         })
       })
       console.log(this.displayLibraryImage)
@@ -71,10 +70,10 @@ export class LibraryProvider {
     updateData[userId + "/list/" + libraryId] = {
       libraryId: libraryId,
       last: imageData,
-      name: "không tên",
+      name: name,
       type: 0,
       time: currentTime,
-      describe: ""
+      describe: describe
     }
     updateData[userId + "/detail/" + libraryId] = {
       key: imageData
@@ -82,8 +81,8 @@ export class LibraryProvider {
     updateData[userId + "/detail/all"] = {
       key: imageData
     }
-    this.ref.child(userId).update(updateData).then(() => {
-      this.list.push(updateData[userId + "/detail/" + libraryId])
+    this.ref.update(updateData).then(() => {
+      this.list.push(updateData[userId + "/list/" + libraryId])
       console.log(this.list)
     })
   }

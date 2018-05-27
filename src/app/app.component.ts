@@ -105,85 +105,20 @@ export class MyApp {
       */
 
       this.event.subscribe('logout', () => {
-        this.user.userId = ""
-        this.user.data = {}
+        this.post.displayNew = []
+        this.library.displayImage = []
+        this.library.displayLibraryImage = []
+        this.post.list = []
+        this.library.list = []
         this.friend.active = []
         this.friend.inactive = []
         this.friend.request = []
-        this.post.list = []
-        this.post.displayNew = []
+        this.user.userId = ""
+        this.user.data = {}
         this.post.detail = {}
-        this.library.list = []
         this.service.storage.remove("userInfo")
         this.rootPage = HomePage
       })
-
-      // control realtime
-      /*
-      this.ref.on("child_added").then(logSnap => {
-        var log = logSnap.val()
-        console.log(log)
-        console.log(this.friend.active, this.friend.inactive, this.friend.request)
-        if(this.friend.active.indexOf(log.userId) >= 0) {
-          switch(log.child) {
-            case "user":
-              switch(log.type) {
-                case "change":
-                  // this.user[log.userId] = firebase.child(userId)
-                break
-              }
-            break
-            case "friend":
-              switch(log.type) {
-                case "delete":
-                  // this.friend.active = filter
-                break
-              }
-            break
-            case "post":
-              switch(log.type) {
-                case "add":
-                  // this.post.list.push
-                  // this.post.detail[log.postId]
-                break
-                case "change":
-                  // this.user[log.postId] = firebase.child(postId)
-                break
-                case "delete":
-                  // this.post.list = filter
-                  // check if post.detail cause error
-                break
-              }
-            break
-          }
-        }
-        switch(log.child) {
-          case "user":
-            switch(log.type) {
-              case "change":
-                // this.user[log.userId] = firebase.child(userId)
-              break
-            }
-          break
-          case "friend":
-            switch(log.type) {
-              case "delete":
-                // this.user[log.userId] = firebase.child(userId)
-              break
-            }
-          break
-          case "post":
-          
-          break
-          case "library":
-          
-          break
-          case "image":
-          
-          break
-        }
-      })
-        */
     });
   }
   dismissLoading() {

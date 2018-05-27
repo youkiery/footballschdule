@@ -12,6 +12,18 @@ import { LibraryProvider } from '../../providers/library/library';
  * png, jpg
  */
 
+@Component({
+  template: `<ion-icon name="arrow-round-back" (click)="goback()"></ion-icon><img width="100%" height="100%" src="{{img}}"> `
+})
+export class viewImage {
+  img = ""
+  constructor(private navCtrl: NavController, private navParam: NavParams) {
+    this.img = this.navParam.get("imageUrl")
+  }
+  goback() {
+    this.navCtrl.pop()
+  }
+}
 @IonicPage()
 @Component({
   selector: 'page-library',
@@ -35,8 +47,7 @@ export class LibraryPage {
           this.controller = 2
         }
         this.library.getLibraryList(this.user.userId)
-        console.log(this.library)
-      }
+  }
 
   selectOn() {
     this.isSelect = true
@@ -63,16 +74,15 @@ export class LibraryPage {
     
     this.selectedLibrary.time = new Date(this.selectedLibrary.time)
     this.controller = 3
-    this.library.ref.child("detail/" + libraryId).once("value").then((snap) => {
+    
+    this.library.ref.child(this.user.userId + "/detail/" + libraryId).once("value").then((snap) => {
       var data = snap.val()
+      
       if(this.service.valid(data)) {
-        var listData = this.service.objToList(data)
-        var list = listData.list
-        this.library.displayLibraryImage = list
+        this.library.displayLibraryImage = this.service.objToList(data)
       }
       this.service.event.publish("loading-end")
     })
-    console.log(this.selectedLibrary)
   }
   returnBack() {
     this.navCtrl.pop()
@@ -87,11 +97,11 @@ export class LibraryPage {
       inputs: [
         {
           name: "name",
-          label: "tên thư viện"
+          placeholder: "tên thư viện"
         },
         {
           name: "describe",
-          label: "giới thiệu"          
+          placeholder: "giới thiệu"          
         }
       ],
       buttons: [
@@ -113,12 +123,12 @@ export class LibraryPage {
     let alert = this.alertCtrl.create({
       inputs: [
         {
-          label: "tên thư viện",
+          placeholder: "tên thư viện",
           name: "name",
           value: this.library[this.service.libraryIndex].name
         },
         {
-          label: "giới thiệu",
+          placeholder: "giới thiệu",
           name: "describe",
           value: this.library[this.service.libraryIndex].describe   
         }
@@ -189,6 +199,67 @@ export class LibraryPage {
     })
     alert.present()
   }
+  getFile() {
+    this.files = (<HTMLInputElement>document.getElementById('file')).files;
+    /*
+		var reader = new FileReader();
+	 	reader.onload = function(e) {
+			let target: any = e.target;
+			let content: string = target.result;
+			(<HTMLInputElement>document.getElementById('blah')).src = content;
+	  }
+    reader.readAsDataURL(this.files[0]);
+    */
+  }
+  tickImage(iamgeId) {
+    if(this.isSelect) {
+      this.selectImages.push(iamgeId)
+    }
+    else {
+      if(this.service.imageToPost) {
+        if(this.service.multi) {
+          this.service.selectImages.push(iamgeId)
+        }
+        else {
+          this.service.selectImages[0] = iamgeId
+        }
+      }
+    }
+  }
+  untickImage(iamgeId) {
+    if(this.isSelect) {
+      this.selectImages = this.selectImages.filter(imageDataList => {
+        return imageDataList !== iamgeId
+      })
+    }
+    else {
+      if(this.service.imageToPost) {
+        if(this.service.multi) {
+          this.service.selectImages = this.service.selectImages.filter(imageDataList => {
+            return imageDataList !== iamgeId
+          })
+        }
+      }
+    }
+  }
+  viewImage(imageUrl) {
+    this.navCtrl.push(viewImage, {imageUrl: imageUrl})
+  }
+  changeAvatar() {
+    if(this.service.valid(this.service.selectImages[0])) {
+      this.user.changeAvatar(this.service.selectImages[0])
+      this.navCtrl.pop()
+    }
+  }
+  selectImageToPost() {
+    if(this.service.valid(this.service.selectImages[0])) {
+      this.navCtrl.pop()
+    }
+    else {
+      this.service.event.publish("loading-end", "chưa chọn ảnh nào")
+    }
+  }
+  
   uploadImage() {
     if(this.files != undefined) {
       var error = 0
@@ -227,7 +298,6 @@ export class LibraryPage {
           
           uploadTask.on('state_changed', (snapshot) => {
             var progress = (uploadTask.snapshot.bytesTransferred / uploadTask.snapshot.totalBytes) * 100;
-            console.log('Upload is ' + progress + '% done');
             if(progress === 100){
               storageRef.getDownloadURL().then(urlsnap => {
                 var url = urlsnap
@@ -239,14 +309,13 @@ export class LibraryPage {
                 else {
                   var libraryId = this.library.list[0].libraryId
                 }
-                console.log(libraryId)
                 var currTime = Date.now()
                 var imageId = this.library.ref.push().key
                 var imageData = {
                   url: url,
                   time: currTime
                 }
-
+  
                 var updateData = {}
                 updateData["library/" + this.user.userId + "/detail/" + libraryId + "/" + imageId] = imageData
                 updateData["library/" + this.user.userId + "/detail/all/" + "/" + imageId] = imageData
@@ -259,7 +328,7 @@ export class LibraryPage {
                   else {
                     this.library.displayImage.push(imageData)
                   }
-
+  
                   if(end === fileIndex) {
                     this.files = undefined
                     this.service.event.publish("loading-end")
@@ -274,74 +343,5 @@ export class LibraryPage {
     else {
       this.service.event.publish("loading-end", "chưa chọn ảnh nào")
     }
-  }
-  getFile() {
-    this.files = (<HTMLInputElement>document.getElementById('file')).files;
-    /*
-		var reader = new FileReader();
-	 	reader.onload = function(e) {
-			let target: any = e.target;
-			let content: string = target.result;
-			(<HTMLInputElement>document.getElementById('blah')).src = content;
-	  }
-    reader.readAsDataURL(this.files[0]);
-    */
-  }
-  tickImage(imageData) {
-    if(this.isSelect) {
-      this.selectImages.push(imageData)
-    }
-    else {
-      if(this.service.imageToPost) {
-        if(this.service.multi) {
-          this.service.selectImages.push(imageData)
-        }
-        else {
-          this.service.selectImages[0] = imageData
-        }
-      }
-    }
-  }
-  untickImage(imageData) {
-    if(this.isSelect) {
-      this.selectImages = this.selectImages.filter(imageDataList => {
-        return imageDataList.id !== imageData.id
-      })
-    }
-    else {
-      if(this.service.imageToPost) {
-        if(this.service.multi) {
-          this.service.selectImages = this.service.selectImages.filter(imageDataList => {
-            return imageDataList.id !== imageData.id
-          })
-        }
-      }
-    }
-  }
-  viewImage(imageUrl) {
-    this.navCtrl.push(viewImage, {imageUrl: imageUrl})
-  }
-  changeAvatar() {
-    if(this.service.valid(this.service.selectImages[0])) {
-      this.user.changeAvatar(this.service.selectImages[0])
-      this.navCtrl.pop()
-    }
-  }
-  selectImageToPost() {
-    if(this.service.valid(this.service.selectImages[0])) {
-      this.navCtrl.pop()
-    }
-    else {
-      this.service.event.publish("loading-end", "chưa chọn ảnh nào")
-    }
-  }
-}
-@Component({
-  template: `<img width="100%" height="100%" src="{{img}}"> `
-})
-export class viewImage {
-  img = ""
-  constructor(private navParam: NavParams) {
-    this.img = this.navParam.get("imageUrl")
   }
 }

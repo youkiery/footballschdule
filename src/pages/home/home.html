@@ -1,11 +1,4 @@
-<ion-header>
-  <ion-navbar>
-    <ion-title>
-      đăng nhập
-    </ion-title>
-  </ion-navbar>
-</ion-header>
-<ion-content padding>
+<ion-content>
   <form class="center">
     <ion-segment [(ngModel)]="form" name="form">
       <ion-segment-button value="login">
@@ -24,6 +17,7 @@
           <ion-input [(ngModel)]="password" type="password" name="password" placeholder="mât khẩu"></ion-input>
         </ion-item>
         <button ion-button color="primary" (click)="login()">đăng nhập</button>
+        <button ion-button color="secondary" (click)="user.signupFb()">đăng nhập bằng Facebook</button>
       </div>
       <div *ngSwitchCase="'signup'">
         <ion-item>
@@ -45,7 +39,6 @@
           </ion-select>
         </ion-item>
         <button ion-button color="primary" (click)="signup()">đăng ký</button>
-        <button ion-button color="secondary" (click)="user.signupFb()">đăng ký với tài khoản Facebook</button>
       </div>
     </div>
   </form>

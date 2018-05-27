@@ -12,7 +12,7 @@ import { LibraryPage, viewImage } from '../pages/library/library';
 import { SettingPage } from '../pages/setting/setting'
 import { FriendPage } from '../pages/friend/friend'
 import { ProfilePage } from '../pages/profile/profile'
-import { CommentPage, DetailOption } from '../pages/comment/comment'
+import { CommentPage, DetailOption, CommentOption } from '../pages/comment/comment'
 
 import  firebase from 'firebase'
 import { Facebook } from '@ionic-native/facebook'
@@ -24,6 +24,7 @@ import { LibraryProvider } from '../providers/library/library';
 import { FriendProvider } from '../providers/friend/friend';
 import { ServiceProvider } from '../providers/service/service';
 import { GroupProvider } from '../providers/group/group';
+import { CommentProvider } from '../providers/comment/comment';
 
 var config = {
   apiKey: "AIzaSyCpCVGzJBpxRZumXRMzmm92ijkZUHM3Zds",
@@ -48,7 +49,8 @@ firebase.initializeApp(config);
     FriendPage,
     ProfilePage,
     CommentPage,
-    DetailOption
+    DetailOption,
+    CommentOption
   ],
   imports: [
     BrowserModule,
@@ -68,7 +70,8 @@ firebase.initializeApp(config);
     FriendPage,
     ProfilePage,
     CommentPage,
-    DetailOption
+    DetailOption,
+    CommentOption
   ],
   providers: [
     StatusBar,
@@ -80,7 +83,8 @@ firebase.initializeApp(config);
     LibraryProvider,
     FriendProvider,
     ServiceProvider,
-    GroupProvider
+    GroupProvider,
+    CommentProvider
   ]
 })
 export class AppModule {}

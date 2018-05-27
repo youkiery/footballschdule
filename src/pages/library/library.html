@@ -20,7 +20,7 @@
       <ion-icon name="add-circle" (click)="newLibrary()"></ion-icon>
     </div>
 
-    <div *ngIf="controller === 3">      
+    <div *ngIf="controller === 3">
       <ion-icon name="arrow-round-back" (click)="goback()"></ion-icon>
 
       <label for="file">
@@ -38,7 +38,7 @@
     </div>    
   </div>
 
-  <div class="content">
+  <div class="container">
     <div *ngIf="controller === 1">
       <span class="inline" *ngFor="let imageData of library.displayImage">
         <img class="md-icon" src="{{imageData.url}}" *ngIf="service.selecteImages.indexOf(imageData.url) < 0" (click)="tickImage(imageData)">
@@ -46,32 +46,47 @@
       </span>
     </div>
 
-    <div *ngIf="controller === 2">
-      <div *ngFor="let libraryList of library.list; let libraryIndex = index">
+    <ion-list *ngIf="controller === 2">
+      <ion-item color="primary">
+        Danh sách thư viện
+      </ion-item>
+      <ion-item *ngFor="let libraryList of library.list; let libraryIndex = index">
         <img class="md-icon" src="{{libraryList.last.url}}" (click)="gotoLibrary(libraryList.libraryId, libraryIndex)">
-        <p>{{libraryList.name}}</p>
+        <span class="desc">
+          {{libraryList.name}}
+        </span>
+      </ion-item>
+      <ion-item color="primary">
+        Tất cả ảnh
+      </ion-item>
+      <div *ngFor="let imageData of library.displayImage">
+        <img class="md-icon border inline" src="{{imageData.url}}" (click)="viewImage(imageData.url)">
       </div>
-      <span class="inline" *ngFor="let imageData of library.displayImage">
-        <img class="md-icon" src="{{imageData.url}}" (click)="viewImage(imageData.url)">
-      </span>
-    </div>
+    </ion-list>
 
-    <div *ngIf="controller === 3">
-      <p>
-        {{selectedLibrary.name}}
-      </p>
-      <p>
-        {{selectedLibrary.describe}}
-      </p>
-      <p>
-        {{selectedLibrary.time | date: "yyyy/MM/dd HH:mm"}}   
-      </p>
-      <span class="inline" *ngFor="let imageData of displayLibraryImage; let imageIndex = index">
-        <img class="md-icon" src="{{imageData.url}}" *ngIf="selectedImages.indexOf(imageData.url) < 0" (click)="tickImage(imageData)">
-        <img class="md-icon selected" src="{{imageData.url}}" *ngIf="selectedImages.indexOf(imageData.url) >= 0" (click)="untickImage(imageData)">
-        <img class="md-icon selected" src="{{imageData.url}}" *ngIf="isSelect === false" (click)="viewImage(imageData.url)">
+    <ion-list *ngIf="controller === 3">
+      <ion-item color="primary">
+        Thông tin thư thư viện
+      </ion-item>
+      <ion-item>
+        Tên: {{selectedLibrary.name}}
+      </ion-item>
+      <ion-item>
+        Giới thiệu: {{selectedLibrary.describe}}
+      </ion-item>
+      <ion-item>
+        Ngày tạo: {{selectedLibrary.time | date: "yyyy/MM/dd HH:mm"}}   
+      </ion-item>
+      <ion-item color="primary">
+        Danh sách ảnh
+      </ion-item>
+      <span class="inline" *ngFor="let imageData of library.displayLibraryImage; let imageIndex = index">
+        <span *ngIf="isSelect === true">
+          <img class="md-icon" src="{{imageData.url}}" *ngIf="selectImages.indexOf(imageData.id) < 0" (click)="tickImage(imageData.id)">
+          <img class="md-icon selected" src="{{imageData.url}}" *ngIf="selectImages.indexOf(imageData.id) >= 0" (click)="untickImage(imageData.id)">    
+        </span>
+        <img class="md-icon" src="{{imageData.url}}" *ngIf="isSelect === false" (click)="viewImage(imageData.url)">
       </span>
-    </div>
+    </ion-list>
   </div>
-
 </ion-content>
