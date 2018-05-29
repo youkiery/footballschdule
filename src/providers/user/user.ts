@@ -16,22 +16,26 @@ import firebase from 'firebase'
 @Injectable()
 export class UserProvider {
   ref: any
+  datatype = {
+    id: "",
+    name: "",
+    avatar: "",
+    lastlog: "",
+  }
   data = {}
   userId = ""
-  defaultImage = "../../assets/imgs/logo.png"
-  position = ["Cư Êbur", "Tân Lợi", "Tân An", "Ea Tu", "Hòa Thuận", "Thành Nhất", "Thành Công", "Thắng Lợi", "Thống Nhất", "Tân Tiến", "Tân Thành", "Tự An", "Tân Lập", "Tân Hòa" ,"Khánh Xuân", "Ea Tam" ,"Hòa Thắng", "Hòa Xuân", "Hòa Phú", "Hòa Khánh", "Ea Kao"]
+  username = ""
+  password = ""
   constructor(private service: ServiceProvider) {
     this.ref = this.service.db.ref("user")
-    this.service.storage.get("userInfo").then(data => {
+    /*this.service.storage.get("userInfo").then(data => {
       var userInfo = data
     
       if(this.service.valid(userInfo)) {
-        // login
-        // check if below line cause error
         this.service.event.publish("loading-start")
         this.loginSuccess(userInfo.userInfo, userInfo.userId)
       }
-    })
+    })*/
   }
 
   login(username, password) {
@@ -90,11 +94,10 @@ export class UserProvider {
           avatar: avatar,
           position: position,
           describe: "",
-          lastLog: currentTime
+          lastlog: currentTime
         }
         
         var libraryId = this.ref.parent.child("library").push().key
-        var imageId = this.ref.parent.child("image").push().key
         var imageData = {
           libraryId: libraryId,
           time: currentTime,
@@ -103,7 +106,7 @@ export class UserProvider {
         updateData["user/" + userId] = signupData
         updateData["library/" + libraryId] = {
           userId: userId,
-          last: imageId,
+          last: "default",
           name: "không tên",
           type: 0,
           time: currentTime,
@@ -125,9 +128,13 @@ export class UserProvider {
       }
     })
   }
+  logout() {
+    this.service.event.publish("logout")
+    this.service.storage.remove("userInfo")
+  }
 
   
-  signupFb() {
+  /*signupFb() {
     this.service.event.publish('loading-start')
     var provider = new firebase.auth.FacebookAuthProvider();
     firebase.auth().signInWithPopup(provider).then(result => {
@@ -191,12 +198,8 @@ export class UserProvider {
         }
       })
     })
-  }
+  }*/
 
-  logout() {
-    this.service.event.publish("logout")
-    this.service.storage.remove("userInfo")
-  }
 
   getuserInfo(userList, event) {
     var end = userList.length - 1

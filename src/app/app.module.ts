@@ -15,6 +15,8 @@ import { ProfilePage } from '../pages/profile/profile'
 import { CommentPage, DetailOption, CommentOption } from '../pages/comment/comment'
 import { GroupPage } from '../pages/group/group'
 
+import { UserProfilePage } from '../pages/user-profile/user-profile'
+
 import  firebase from 'firebase'
 import { Facebook } from '@ionic-native/facebook'
 
@@ -54,7 +56,8 @@ firebase.initializeApp(config);
     CommentPage,
     DetailOption,
     CommentOption,
-    GroupPage
+    GroupPage,
+    UserProfilePage
   ],
   imports: [
     BrowserModule,
@@ -76,7 +79,8 @@ firebase.initializeApp(config);
     CommentPage,
     DetailOption,
     CommentOption,
-    GroupPage
+    GroupPage,
+    UserProfilePage
   ],
   providers: [
     StatusBar,

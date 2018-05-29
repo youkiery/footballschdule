@@ -12,20 +12,15 @@ export class ServiceProvider {
   db: any
   store: any
   fb: any
-  profileId = "" // display profile post
-  detailId = "" // display detail post
-  postId = "" // display modifing post
-  selectImages = []
-  libraryIndex = null
-  imageToPost = false
-  multi = false
-  fnd = false
 
   allowed = [
     "png",
     "jpeg",
     "bmp",
   ]
+  defaultImage = "../../assets/imgs/logo.png"
+  position = ["Cư Êbur", "Tân Lợi", "Tân An", "Ea Tu", "Hòa Thuận", "Thành Nhất", "Thành Công", "Thắng Lợi", "Thống Nhất", "Tân Tiến", "Tân Thành", "Tự An", "Tân Lập", "Tân Hòa" ,"Khánh Xuân", "Ea Tam" ,"Hòa Thắng", "Hòa Xuân", "Hòa Phú", "Hòa Khánh", "Ea Kao"]
+  
   constructor(public storage: Storage, public event: Events, public popoverCtrl: PopoverController,
       public platform: Platform, public toastCtrl: ToastController) {
         this.db = firebase.database()

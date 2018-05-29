@@ -6,6 +6,8 @@ import { SplashScreen } from '@ionic-native/splash-screen';
 import { HomePage } from '../pages/home/home';
 import { MainPage } from '../pages/main/main';
 
+import { UserProfilePage } from '../pages/user-profile/user-profile';
+
 import { ServiceProvider } from '../providers/service/service';
 import { UserProvider } from '../providers/user/user';
 import { FriendProvider } from '../providers/friend/friend';
@@ -60,7 +62,7 @@ export class MyApp {
       
       this.event.subscribe('login-success', () => {
         this.dismissLoading()
-        this.rootPage = MainPage
+        this.rootPage = UserProfilePage
       })
 
       /*
