@@ -8,30 +8,20 @@ import { ServiceProvider } from "../service/service"
 @Injectable()
 export class LibraryProvider {
   ref: any
-  displayImage = []
-  displayLibraryImage = []
   list = []
   defaultImage = "../../assets/imgs/logo.png"
   constructor(private service: ServiceProvider) {
     this.ref = this.service.db.ref("library")
   }
-  getLibraryList(userId) {
+  getLibraryList(userId, event) {
     this.service.event.publish("loading-start")
-    this.ref.child(userId + "/list").once("value").then(libraryDataListSnap => {
+    this.ref.orderByChild("userId").equalTo(userId).once("value").then(libraryDataListSnap => {
       var libraryDatalist = libraryDataListSnap.val()
       
       if(this.service.valid(libraryDatalist)) {
         this.list = this.service.objToList(libraryDatalist)
         
-        this.ref.child(userId + "/detail/all").limitToFirst(6).once("value").then(libraryDataListSnap => {
-          var libraryDatalist = libraryDataListSnap.val()
-          if(this.service.valid(libraryDatalist)) {
-            
-            console.log(libraryDatalist)
-            this.displayImage = this.service.objToList(libraryDatalist)
-            this.service.event.publish("loading-end")
-          }
-        })
+        this.service.event.publish(event)
       }
     })
   }
@@ -48,12 +38,7 @@ export class LibraryProvider {
     
     console.log(deleteList)
     this.ref.update(deleteList).then(() => {
-      imageList.forEach(imageData => {
-        this.displayLibraryImage = this.displayLibraryImage.filter(imageLibraryData => {
-          return imageLibraryData.id !== imageData
-        })
-      })
-      console.log(this.displayLibraryImage)
+      this.service.event.publish("remove-image-list", imageList)
       this.service.event.publish("loading-end")
     })
   }
@@ -62,13 +47,12 @@ export class LibraryProvider {
     var updateData = {}
 
     var libraryId = this.ref.parent.child("library").push().key
-    var imageId = this.ref.parent.child("library").push().key
+    //var imageId = this.ref.parent.child("library").push().key
     var imageData = {        
       time: currentTime,
       url: this.defaultImage
     }
     updateData[userId + "/list/" + libraryId] = {
-      libraryId: libraryId,
       last: imageData,
       name: name,
       type: 0,

@@ -1,18 +1,107 @@
-<!--
-  Generated template for the GroupPage page.
-
-  See http://ionicframework.com/docs/components/#navigation for more info on
-  Ionic pages and navigation.
--->
-<ion-header>
-
-  <ion-navbar>
-    <ion-title>group</ion-title>
-  </ion-navbar>
-
-</ion-header>
-
-
-<ion-content padding>
-
+<ion-content>
+  <div class="header">
+    <ion-icon name="arrow-round-back" (click)="goback()"></ion-icon>
+    <ion-icon name="add" (click)="newGroup()"></ion-icon>
+  </div>
+  <div class="container">
+    <ion-list *ngIf="controller === 'normal'">
+      <ion-item color="primary">
+        Danh sách đội bóng theo dõi
+      </ion-item>
+      <ion-item *ngFor="let group of follow; let groupIndex = index">
+        <img class="md-icon" src="{{group.avatar}}" (click)="gotoGroup(groupIndex)">
+        <div class="right">
+          <p>
+            {{group.name}}
+          </p>
+          <p>
+            {{group.describe}}
+          </p>
+          <p>
+            {{group.time | date: "yyyy/MM/dd HH:mm"}}   
+          </p>
+        </div>
+      </ion-item>
+      <ion-item color="primary">
+        Các đội mới lập
+      </ion-item>
+      <ion-item *ngFor="let group of tempList">
+        <img class="md-icon" src="{{group.avatar}}" (click)="gotoGroup(group.groupId, groupIndex)">
+        <div class="right">
+          <p>
+            {{group.name}}
+          </p>
+          <p>
+            {{group.describe}}
+          </p>
+          <p>
+            {{group.time | date: "yyyy/MM/dd HH:mm"}}   
+          </p>
+        </div>
+      </ion-item>
+    </ion-list>
+    <div *ngIf="controller === 'child'">
+      <ion-item>
+        <ion-avatar item-start>
+          <img class="md-icon" src="{{follow[groupIndex].avatar}}">
+        </ion-avatar>
+        <p>
+          {{user.data[user.userId].name}}
+        </p>
+        <div class="textarea" (click)="gotoPost(groupId)">
+          <button ion-button class="input-button">
+            đăng
+          </button>
+        </div>
+      </ion-item>
+      <div *ngFor="let postId of displayList; let i = index">
+        <ion-card *ngIf="groupInfo.name !== undefined">
+          <ion-card-header>
+            <ion-item>
+              <ion-avatar item-start>
+                <img class="md-icon" src="{{groupInfo.avatar}}">
+              </ion-avatar>
+              <p>
+                {{groupInfo.name}}
+              </p>
+              <p>
+                {{postList[i].time | date: "yyyy/MM/dd HH:mm"}}
+              </p>
+              <ion-icon class="right" name="menu" (click)="thisPostOption($event, postId)" *ngIf="user.userId === postList[i].userId"></ion-icon>
+            </ion-item>
+            <span *ngIf="postList[i].image !== undefined">
+              <span *ngIf="postList[i].image.length > 0">
+                <img src="{{images[postList[i].image[0]]}}">
+              </span>
+            </span>
+          </ion-card-header>
+          <ion-list>
+            <p class="msg" (click)="gotoDetail(postId)">
+              {{postList[i].msg}}
+            </p>
+            <div class="sm-item">
+              <span *ngIf="postList[i].like !== undefined">
+                <span *ngIf="postList[i].like.length > 0">
+                  <button ion-button color="primary" *ngIf='this.service.findIndex(postList[i].like, user.userId, "userId") === -1' (click) ="post.like(user.userId, postId)">
+                    {{postList[i].like.length}}
+                  </button>
+                  <button ion-button color="secondary" *ngIf='this.service.findIndex(postList[i].like, user.userId, "userId") !== -1'  (click)="post.unlike(user.userId, postId)">
+                    {{postList[i].like.length}}
+                  </button>
+                </span>
+                <span *ngIf="postList[i].like.length === 0">
+                  <button ion-button color="primary" (click)="post.like(user.userId, postId)">
+                    0
+                  </button>
+                </span>
+              </span>
+            </div>
+          </ion-list>
+        </ion-card>
+      </div>
+      <button ion-button (click)="loadMore()" *ngIf="(page - 1) * postPerLoad < postList.length">
+        Xem thêm
+      </button>
+    </div>  
+  </div>
 </ion-content>

@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { IonicPage, NavController } from 'ionic-angular';
+import { IonicPage, NavController, NavParams } from 'ionic-angular';
 
 import { LibraryPage } from '../library/library'
 
@@ -17,42 +17,57 @@ import { UserProvider } from "../../providers/user/user"
   templateUrl: 'post.html',
 })
 export class PostPage {
-  msg = ""
+  list = []
+  postId = ""
+  groupId = ""
+  type = 0
   postData: any
+  msg = ""
   time = new Date()
+  imageList = []
   constructor(public service: ServiceProvider, public user: UserProvider, public post: PostProvider,
-      public navCtrl: NavController) {
-        if(this.service.postId !== "") {
-          console.log()
-          this.service.selectImages = []
-          this.postData = this.post.detail[this.service.postId]
-          this.msg = this.postData.msg
-          console.log(this.postData)
+      public navCtrl: NavController, private navParam: NavParams) {
+        this.postId = this.navParam.get("postId")
+        this.groupId = this.navParam.get("groupId")
+      
+        console.log(this.groupId)
+        if(this.groupId) {
+          this.type = 1
         }
-      }
+        if(this.service.valid(this.postId)) {
+          this.postData = this.post.data[this.postId]
+          this.msg = this.postData.msg  
+        }
+        this.service.event.subscribe("update-image-post", (imageList) => {
+          this.imageList = imageList
+        })
+  }
 
   checkPostContent() {
     if(this.msg.length < 10) {
       this.service.warning("Nội dung ngắn hơn 10 kí tự")
     }
     else {
-      if(this.service.postId !== "") {
-        if(this.postData.image !== undefined) {
-          this.service.selectImages.concat(this.postData.image)
+      if(this.postId !== "") {
+        if(this.type) {
+          this.post.pushAPost(this.groupId, this.msg, this.imageList, this.type, "group-update-post")
         }
-        this.post.changePostContent(this.service.postId, this.msg, this.service.selectImages)
+        else {
+          this.post.pushAPost(this.user.userId, this.msg, this.imageList, this.type, "update-post-list")
+        }
       }
       else {
-        this.post.pushAPost(this.user.userId, this.msg, this.service.selectImages)
+        this.post.changePostContent(this.postId, this.msg, this.imageList)
       }
+      this.imageList = []
       this.navCtrl.pop()
     }
   }
   selectImageToPost() {
-    this.service.multi = true
-    this.navCtrl.push(LibraryPage)
+    this.navCtrl.push(LibraryPage, {action: "select"})
   }
   goback() {
     this.navCtrl.pop()
   }
 }
+

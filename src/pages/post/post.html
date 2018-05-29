@@ -3,7 +3,7 @@
     <ion-icon name="arrow-round-back" (click)="goback()"></ion-icon>  
   </div>
   <div class="container">
-    <ion-card *ngIf="service.postId === ''">
+    <ion-card *ngIf="postId === ''">
       <ion-card-header>
         <ion-item>
           <ion-avatar item-start>
@@ -27,7 +27,7 @@
         </form>
       </ion-list>
     </ion-card>
-    <ion-card *ngIf="service.postId !== ''">
+    <ion-card *ngIf="postId !== ''">
       <ion-card-header>
         <ion-item>
           <ion-avatar item-start>
@@ -37,7 +37,7 @@
             {{user.data[user.userId].name}}
           </P>
           <p>
-            {{post.detail[this.service.postId].time | date: "yyyy/MM/dd HH:mm"}}
+            {{time | date: "yyyy/MM/dd HH:mm"}}
           </p>
         </ion-item>
       </ion-card-header>
@@ -46,6 +46,9 @@
           <ion-textarea class="max" [(ngModel)]="msg" name="msg" rows="5"></ion-textarea><br/>
           <button ion-button (click)="checkPostContent()">
             post bài
+          </button>
+          <button ion-button (click)="selectImageToPost()">
+            chọn ảnh
           </button>
         </form>
       </ion-list>

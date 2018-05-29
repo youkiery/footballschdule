@@ -24,7 +24,7 @@ export class UserProvider {
     this.ref = this.service.db.ref("user")
     this.service.storage.get("userInfo").then(data => {
       var userInfo = data
-
+    
       if(this.service.valid(userInfo)) {
         // login
         // check if below line cause error
@@ -94,26 +94,22 @@ export class UserProvider {
         }
         
         var libraryId = this.ref.parent.child("library").push().key
-        var imageId = this.ref.parent.child("library").push().key
-        var imageData = {        
+        var imageId = this.ref.parent.child("image").push().key
+        var imageData = {
+          libraryId: libraryId,
           time: currentTime,
           url: this.defaultImage
         }
         updateData["user/" + userId] = signupData
-        updateData["library/" + userId + "/list/" + libraryId] = {
-          libraryId: libraryId,
-          last: imageData,
+        updateData["library/" + libraryId] = {
+          userId: userId,
+          last: imageId,
           name: "không tên",
           type: 0,
           time: currentTime,
           describe: ""
         }
-        updateData["library/" + userId + "/detail/" + libraryId] = {
-          key: imageData
-        }
-        updateData["library/" + userId + "/detail/all"] = {
-          key: imageData
-        }
+        updateData["image/" + imageId] = imageData
 
         this.ref.parent.update(updateData).then(() => {
           var storeData = {
@@ -140,6 +136,7 @@ export class UserProvider {
       var userId = user.uid
       
       var signupData = {
+        userId: userId,
         username: "",
         password: "",
         name: user.displayName,
@@ -166,41 +163,23 @@ export class UserProvider {
         else {
           var updateData = {}
           var libraryId = this.ref.parent.child("library").push().key
-          var imageId = this.ref.parent.child("library").push().key
-          var imageData = {        
+          var imageId = this.ref.parent.child("image").push().key
+          var imageData = {
+            libraryId: libraryId,
             time: currentTime,
             url: this.defaultImage
           }
           updateData["user/" + userId] = signupData
-          updateData["library/" + userId + "/list/" + libraryId] = {
-            libraryId: libraryId,
-            last: imageData,
+          updateData["library/" + libraryId] = {
+            userId: userId,
+            last: imageId,
             name: "không tên",
             type: 0,
             time: currentTime,
             describe: ""
           }
-          updateData["library/" + userId + "/detail/" + libraryId] = {
-            key: imageData
-          }
-          updateData["library/" + userId + "/detail/all"] = {
-            key: imageData
-          }
-          updateData["user/" + userId] = signupData
-          updateData["library/" + userId + "/list/" + libraryId] = {
-            libraryId: libraryId,
-            last: imageData,
-            name: "không tên",
-            type: 0,
-            time: currentTime,
-            describe: ""
-          }
-          updateData["library/" + userId + "/detail/" + libraryId] = {
-            key: imageData
-          }
-          updateData["library/" + userId + "/detail/all"] = {
-            key: imageData
-          }
+          updateData["image/" + imageId] = imageData
+  
           this.ref.parent.update(updateData).then(() => {
             var storeData = {
               userId: userId,
@@ -219,8 +198,9 @@ export class UserProvider {
     this.service.storage.remove("userInfo")
   }
 
-  getuserInfo(userList) {
+  getuserInfo(userList, event) {
     var end = userList.length - 1
+    var list = []
     userList.forEach((userId, userIndex) => {
       if(!this.service.valid(this.data[userId])) {
         this.ref.child(userId).once("value").then(userInfoSnap => {
@@ -230,12 +210,12 @@ export class UserProvider {
           }
           // else case
           if(end === userIndex) {
-            this.service.event.publish("get-library")
+            this.service.event.publish(event)
           }
         })
       }
       else if(end === userIndex) {
-        this.service.event.publish("get-library")
+        this.service.event.publish(event)
       }
     })
   }
@@ -259,6 +239,7 @@ export class UserProvider {
     this.data[userId] = {
       name: userInfo.name,
       avatar: userInfo.avatar,
+      region: userInfo.region,
       lastLog: userInfo.lastLog
     }
   }
@@ -296,7 +277,7 @@ export class UserProvider {
       this.ref.child(this.userId).update(updateData).then(() => {
         for (const key in updateData) {
           if (updateData.hasOwnProperty(key)) {
-            this.data[key] = updateData[key]
+            this.data[this.userId] = updateData[key]
           }
         }
         var storeData = {
@@ -314,12 +295,14 @@ export class UserProvider {
 
   getUserData(userId) {
     console.log(userId)
-    this.ref.child(userId).once("value").then(userDataSnap => {
-      var userData = userDataSnap.val()
-      if(this.service.valid(userData)) {
-        this.setUser(userId, userData)
-      }
-    })
+    if(this.data[userId] === undefined) {
+      this.ref.child(userId).once("value").then(userDataSnap => {
+        var userData = userDataSnap.val()
+        if(this.service.valid(userData)) {
+          this.setUser(userId, userData)
+        }
+      })
+    }
   }
   /*
 

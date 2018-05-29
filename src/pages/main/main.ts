@@ -4,6 +4,7 @@ import { IonicPage, NavController, ViewController, NavParams, AlertController } 
 import { LibraryPage } from '../../pages/library/library';
 import { PostPage } from '../post/post';
 import { CommentPage } from '../comment/comment';
+import { GroupPage } from '../group/group';
 
 import { ServiceProvider } from '../../providers/service/service';
 import { UserProvider } from '../../providers/user/user';
@@ -30,50 +31,54 @@ import { ProfilePage } from '../profile/profile';
 export class MainPage {
   page = 1
   postPerLoad = 6
-  like = true
+  postList = []
+  displayList = []
   constructor(public user: UserProvider, public post: PostProvider, public group: GroupProvider,
     public navCtrl: NavController, public friend: FriendProvider, public service: ServiceProvider) {
 
+      
       this.service.event.subscribe("get-friend-list", () => {
         this.service.event.publish("loading-update", "đang tải danh sách bạn bè")
-        this.friend.initiaze(this.user.userId)
+        this.friend.initiaze(this.user.userId, "get-group-list")
       })
       this.service.event.subscribe("get-group-list", () => {
         this.service.event.publish("loading-update", "đang tải danh sách nhóm")
-        this.group.initiaze(this.user.userId)
+        this.group.getRelativeGroupList(this.user.userId, "get-user-post-list")
       })
-      this.service.event.subscribe("get-user-post-list", () => {
+      this.service.event.subscribe("get-user-post-list", (list) => {
         this.service.event.publish("loading-update", "đang tải danh sách bài viết")
-        this.post.getUserPost(this.friend.active.concat([this.user.userId]))
+        var idList = [this.user.userId]
+        this.friend.data.forEach(friend => {
+          if(friend.type === 0) {
+            idList.push(friend.friendId)
+          }
+        })
+        list.forEach(groupData => {
+          idList.push(groupData.groupId)
+        })
+        this.post.getPostList(idList, "display-post")
       })
-      this.service.event.subscribe("get-group-post-list", () => {
-        this.service.event.publish("loading-update", "đang tải danh sách bài viết")
-        this.post.getGroupPost(this.group.list)
-      })
-      this.service.event.subscribe("get-initiaze-finish", () => {
-        var end = this.post.list.length
-        console.log(this.post.list)
+      this.service.event.subscribe("display-post", (postList) => {
+        this.postList = postList
+        var end = this.postList.length
         if(end) {
-          var from = 0//(this.page - 1) * this.postPerLoad
-          var to = this.postPerLoad//this.page * this.postPerLoad
+          var from = (this.page - 1) * this.postPerLoad
+          var to = this.page * this.postPerLoad
           var indexToLoad = []
           while(from < to && from < end) {
             indexToLoad.push(from)
             from ++
           }
+          end = end > to ? to : end
           end --
-          this.page = 2
+          this.page ++
+          console.log(indexToLoad)
           indexToLoad.forEach(index => {
-            this.post.displayNew.push({
-              postId: this.post.list[index].postId,
-              type: this.post.list[index].type,
-              display: false
-            })
+            this.displayList.push(this.postList[index].id)
             // quere load
-            if(this.user.data[this.post.list[index].userId] === undefined) {
-              this.user.getUserData(this.post.list[index].userId)
+            if(this.user.data[this.postList[index].userId] === undefined) {
+              this.user.getUserData(this.postList[index].userId)
             }
-            this.post.getPostDetail(this.post.list[index].postId, index)
             if(index === end) {
               this.service.event.publish("loading-end")
             }
@@ -83,83 +88,40 @@ export class MainPage {
           this.service.event.publish("loading-end")
         }
       })
+      this.service.event.subscribe("update-post-list", (postId) => {
+        var temp = []
+        this.displayList.forEach((newId, newIndex) => {
+          temp[newIndex + 1] = newId
+        })
+        temp[0] = postId
+        this.displayList = temp
+        console.log(this.displayList)
+        console.log(this.post.data)
+      })
+      this.service.event.subscribe("remove-post-list", (postId) => {
+        this.displayList = this.displayList.filter(x => {
+          return x !== postId
+        })
+      })
       
+      this.service.event.publish("loading-start")
       this.service.event.publish("get-friend-list")
   }
 
   reload() {
-    this.post.displayNew = []
-    this.post.list = []
-    this.post.detail = {}
-    this.post.getUserPost(this.friend.active.concat([this.user.userId]))
+    this.displayList = []
+    this.postList = []
+    this.page = 1
+    this.service.event.publish("loading-start")
+    this.service.event.publish("get-friend-list")
   }
-
   loadMore() {
     this.service.event.publish("loading-start")
-    var end = this.post.list.length
-    if(end) {
-      var from = (this.page - 1) * this.postPerLoad
-      var to = this.page * this.postPerLoad
-      var indexToLoad = []
-      while(from < to && from < end) {
-        indexToLoad.push(from)
-        from ++
-      }
-      end --
-      this.page ++
-      indexToLoad.forEach(index => {
-        this.post.displayNew.push({
-          postId: this.post.list[index].postId,
-          type: this.post.list[index].type,
-          display: false
-        })
-        
-        if(this.user.data[this.post.list[index].userId] === undefined) {
-          this.user.getUserData(this.post.list[index].userId)
-        }
-        // quere load
-        this.post.getPostDetail(this.post.list[index].postId, index)
-        if(index === end) {
-          this.service.event.publish("loading-end")
-        }
-      })
-    }
-    else {
-      this.service.event.publish("loading-end", "không có tin để hiển thị")
-    }
+    this.service.event.publish("display-post", this.postList)
   }
 
-  viewLiked(postId) {
-    var nameList = []
-    var like = this.post.detail[postId]
-    var missing = []
-    if(like.like === undefined) {
-      like = []
-    }
-    else {
-      like = like.like
-    }
-    
-    like.forEach((userId, index) => {
-      if(!this.service.valid(userId)) {
-        missing.push(userId)
-      }
-    });
-    var count = missing.length
-    missing.forEach(userId => {
-      this.user.ref.child(userId).once("value").then(userDataSnap => {
-        var userData = userDataSnap.val()
-        if(this.service.valid(userData)) {
-          this.user.setUser(userId, userData)
-          nameList.push(this.user.data[userId].name)
-        }
-        count --
-        if(!count) {
-          this.service.warning(nameList.join(", "))
-        }
-      })  
-    })
-  // popover
+  changeAvatar() {
+    this.navCtrl.push(LibraryPage, {action: "change"})
   }
   gotoSetting() {
     this.navCtrl.push(SettingPage)
@@ -176,9 +138,11 @@ export class MainPage {
   gotoProfile(userId) {
     this.navCtrl.push(ProfilePage, {userId: userId})
   }
-  gotoDetail(detailId) {
-    this.service.detailId = detailId
-    this.navCtrl.push(CommentPage)
+  gotoDetail(postId) {
+    this.navCtrl.push(CommentPage, {postId: postId})
+  }
+  gotoGroup() {
+    this.navCtrl.push(GroupPage)
   }
   thisPostOption(event, postId) {
     let popover = this.service.popoverCtrl.create(PostOption, {
@@ -188,51 +152,6 @@ export class MainPage {
       ev: event
     });
   }
-  /*
-
-
-  gotoSetting() {
-    this.navCtrl.push(SettingPage)
-  }
-  gotoFriend() {
-    this.navCtrl.push(FriendPage)
-  }
-  gotoProfile() {
-    this.user.profileId = this.user.data.userId
-    this.navCtrl.push(ProfilePage)
-  }
-  submitPost() {
-    var postRef = firebase.database().ref("post")
-    var currTime = Date.now()
-    var postId = postRef.child("detail").child(this.user.data.userId).push().key
-    var postData = {
-      userId: this.user.data.userId,
-      msg: this.msg
-    }
-    var length = (this.user.postList.filter(post => {
-      console.log(this.user.post, post.postId)
-      return post.userId === this.user.data.userId
-    })).length
-    postRef.child("detail").child(postId).set(postData).then(() => {
-      var postListData = {
-        postId: postId,
-        time: currTime
-      }
-      postRef.child("list").child(this.user.data.userId).child(length.toString())
-          .set(postListData).then(() => {
-            this.user.post[postId] = postData
-            this.user.post[postId].time = new Date(currTime)
-            this.user.postList.push(postListData)
-            var newTemp = []
-            this.displayNew.forEach((postTemp, index) => {
-              newTemp[index + 1] = postTemp
-            })
-            newTemp[0] = postId
-            this.displayNew = newTemp
-            this.msg = ""
-          })
-    })
-  }*/
 }
 
 @Component({
@@ -257,6 +176,7 @@ export class PostOption {
   }
   deletePost() {
     let alert = this.alertCtrl.create({
+      message: "Xóa bài viết này?",
       buttons: [
         {
           text: 'Hủy',

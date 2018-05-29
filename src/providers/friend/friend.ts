@@ -7,37 +7,39 @@ import {ServiceProvider} from "../service/service"
  */
 @Injectable()
 export class FriendProvider {
+  data = []
+  ref: any
   active = []
   inactive = []
   request = []
-  data = {}
-  ref: any
   constructor(private service: ServiceProvider) {
     this.ref = this.service.db.ref("friend")
+    var data = {}
   }
-  initiaze(userId) {
-    console.log(userId)
-    this.ref.child(userId).once("value").then(friendDataListSnap => {
+  initiaze(userId, event) {
+    this.ref.orderByChild("userId").equalTo(userId).once("value").then(friendDataListSnap => {
       var friendDataList = friendDataListSnap.val()
+      console.log(this.data)
       if(this.service.valid(friendDataList)) {
+        console.log(friendDataList)
         var friendList = this.service.objToList(friendDataList)
-        friendList.forEach(friendData => {
-          switch(friendData.type) {
+        friendList.forEach(friend => {
+          switch(friend.type) {
             case 0:
-              this.active.push(friendData.ckey)
-            break
+              this.active.push(friend.friendId)
+              break
             case 1:
-              this.inactive.push(friendData.ckey)
-            break
+              this.active.push(friend.friendId)
+              break
             case 2:
-              this.request.push(friendData.ckey)
-            break
+              this.active.push(friend.friendId)
+              break
           }
-          this.data[friendData.ckey] = friendData
         })
+        this.data = friendList
       }
       console.log(this.data)
-      this.service.event.publish("get-group-list",)
+      this.service.event.publish(event)
     })
   }
 
@@ -48,19 +50,21 @@ export class FriendProvider {
     
     var updateData = {}
     var inactiveData = {
-      ckey: friendRequestKey,
+      fromId: userId,
       type: 1,
-      userId: friendId
+      toId: friendId,
+      refKey: friendRequestKey
     }
     var requestData = {
-      ckey: friendInactiveKey,
+      fromId: userId,
       type: 2,
-      userId: userId
+      toId: userId,
+      refKey: friendInactiveKey
     }
-    updateData[userId + "/" + friendInactiveKey] = inactiveData
-    updateData[userId + "/" + friendRequestKey] = requestData
+    updateData[friendInactiveKey] = inactiveData
+    updateData[friendRequestKey] = requestData
     this.ref.update(updateData).then(() => {
-      this.inactive.push(friendId)
+      this.data.push(inactiveData)
       this.service.event.publish('loading-end')
     })
   }
@@ -69,13 +73,11 @@ export class FriendProvider {
     this.service.event.publish('loading-start')
     var updateData = {}
 
-    updateData[userId + "/" + this.data[friendId].id + "/type"] = 0 
-    updateData[friendId + "/" + this.data[friendId].ckey + "/type"] = 0
+    var dataIndex = this.service.findIndex(this.data, friendId, "friendId")
+    updateData[this.data[dataIndex].id + "/type"] = 0
+    updateData[this.data[dataIndex].refKey + "/type"] = 0
     this.ref.update(updateData).then(() => {
-      this.request = this.request.filter(friend => {
-        return friend !== friendId
-      })
-      this.active.push(friendId)
+      this.data[dataIndex].type = 0
       this.service.event.publish('loading-end')  
     })
   }
@@ -84,27 +86,28 @@ export class FriendProvider {
     this.service.event.publish('loading-start')
     var updateData = {}
 
-    updateData[userId + "/" + this.data[friendId].id] = null
-    updateData[friendId + "/" + this.data[friendId].ckey] = null
+    var dataIndex = this.service.findIndex(this.data, friendId, "friendId")
+    updateData[this.data[dataIndex].id] = null
+    updateData[this.data[dataIndex].refKey] = null
     this.ref.update(updateData).then(() => {
-      this.request = this.request.filter(friend => {
-        return friend !== friendId
+      this.data = this.data.filter(x => {
+        return x.friendId !== friendId
       })
       this.service.event.publish('loading-end')  
     })
   }
-
 
   // check if error
   unfriend(userId, friendId) {
     this.service.event.publish('loading-start')
     var updateData = {}
 
-    updateData[userId + "/" + this.data[friendId].id] = null
-    updateData[friendId + "/" + this.data[friendId].ckey] = null
+    var dataIndex = this.service.findIndex(this.data, friendId, "friendId")
+    updateData[this.data[dataIndex].id] = null
+    updateData[this.data[dataIndex].refKey] = null
     this.ref.update(updateData).then(() => {
-      this.request = this.request.filter(friend => {
-        return friend !== friendId
+      this.data = this.data.filter(x => {
+        return x.friendId !== friendId
       })
       this.service.event.publish('loading-end')  
     })

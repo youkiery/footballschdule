@@ -2,7 +2,6 @@ import { Component } from '@angular/core';
 import { IonicPage, AlertController, NavController, ViewController, NavParams } from 'ionic-angular';
 
 import { PostPage } from '../post/post';
-import { PostOption } from '../main/main';
 
 import { ServiceProvider } from '../../providers/service/service'
 import { UserProvider } from '../../providers/user/user'
@@ -18,45 +17,73 @@ import { PostProvider } from '../../providers/post/post'
   templateUrl: 'comment.html',
 })
 export class CommentPage {
+  postId = ""
+  postIndex = -1
   postData: any
   commentMsg = ""
   listener: any
   comment = []
   constructor(public service: ServiceProvider, public user: UserProvider, public post: PostProvider,
-    public alertCtrl: AlertController, public viewCtrl: ViewController, public navCtrl: NavController) {
-        this.postData = post.detail[service.detailId]
+    public alertCtrl: AlertController, public viewCtrl: ViewController, public navCtrl: NavController,
+    private navParam: NavParams) {
+        this.postId = this.navParam.get("postId")
+        this.postData = this.post.data[this.postId]
         
-        this.listener = this.post.ref.child("comment/" + service.detailId)
+        this.listener = this.post.ref.parent.child("comment")
         this.listener.on("child_added", (dataSnap) => {
           var data = dataSnap.val()
-          var key = dataSnap.key
-          data.key = key
-          this.comment.push(data)
+          if(data.postId === this.postId) {
+            var key = dataSnap.key
+            data.id = key
+            this.post.ref.parent.child("like").orderByChild("postId").equalTo(key).once("value")
+              .then((likeSnap) => {
+                var likeData = likeSnap.val()
+                var like = []
+                if(this.service.valid(likeData)) {
+                  like = this.service.objToList(likeData)
+                }
+                data["like"] = like
+              })
+            this.comment.push(data)
+          }
         })
         this.listener.on("child_changed", (dataSnap) => {
           var data = dataSnap.val()
-          var key = dataSnap.key
-          data.key = key
-          var index = this.comment.findIndex(x => x.key === key);
-          console.log(this.comment)
-          this.comment[index] = data
-          console.log(this.comment)
+          console.log(data)
+          if(data.postId === this.postId) {
+            console.log("x")
+            var key = dataSnap.key
+            data.id = key
+            var index = this.comment.findIndex(x => x.id === key);
+            this.comment[index] = data
+          }
         })
         this.listener.on("child_removed", (dataSnap) => {
           var data = dataSnap.val()
-          var key = dataSnap.key
-          data.key = key
-          this.comment = this.comment.filter(x => x.key !== key);
+          if(data.postId === this.postId) {
+            var key = dataSnap.key
+            data.id = key
+            this.comment = this.comment.filter(x => x.id !== key);
+          }
         })
         this.service.event.subscribe("delete-post", () => {
-          console.log("delete-post")
           this.navCtrl.pop()
+        })
+        this.service.event.subscribe("comment-like", (data) => {
+          var index = this.service.findIndex(this.comment, data[0], "id")
+          this.comment[index].like.push(data[1])
+        })
+        this.service.event.subscribe("comment-unlike", (data) => {
+          var index = this.service.findIndex(this.comment, data, "id")
+          this.comment[index].like = this.comment[index].like.filter(x => {
+            return x.userId !== user.userId
+          })
         })
       }
 
-  commentPost(commentData, msg) {
+  commentPost(msg) {
     this.commentMsg = ""
-    this.post.comment(this.user.userId, this.service.detailId, commentData, msg)
+    this.post.comment(this.user.userId, this.postId, msg)
   }
 
   viewLiked(like) {
@@ -106,14 +133,10 @@ export class CommentPage {
     });
   }
   thisCommentOption(event, data) {
-    console.log(data)
     let popover = this.service.popoverCtrl.create(CommentOption, data);
     popover.present({
       ev: event
     });
-  }
-  ionViewDidLoad() {
-    console.log('ionViewDidLoad CommentPage');
   }
   goback() {
     this.listener.off()
@@ -136,9 +159,8 @@ export class DetailOption {
     public user: UserProvider) {
       this.postId = this.navParam.get("postId")
     }
-  changeContent() { 
-    this.service.postId = this.postId
-    this.navCtrl.push(PostPage)
+  changeContent() {
+    this.navCtrl.push(PostPage, {postId: this.postId})
     this.viewCtrl.dismiss()
   }
   deletePost() {
@@ -166,7 +188,7 @@ export class DetailOption {
   template: `
     <ion-list>
       <button ion-item (click)="changeContent()">Đổi nội dung</button>
-      <button ion-item (click)="deleteComment()">Xóa bài viết</button>
+      <button ion-item (click)="deleteComment()">Xóa bình luận</button>
     </ion-list>
   `
 })
@@ -178,7 +200,6 @@ export class CommentOption {
     public alertCtrl: AlertController,
     public user: UserProvider) {
       this.msg = this.navParam.get("msg")
-      this.postId = this.navParam.get("postId")
       this.commentId = this.navParam.get("commentId")
       console.log(this.msg, this.commentId)
     }
@@ -197,7 +218,7 @@ export class CommentOption {
           text: 'Đăng',
           handler: (data) => {
             console.log(data)
-            this.post.changeComment(this.postId, this.commentId, data.msg)
+            this.post.changeComment(this.commentId, data.msg)
           }
         }
       ]
@@ -215,7 +236,7 @@ export class CommentOption {
         {
           text: 'Xóa',
           handler: () => {
-            this.post.delComment(this.postId, this.commentId)
+            this.post.delComment(this.commentId)
           }
         }
       ]

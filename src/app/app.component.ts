@@ -6,6 +6,8 @@ import { SplashScreen } from '@ionic-native/splash-screen';
 import { HomePage } from '../pages/home/home';
 import { MainPage } from '../pages/main/main';
 
+import { UserProfilePage } from '../pages/user-profile/user-profile';
+
 import { ServiceProvider } from '../providers/service/service';
 import { UserProvider } from '../providers/user/user';
 import { FriendProvider } from '../providers/friend/friend';
@@ -40,9 +42,11 @@ export class MyApp {
 
       // loading
       this.event.subscribe("loading-start", () => {
-        this.load = this.loadCtrl.create()
-        this.load.present()
-        this.isload = true
+        if(!this.isload) {
+          this.load = this.loadCtrl.create()
+          this.load.present()
+          this.isload = true  
+        }
       })
 
       this.event.subscribe("loading-update", (msg) => {
@@ -58,7 +62,7 @@ export class MyApp {
       
       this.event.subscribe('login-success', () => {
         this.dismissLoading()
-        this.rootPage = MainPage
+        this.rootPage = UserProfilePage
       })
 
       /*
@@ -105,17 +109,6 @@ export class MyApp {
       */
 
       this.event.subscribe('logout', () => {
-        this.post.displayNew = []
-        this.library.displayImage = []
-        this.library.displayLibraryImage = []
-        this.post.list = []
-        this.library.list = []
-        this.friend.active = []
-        this.friend.inactive = []
-        this.friend.request = []
-        this.user.userId = ""
-        this.user.data = {}
-        this.post.detail = {}
         this.service.storage.remove("userInfo")
         this.rootPage = HomePage
       })

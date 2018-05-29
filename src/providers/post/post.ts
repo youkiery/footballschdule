@@ -8,267 +8,188 @@ import { ServiceProvider } from "../service/service"
 @Injectable()
 export class PostProvider {
   ref: any
-  list = []
-  displayNew = []
-  detail = {}
-  page = 1
+  data = []
   constructor(private service: ServiceProvider) {
     this.ref = this.service.db.ref("post")
   }
-  getUserPost(userList) {
+  getPostList(userList, event) {
     // check if friendlist vaild
-    this.list = []
-    var userListNumber = userList.length - 1
+    var list = []
+    var userLength = userList.length - 1
+    console.log(userList)
     userList.forEach((userId, userIndex) => {
-      this.ref.child("list/" + userId).once("value").then(userPostDataListSnap => {
+      this.ref.orderByChild("userId").equalTo(userId).once("value").then(userPostDataListSnap => {
         var userPostDataList = userPostDataListSnap.val()
         if(this.service.valid(userPostDataList)) {
-          var userPostList = this.service.objToList(userPostDataList)
-          this.list = this.list.concat(userPostList)
+          list = this.service.objToList(userPostDataList)
         }
-        if(userListNumber === userIndex) {
-          this.service.event.publish("get-group-post-list")
+        if(userLength === userIndex) {
+          var end = list.length - 1
+          if(end >= 0) {
+            list.forEach((listData, listIndex) => {
+              if(listData.image === undefined) {
+                listData.image = []
+              }
+              this.ref.parent.child("like").orderByChild("postId").equalTo(listData.id).once("value")
+                .then(likeSnap => {
+                  var like = this.service.objToList(likeSnap.val())
+                  
+                  listData["like"] = like
+                  this.data[listData.id] = listData
+                  if(listIndex === end) {
+                    this.service.event.publish(event, list)
+                  }
+              })
+            })  
+          }
+          else {
+            this.service.event.publish(event, list)
+          }
         }
       })
     });
   }
-  getGroupPost(groupList) {
-    // check if friendlist vaild
-    var groupListNumber = groupList.length
-    if(groupListNumber) {
-      var end = groupListNumber - 1
-      groupList.forEach((groupId, groupIndex) => {
-        this.ref.child("list/" + groupId).once("value").then(groupPostDataListSnap => {
-          var groupPostDataList = groupPostDataListSnap.val()
-          if(this.service.valid(groupPostDataList)) {
-            var groupPostList = this.service.objToList(groupPostDataList)
-            this.list = this.list.concat(groupPostList)
-          }
-          if(end === groupIndex) {
-            this.service.event.publish("get-initiaze-finish")
-          }
-        })
-      });  
-    }
-    else {
-      this.service.event.publish("get-initiaze-finish")
-    }
-  }
   // this function may error
-  getPostDetail(postId, postIndex) {
-
-    this.ref.child("detail/" + postId).once("value").then(postDataSnap => {
-      var postData = postDataSnap.val()
-      
-      // check if below line cause error
-      if(postData.image === undefined) {
-        postData.image = []
-      }
-      postData.time = new Date(this.list[postIndex].time)
-      postData.like = this.service.objToKeyList(postData.like)
-      this.detail[postId] = postData
-      this.displayNew[postIndex].display = true
-      // check if below line cause error
-    })
-  }
-
-  getPostDetailList(postList, userList) {
-    var postRef = this.service.db.ref("post")
-    var end = postList.length
-    if(end) {
-      var from = 0
-      var to = end > 8 ? 8 : end
-      end = to - 1
-      var postListToLoad = []
-      while(from < to) {
-        postListToLoad.push(postList[from])
-        from ++
-      }
-      postListToLoad.forEach((postData, index) => {
-        if(userList.indexOf(postData.userId) < 0) {
-          userList.push(postData.userId)    
-        }
-        if(!this.service.valid(this.detail[postData.postId])) {
-          postRef.child("detail").child(postData.postId).once("value").then(postSnap => {
-            var post = postSnap.val()
-            
-            // check if below line cause error
-            if(post.image === undefined) {
-              post.image = []
-            }
-            post.time = new Date(postData.time)
-            this.detail[postData.postId] = post
-            // check if below line cause error
-            if(index === end) {
-              this.service.event.publish("get-user-data", userList)
-            }
-          })
-        }
-      })
-    }
-    else {
-      this.service.event.publish("get-user-data", userList)
-    }
-  }
   // ref error
-  pushAPost(userId, content, image) {
-    this.service.event.publish("loading")
-    var postId = this.ref.child("detail").push().key
-    var listId = this.ref.child("list").push().key
+  
+  pushAPost(userId, content, image, type, event) {
+    this.service.event.publish("loading-start")
+    var postId = this.ref.push().key
     var currTime = Date.now()
-    var listData = {
-      postId: postId,
+    var postData
+    postData = {
       userId: userId,
-      type: 0, //userpost
+      type: type,
       time: currTime,
-      like: 0,
-      comment: 0
-    }
-    var detailData = {
-      msg: content,
-      userId: userId
-    }
-    detailData["image"] = []
-    if(image.length > 0) {
-      detailData["image"] = image
-    }
-    var updateData = {}
-    updateData["post/detail/" + postId] = detailData
-    updateData["post/list/" + userId + "/" + listId] = listData
-    this.ref.parent.update(updateData).then(() => {
-      this.list.push(listData)
-      detailData["time"] = new Date(listData.time)
-      this.detail[postId] = detailData
-      var temp = []
-      this.displayNew.forEach((newId, newIndex) => {
-        temp[newIndex + 1] = newId
-      })
-      temp[0] = {
-        postId: postId,
-        type: 0,
-        display: true
-      }
-      this.displayNew = temp
-      this.service.event.publish("finish-load")
-    })
-  }
-  changePostContent(postId, content, image) {
-    this.service.event.publish("loading")
-    if(image === undefined) {
-      image = []
-    }
-    var currTime = Date.now()
-    var detailPost = {
       msg: content,
       image: image,
-      modTIme: currTime
+      like: []
     }
+    var updateData = {}
+    updateData["post/" + postId] = postData
+    this.ref.parent.update(updateData).then(() => {
+      postData.id = postId
+      postData.time = new Date(postData.time)
+      this.data[postId] = postId
+
+      this.service.event.publish(event, postId)
+      this.service.event.publish("loading-end")
+    })
+  }
+  
+  changePostContent(postId, content, image) {
+    this.service.event.publish("loading-start")
+    console.log(postId, content, image)
+    var currTime = Date.now()
+    var updateData
+    var detailPost = {
+      msg: content,
+      image: image
+    }
+    image.forEach(image => {
+      updateData["postImage/" + image.imageId] = image
+    })
     this.ref.child("detail/" + postId).update(detailPost).then(() => {
-      this.detail[postId].msg = content
-      this.detail[postId].image = image
-      this.service.event.publish("finish-load")
+      this.data[postId].msg = content
+      this.data[postId].image = image
+      this.service.event.publish("loading-end")
     })
   }
 
   deletePost(userId, postId) {
-    this.ref.child("detail/" + postId).remove().then(() => {
-      var list = this.list.filter(postList => {
-        return postList.postId !== postId
-      })
-      this.ref.child("list/" + userId).set(list).then(() => {
-        if(this.displayNew.indexOf(postId) >= 0) {
-          this.displayNew = this.displayNew.filter(postIdList => {
-            return postIdList !== postId 
-          })
-        }
-        if(this.list.indexOf(postId) >= 0) {
-          this.list = this.list.filter(postListData => {
-            return postListData.postId !== postId 
-          })
-        }
-        this.detail[postId] = null
-        this.service.event.publish("finish-load")  
-      })
+    this.service.event.publish("loading-start")  
+    var updateData = {}
+    updateData[postId] = null
+    this.ref.update(updateData).then(() => {
+      this.data[postId] = null
+      this.service.event.publish("remove-post-list", postId)  
+      this.service.event.publish("loading-end")  
     })
   }
   
-  like(userId, postId, like) {
-    this.service.event.publish('loading')
-    if(like === undefined) {
-      like = []
+  like(userId, postId) {
+    this.service.event.publish('loading-start')
+    var key = this.ref.parent.child("like").push().key
+    var updateData = {
+      userId: userId,
+      postId: postId
     }
-    like.push(userId)
-    this.ref.child("detail/" + postId + "/like").set(like).then(() => {
-      this.detail[postId].like = like
-      this.service.event.publish('finish-load')
+    this.ref.parent.child("like/" + key).update(updateData).then(() => {
+      updateData["id"] = key
+      this.data[postId].like.push(updateData)
+      console.log(this.data)
+      this.service.event.publish('loading-end')
     })
   }
 
-  unlike(userId, postId, like) {
-    this.service.event.publish('loading')
-    like = like.filter(likedUser => {
-      return likedUser !== userId
-    })
-    this.ref.child("detail/" + postId + "/like").set(like).then(() => {
-      this.detail[postId].like = like
-      this.service.event.publish('finish-load')
+  // ???
+  unlike(userId, postId) {
+    this.service.event.publish('loading-start')
+    var index = this.service.findIndex(this.data[postId].like, userId, "userId")
+    var likeId = this.data[postId].like[index].id
+    this.ref.parent.child("like/" + likeId).remove().then(() => {
+      this.data[postId].like = this.data[postId].like.filter(liker => {
+        return liker.userId !== userId 
+      })
+      this.service.event.publish('loading-end')
     })
   }
   
-  comment(userId, postId, comment, msg) {
-    this.service.event.publish('loading')
+  comment(userId, postId, msg) {
+    this.service.event.publish('loading-start')
     var currTime = Date.now()
     var commentData
     commentData = {
       userId: userId,
+      postId: postId,
       msg: msg,
       time: currTime
     }
-    
     // realtime issue
-    this.ref.child("comment/" + postId).push(commentData).then(() => {
-      this.service.event.publish('finish-load')
+    this.ref.parent.child("comment").push(commentData).then(() => {
+      this.service.event.publish('loading-end')
     })
   }
-  changeComment(postId, commentId, msg) {
-    this.service.event.publish("loading")
-    var currTime = Date.now()
-    this.ref.child("comment/" + postId + "/" + commentId).update({msg: msg}).then(() => {
-      this.service.event.publish("finish-load")
+  changeComment(commentId, msg) {
+    this.service.event.publish("loading-start")
+    this.ref.parent.child("comment/" + commentId).update({msg: msg}).then(() => {
+      this.service.event.publish("loading-end")
     })
   }
-  likeComment(userId, postId, commentIndex, like) {
-    this.service.event.publish('loading')
-    if(like === undefined) {
-      like = []
+  delComment(commentId) {
+    this.service.event.publish('loading-start')
+    console.log(commentId)
+    this.ref.parent.child("comment/" + commentId).remove().then(() => {
+      this.service.event.publish('loading-end')
+    })
+  }
+  likeComment(userId, commentId) {
+    this.service.event.publish('loading-start')
+    var key = this.ref.parent.child("like").push().key
+    var updateData = {
+      userId: userId,
+      postId: commentId
     }
-    like.push(userId)
-    this.ref.child("detail/" + postId + "/comment/" + commentIndex + "/like").set(like).then(() => {
-      this.detail[postId].comment[commentIndex].like = like
-      this.service.event.publish('finish-load')
+    this.ref.parent.child("like/" + key).update(updateData).then(() => {
+      updateData["id"] = key
+      this.service.event.publish('comment-like', ([commentId,updateData]))
+      this.service.event.publish('loading-end')
     })
   }
 
-  unlikeComment(userId, postId, commentIndex, like) {
-    this.service.event.publish('loading')
-    like = like.filter(likedUser => {
-      return likedUser !== userId
-    })
-    this.ref.child("detail/" + postId + "/comment/" + commentIndex + "/like").set(like).then(() => {
-      this.detail[postId].comment[commentIndex].like = like
-      this.service.event.publish('finish-load')
+  unlikeComment(userId, commentId, likeList) {
+    this.service.event.publish('loading-start')
+    var index = this.service.findIndex(likeList, userId, "userId")
+    var likeId = likeList[index].id
+    this.ref.parent.child("like/" + likeId).remove().then(() => {
+      this.service.event.publish('comment-unlike', (commentId))
+      this.service.event.publish('loading-end')
     })
   }
   
-  delComment(postId, commentId) {
-    this.service.event.publish('loading')
-    this.ref.child("comment/" + postId + "/" + commentId).remove().then(() => {
-      this.service.event.publish('finish-load')
-    })
-  }
-
+  /*
   subcomment(userId, postId, subcomment, commentIndex, msg) {
-    this.service.event.publish('loading')
+    this.service.event.publish('loading-start')
     var currTime = Date.now()
     subcomment.push({
       userId: userId,
@@ -280,11 +201,11 @@ export class PostProvider {
         .update(subcomment).then(() => {
           subcomment[subcomment.length - 1].time = new Date(subcomment.time)
           this.detail[postId].comment[commentIndex].subcomment = subcomment
-          this.service.event.publish('finish-load')
+          this.service.event.publish('loading-end')
         })
   }
   delSubcomment(postId, subcomment, commentIndex, subcommentIndex) {
-    this.service.event.publish('loading')
+    this.service.event.publish('loading-start')
     subcomment = subcomment.filter((subcommentData, index) => {
       return subcommentIndex !== index
     })
@@ -292,11 +213,11 @@ export class PostProvider {
     this.ref.child("detail/" + postId + "/comment/" + commentIndex + "/comment")
         .update(subcomment).then(() => {
           this.detail[postId].comment[commentIndex].subcomment = subcomment
-          this.service.event.publish('finish-load')
+          this.service.event.publish('loading-end')
         })
   }
   likeSubcomment(userId, postId, commentIndex, subcommentIndex, like) {
-    this.service.event.publish('loading')
+    this.service.event.publish('loading-start')
     if(like === undefined) {
       like = []
     }
@@ -304,19 +225,19 @@ export class PostProvider {
     this.ref.child("detail/" + postId + "/comment/" + commentIndex + "/comment/" +
         subcommentIndex + "/like").set(like).then(() => {
           this.detail[postId].comment[commentIndex].comment[subcommentIndex].like = like
-          this.service.event.publish('finish-load')
+          this.service.event.publish('loading-end')
         })
   }
 
   unlikeSubcomment(userId, postId, commentIndex, subcommentIndex, like) {
-    this.service.event.publish('loading')
+    this.service.event.publish('loading-start')
     like = like.filter(likedUser => {
       return likedUser !== userId
     })
     this.ref.child("detail/" + postId + "/comment/" + commentIndex + "/comment/" +
         subcommentIndex + "/like").set(like).then(() => {
           this.detail[postId].comment[commentIndex].comment[subcommentIndex].like = like
-          this.service.event.publish('finish-load')
+          this.service.event.publish('loading-end')
         })
-  }
+  }*/
 }

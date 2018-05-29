@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { IonicPage, NavParams } from 'ionic-angular';
+import { IonicPage, NavParams, NavController } from 'ionic-angular';
 
 import { ServiceProvider } from "../../providers/service/service"
 import { PostProvider } from "../../providers/post/post"
@@ -15,96 +15,106 @@ import { UserProvider } from "../../providers/user/user"
   templateUrl: 'profile.html',
 })
 export class ProfilePage {
-  list = []
-  displayNew = []
-  userId = ""
   page = 1
   postPerLoad = 6
+  postList = []
+  displayList = []
+  userId = ""
   constructor(public service: ServiceProvider, public user: UserProvider, public post: PostProvider,
-    private navParam: NavParams) {
-    this.service.event.publish("loading-start")
-    this.userId = this.navParam.get("userId")
-    if(!this.service.valid(this.user.data[this.userId])) {
-      this.user.ref.child(this.service.profileId).once("value").then(userSnap => {
-        var userInfo = userSnap.val()
-        this.user.setUser(this.service.profileId, userInfo)
-        this.getUserPost()
-        // checkif it undefine
+    private navParam: NavParams, private navCtrl: NavController) {
+      /*this.userId = this.navParam.get("userId")
+
+      this.service.event.subscribe("get-profile-post-list", () => {
+        this.service.event.publish("loading-update", "đang tải danh sách bài viết")
+        this.post.getUserPost([this.user.userId], "get-profile-post")
       })
-    }
-    else {
-      this.getUserPost()
-    }
-  }
-
-
-  getUserPost() {
-    this.list = []
-    this.post.ref.child("list/" + this.userId).once("value").then(userPostDataListSnap => {
-      var userPostDataList = userPostDataListSnap.val()
-      if(this.service.valid(userPostDataList)) {
-        this.list = this.service.objToList(userPostDataList)
-      }
-    })
-    this.loadMore()
-  }
-  
-  
-  loadMore() {
-    this.service.event.publish("loading-start")
-    var end = this.list.length
-    if(end) {
-      var from = (this.page - 1) * this.postPerLoad
-      var to = this.page * this.postPerLoad
-      var indexToLoad = []
-      while(from < to && from < end) {
-        indexToLoad.push(from)
-        from ++
-      }
-      end --
-      this.page ++
-      indexToLoad.forEach(index => {
-        this.displayNew.push({
-          postId: this.list[index].postId,
-          type: this.list[index].type,
-          display: false
-        })
-        
-        if(this.user.data[this.list[index].userId] === undefined) {
-          this.user.getUserData(this.post.list[index].userId)
+      this.service.event.subscribe("get-profile-post", (postList) => {
+        console.log(postList)
+        console.log(this.postList)
+        console.log(this.displayList)
+        this.postList = this.postList.concat(postList)
+        var end = this.postList.length
+        if(end) {
+          var from = (this.page - 1) * this.postPerLoad
+          var to = this.page * this.postPerLoad
+          var indexToLoad = []
+          while(from < to && from < end) {
+            indexToLoad.push(from)
+            from ++
+          }
+          end --
+          this.page ++
+          indexToLoad.forEach(index => {
+            this.displayList.push({
+              postId: this.postList[index].postId,
+              type: this.postList[index].type,
+              display: false
+            })
+            // quere load
+            if(this.user.data[this.postList[index].userId] === undefined) {
+              this.user.getUserData(this.postList[index].userId)
+            }
+            
+            this.post.getPostDetail(this.postList, this.postList[index].postId, index, "update-display-list")
+            
+            if(index === end) {
+              console.log(this.displayList)
+              this.service.event.publish("loading-end")
+            }
+          })
         }
-        // quere load
-        if(this.post.detail[this.list[index].postId] === undefined) {
-          this.getPostDetail(this.post.list[index].postId, index)
-        } 
-        if(index === end) {
+        else {
           this.service.event.publish("loading-end")
         }
       })
-    }
-    else {
-      this.service.event.publish("loading-end", "không có tin để hiển thị")
-    }
+      this.service.event.subscribe("update-display-list", postIndex => {
+        this.displayList[postIndex].display = true
+      })
+      this.service.event.subscribe("update-post-list", (postId) => {
+        if(this.userId === this.user.userId) {
+          var temp = []
+          this.displayList.forEach((newId, newIndex) => {
+            temp[newIndex + 1] = newId
+          })
+          temp[0] = {
+            postId: postId,
+            type: 0,
+            display: true
+          }
+          this.displayList = temp          
+        }
+      })
+      this.service.event.subscribe("update-post-list", (postId) => {
+        if(this.userId === this.user.userId) {
+          this.displayList = this.displayList.filter(postDataList => {
+            return postDataList.postId !== postId
+          })    
+        }
+      })
+      
+      this.service.event.publish("loading-start")
+      this.service.event.publish("get-profile-post-list")
+  }
+  
+  reload() {
+    this.displayList = []
+    this.postList = []
+    this.post.detail = {}
+    this.page = 1
+    this.service.event.publish("loading-start")
+    this.service.event.publish("get-friend-list")
   }
 
-  getPostDetail(postId, postIndex) {
-    this.post.ref.child("detail/" + postId).once("value").then(postDataSnap => {
-      var postData = postDataSnap.val()
-      
-      // check if below line cause error
-      if(postData.image === undefined) {
-        postData.image = []
-      }
-      postData.time = new Date(this.list[postIndex].time)
-      postData.like = this.service.objToList(postData.like)
-      this.post.detail[postId] = postData
-      this.displayNew[postIndex].display = true
-      // check if below line cause error
-    })
+  loadMore() {
+    this.service.event.publish("get-profile-post", this.postList)
+  }
+
+  goback() {
+    this.navCtrl.pop()
   }
 
   ionViewDidLoad() {
-    console.log('ionViewDidLoad ProfilePage');
+    console.log('ionViewDidLoad ProfilePage');*/
   }
 
 }

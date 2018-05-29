@@ -48,7 +48,7 @@ export class SettingPage {
     this.user.confirmAccount(this.username, this.password)
   }*/
   changeUserInfo() {
-    var e
+    var e = ""
     if(this.username.length < 4 && this.username !== '') {
       e = "tên người dùng tối thiểu 4 kí tự"
     }
@@ -61,18 +61,16 @@ export class SettingPage {
     else if(this.name.length < 4 && this.name !== '') {
       e = "tên hiển thị tối thiểu 4 kí tự"
     }
-    else if((/[^a-z|A-Z|" " ]/g).test(this.name) && this.name !== '') {
-      e = "tên hiển thị chỉ chứa chữ cái vài dấu cách"
+    else if((/[^a-z|A-Z|\s]/g).test(this.service.vitoen(this.name)) && this.name !== '') {
+      e = "tên hiển thị chỉ chứa chữ cái và dấu cách"
     }
 
-    if(e !== undefined) {
-      this.service.toastCtrl.create({
-        message: e,
-        duration: 1000,
-        position: 'bottom'
-      }).present()
+    if(e) {
+      this.service.warning(e)
     }
-    this.user.changeUserInfo(this.username, this.password, this.name)
+    else {
+      this.user.changeUserInfo(this.username, this.password, this.name)
+    }
   }
 
   goback() {
