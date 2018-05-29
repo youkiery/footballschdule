@@ -1,5 +1,7 @@
 import { Injectable } from '@angular/core';
 
+import firebase from "firebase"
+
 import {ServiceProvider} from "../service/service"
 
 /**
@@ -7,15 +9,16 @@ import {ServiceProvider} from "../service/service"
  */
 @Injectable()
 export class FriendProvider {
-  data = []
   ref: any
+  data = []
   active = []
   inactive = []
   request = []
   constructor(private service: ServiceProvider) {
-    this.ref = this.service.db.ref("friend")
+    this.ref = firebase.database().ref("friend")
     var data = {}
   }
+  
   initiaze(userId, event) {
     this.ref.orderByChild("userId").equalTo(userId).once("value").then(friendDataListSnap => {
       var friendDataList = friendDataListSnap.val()
