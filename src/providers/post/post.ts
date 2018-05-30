@@ -8,43 +8,49 @@ import { ServiceProvider } from "../service/service"
 @Injectable()
 export class PostProvider {
   ref: any
-  data = []
+  data = {}
   constructor(private service: ServiceProvider) {
     this.ref = this.service.db.ref("post")
   }
   getPostList(userList, event) {
     // check if friendlist vaild
     var list = []
-    var userLength = userList.length - 1
-    console.log(userList)
+    var end1 = userList.length - 1
     userList.forEach((userId, userIndex) => {
       this.ref.orderByChild("userId").equalTo(userId).once("value").then(userPostDataListSnap => {
         var userPostDataList = userPostDataListSnap.val()
         if(this.service.valid(userPostDataList)) {
-          list = this.service.objToList(userPostDataList)
+          var list2 = this.service.objToList(userPostDataList)
+          list2.forEach(data => {
+            list.push(data.id)
+          })
+          var length2 = list2.length
         }
-        if(userLength === userIndex) {
-          var end = list.length - 1
-          if(end >= 0) {
-            list.forEach((listData, listIndex) => {
-              if(listData.image === undefined) {
-                listData.image = []
-              }
-              this.ref.parent.child("like").orderByChild("postId").equalTo(listData.id).once("value")
-                .then(likeSnap => {
-                  var like = this.service.objToList(likeSnap.val())
-                  
-                  listData["like"] = like
-                  this.data[listData.id] = listData
-                  if(listIndex === end) {
-                    this.service.event.publish(event, list)
-                  }
-              })
-            })  
-          }
-          else {
+        if(end1 === userIndex) {
+          console.log(!length2)
+          if(!length2) {
             this.service.event.publish(event, list)
           }
+          else {
+            var end2 = length2 - 1
+          }
+        }
+        if(length2) {
+          list2.forEach((listData, listIndex) => {
+            if(listData.image === undefined) {
+              listData.image = []
+            }
+            this.ref.parent.child("like").orderByChild("postId").equalTo(listData.id).once("value")
+              .then(likeSnap => {
+                var like = this.service.objToList(likeSnap.val())
+                
+                listData["like"] = like
+                this.data[listData.id] = listData
+                if(end2 !== undefined && listIndex === end2) {
+                  this.service.event.publish(event, list)
+                }
+            })
+          })
         }
       })
     });
@@ -70,7 +76,7 @@ export class PostProvider {
     this.ref.parent.update(updateData).then(() => {
       postData.id = postId
       postData.time = new Date(postData.time)
-      this.data[postId] = postId
+      this.data[postId] = postData
 
       this.service.event.publish(event, postId)
       this.service.event.publish("loading-end")
@@ -80,18 +86,18 @@ export class PostProvider {
   changePostContent(postId, content, image) {
     this.service.event.publish("loading-start")
     console.log(postId, content, image)
-    var currTime = Date.now()
-    var updateData
+    //var currTime = Date.now()
+    //var updateData
     var detailPost = {
       msg: content,
       image: image
     }
-    image.forEach(image => {
-      updateData["postImage/" + image.imageId] = image
-    })
-    this.ref.child("detail/" + postId).update(detailPost).then(() => {
+    this.ref.update(detailPost).then(() => {
       this.data[postId].msg = content
       this.data[postId].image = image
+      console.log(this.data[postId])
+      
+      this.service.event.publish("comment-update-post", detailPost)
       this.service.event.publish("loading-end")
     })
   }
@@ -114,6 +120,8 @@ export class PostProvider {
       userId: userId,
       postId: postId
     }
+    console.log(this.data)
+    console.log(updateData)
     this.ref.parent.child("like/" + key).update(updateData).then(() => {
       updateData["id"] = key
       this.data[postId].like.push(updateData)

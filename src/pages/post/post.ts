@@ -30,7 +30,7 @@ export class PostPage {
         this.postId = this.navParam.get("postId")
         this.groupId = this.navParam.get("groupId")
       
-        console.log(this.groupId)
+        console.log(this.postId)
         if(this.groupId) {
           this.type = 1
         }
@@ -48,15 +48,16 @@ export class PostPage {
       this.service.warning("Nội dung ngắn hơn 10 kí tự")
     }
     else {
-      if(this.postId !== "") {
+      if(this.postId === undefined) {
         if(this.type) {
           this.post.pushAPost(this.groupId, this.msg, this.imageList, this.type, "group-update-post")
         }
         else {
-          this.post.pushAPost(this.user.userId, this.msg, this.imageList, this.type, "update-post-list")
+          this.post.pushAPost(this.user.userId, this.msg, this.imageList, this.type, "main-push-post")
         }
       }
       else {
+        console.log(1)
         this.post.changePostContent(this.postId, this.msg, this.imageList)
       }
       this.imageList = []

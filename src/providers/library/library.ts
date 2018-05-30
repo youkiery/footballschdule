@@ -27,18 +27,18 @@ export class LibraryProvider {
   }
   
   // find out if ref false
-  deleteImage(userId, libraryIndex, imageList) {
+  deleteImage(userId, libraryIndex, imageList, imageKey) {
     this.service.event.publish("loading-start")
     var deleteList = {}
-    var libraryId = this.list[libraryIndex].libraryId
-    imageList.forEach(imageData => {
-      deleteList[userId + "/detail/" + libraryId + "/" + imageData] = null
-      deleteList[userId + "/detail/all/" + imageData] = null
+    //var libraryId = this.list[libraryIndex].libraryId
+    console.log(userId, libraryIndex, imageList)
+    imageKey.forEach(key => {
+      deleteList["libraryImage/" + key] = null
     })
     
     console.log(deleteList)
-    this.ref.update(deleteList).then(() => {
-      this.service.event.publish("remove-image-list", imageList)
+    this.ref.parent.update(deleteList).then(() => {
+      this.service.event.publish("library-remove-image", imageList)
       this.service.event.publish("loading-end")
     })
   }
@@ -47,26 +47,18 @@ export class LibraryProvider {
     var updateData = {}
 
     var libraryId = this.ref.parent.child("library").push().key
-    //var imageId = this.ref.parent.child("library").push().key
-    var imageData = {        
-      time: currentTime,
-      url: this.defaultImage
-    }
-    updateData[userId + "/list/" + libraryId] = {
-      last: imageData,
+    
+    updateData = {
+      userId: userId,
+      last: "default",
       name: name,
       type: 0,
       time: currentTime,
       describe: describe
     }
-    updateData[userId + "/detail/" + libraryId] = {
-      key: imageData
-    }
-    updateData[userId + "/detail/all"] = {
-      key: imageData
-    }
-    this.ref.update(updateData).then(() => {
-      this.list.push(updateData[userId + "/list/" + libraryId])
+    this.ref.push(updateData).then(() => {
+      updateData["id"] = libraryId
+      this.list.push(updateData)
       console.log(this.list)
     })
   }

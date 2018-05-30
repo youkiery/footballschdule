@@ -3,25 +3,23 @@
     <ion-icon name="arrow-round-back" (click)="goback()"></ion-icon>
   </div>
   <div class="container">
-    <ion-card>
+    <ion-card *ngIf="postData.type === 0">
       <ion-card-header>
         <ion-item>
           <ion-avatar item-start>
             <img class="md-icon" src="{{user.data[postData.userId].avatar}}">
           </ion-avatar>
           <p>
-            <b>
               {{user.data[postData.userId].name}}
-            </b>
           </p>
           <p>
             {{postData.time | date: "yyyy/MM/dd HH:mm"}}
           </p>
           <ion-icon class="right" name="menu" (click)="thisPostOption($event, postId)" *ngIf="user.userId === postData.userId"></ion-icon>
         </ion-item>
-        <ion-slides *ngIf="postData.image !== undefined">
+        <ion-slides *ngIf="postData.image !== undefined || postData.image !== []">
           <ion-slide *ngFor="let imageId of postData.image">
-            <img src="{{image.data[imageId]}}">
+            <img class="lg-icon" src="{{image.data[imageId]}}">
           </ion-slide>
         </ion-slides>
       </ion-card-header>
@@ -32,15 +30,15 @@
         <div class="sm-item">
             <span *ngIf="postData.like !== undefined">
               <span *ngIf="postData.like.length > 0">
-                <button ion-button color="primary" *ngIf='this.service.findIndex(post.data[postId].like, user.userId, "userId") === -1' (click) ="post.like(user.userId, displayData)">
+                <button ion-button color="primary" *ngIf='this.service.findIndex(post.data[postId].like, user.userId, "userId") === -1' (click) ="post.like(user.userId, postData.id)">
                   {{postData.like.length}}
                 </button>
-                <button ion-button color="secondary" *ngIf='this.service.findIndex(post.data[postId].like, user.userId, "userId") !== -1'  (click)="post.unlike(user.userId, i)">
+                <button ion-button color="secondary" *ngIf='this.service.findIndex(post.data[postId].like, user.userId, "userId") !== -1'  (click)="post.unlike(user.userId, postData.id)">
                   {{postData.like.length}}
                 </button>
               </span>
               <span *ngIf="postData.like.length === 0">
-                <button ion-button color="primary" (click)="post.like(user.userId, displayData)">
+                <button ion-button color="primary" (click)="post.like(user.userId, postData.id)">
                   0
                 </button>
               </span>
@@ -58,15 +56,25 @@
           </button>
         </div>
         <div *ngFor="let commentData of comment; let i1 = index">
-          <img class="md-icon" src="{{user.data[postData.userId].avatar}}">
-          {{user.data[postData.userId].name}}
+          <ion-item>
+            <ion-avatar item-start>
+              <img class="md-icon" src="{{user.data[commentData.userId].avatar}}">
+            </ion-avatar>
+            <p>
+              {{user.data[commentData.userId].name}}
+            </p>
+            <p>
+              {{commentData.time | date: "yyyy/MM/dd HH:mm"}}
+            </p>
+          </ion-item>
           <ion-icon class="right" name="menu" (click)="thisCommentOption($event, {msg: commentData.msg, commentId: commentData.id})" *ngIf="user.userId === comment[i1].userId"></ion-icon>
-          <p>
-            {{commentData.time | date: "yyyy/MM/dd HH:mm"}}
-          </p>
           <p>
             {{commentData.msg}}
           </p>
+          <button ion-button *ngIf="commentData.userId !== user.userId && friend.active.indexOf(commentData.userId) === -1 && friend.inactive.indexOf(commentData.userId) === -1" (click)="user.addFriend(user.userId, commentData.userId)">
+            +
+          </button>
+          <!--
           <div class="sm-item">
             <span *ngIf="commentData.like !== undefined">
               <button ion-button color="primary" *ngIf='this.service.findIndex(commentData.like, user.userId, "userId") === -1' (click)="post.likeComment(user.userId, commentData.id)">
@@ -81,13 +89,131 @@
                 0
               </button>
             </span>
-            <span>
-              <button ion-button *ngIf="commentData.userId !== user.userId && friend.active.indexOf(commentData.userId) === -1 && friend.inactive.indexOf(commentData.userId) === -1" (click)="user.addFriend(user.userId, commentData.userId)">
-                +
+          </div>
+          <div *ngFor="let subcomment of comment.comment; let i1 = index">
+              <img class="md-icon" src="{{user.data[postData.userId].avatar}}">
+              {{user.data[postData.userId].name}}
+              <p>
+                {{subcomment.time | date: "yyyy/MM/dd HH:mm"}}
+              </p>
+              <p>
+                {{subcomment.msg}}
+              </p>
+              <span *ngIf="subcomment.like !== undefine">
+                <button ion-button (click)="viewLiked(user.detailId)">
+                  {{subcomment.like.length}}
+                </button>
+                <button ion-button color="primary" *ngIf='subcomment.like.indexOf(user.userId) === -1' (click)="post.like(subcomment.userId, user.detailId, subcomment.like)">
+                  like
+                </button>
+                <button ion-button color="secondary" *ngIf='subcomment.like.indexOf(user.userId) !== -1' (click)="post.unlike(subcomment.userId, user.detailId, subcomment.like)">
+                  like
+                </button>
+              </span>
+              <span *ngIf="subcomment.like === undefine">
+                <button ion-button>
+                  0
+                </button>
+                <button ion-button color="primary" (click)="post.like(subcomment.userId, user.detailId, subcomment.like)">
+                  like
+                </button>
+              </span>
+              <span>
+                <button ion-button *ngIf="postData.userId !== user.userId && friend.active.indexOf(subcomment.userId) === -1 && friend.inactive.indexOf(subcomment.userId) === -1" (click)="user.addFriend(subcomment.userId)">
+                  +
+                </button>
+              </span>
+            </div>          
+          -->
+        </div>
+      </ion-list>
+    </ion-card>
+    <ion-card *ngIf="postData.type === 1">
+      <ion-card-header>
+        <ion-item>
+          <ion-avatar item-start>
+            <img class="md-icon" src="{{group.data[postData.userId].avatar}}">
+          </ion-avatar>
+          <p>
+            {{group.data[postData.userId].name}}
+          </p>
+          <p>
+            {{postData.time | date: "yyyy/MM/dd HH:mm"}}
+          </p>
+          <ion-icon class="right" name="menu" (click)="thisPostOption($event, postId)" *ngIf="user.userId === group.data[postData.userId].userId"></ion-icon>
+        </ion-item>
+        <ion-slides *ngIf="postData.image !== undefined">
+          <ion-slide *ngFor="let imageId of postData.image">
+            <img class="lg-icon" src="{{image.data[imageId]}}">
+          </ion-slide>
+        </ion-slides>
+      </ion-card-header>
+      <ion-list>
+        <p class="msg">
+          {{postData.msg}}
+        </p>
+        <div class="sm-item">
+            <span *ngIf="postData.like !== undefined">
+              <span *ngIf="postData.like.length > 0">
+                <button ion-button color="primary" *ngIf='this.service.findIndex(post.data[postId].like, user.userId, "userId") === -1' (click) ="post.like(user.userId, postData.id)">
+                  {{postData.like.length}}
+                </button>
+                <button ion-button color="secondary" *ngIf='this.service.findIndex(post.data[postId].like, user.userId, "userId") !== -1'  (click)="post.unlike(user.userId, postData.id)">
+                  {{postData.like.length}}
+                </button>
+              </span>
+              <span *ngIf="postData.like.length === 0">
+                <button ion-button color="primary" (click)="post.like(user.userId, postData.id)">
+                  0
+                </button>
+              </span>
+              <span>
+                <button ion-button *ngIf="postData.userId !== user.userId && friend.active.indexOf(postData.userId) === -1 && friend.inactive.indexOf(postData.userId) === -1" (click)="user.addFriend(user.userId, postData.userId)">
+                  +
+                </button>
+              </span>
+            </span>
+          </div>
+        <div>
+          <ion-textarea name="commentMsg" [(ngModel)]="commentMsg"></ion-textarea>
+          <button ion-button (click)="commentPost(commentMsg)"><br/>
+            bình luận
+          </button>
+        </div>
+        <div *ngFor="let commentData of comment; let i1 = index">
+          <ion-item>
+            <ion-avatar item-start>
+              <img class="md-icon" src="{{user.data[commentData.userId].avatar}}">
+            </ion-avatar>
+            <p>
+              {{user.data[commentData.userId].name}}
+            </p>
+            <p>
+              {{commentData.time | date: "yyyy/MM/dd HH:mm"}}
+            </p>
+          </ion-item>
+          <p>
+            {{commentData.msg}}
+          </p>
+          <button ion-button *ngIf="commentData.userId !== user.userId && friend.active.indexOf(commentData.userId) === -1 && friend.inactive.indexOf(commentData.userId) === -1" (click)="user.addFriend(user.userId, commentData.userId)">
+            +
+          </button>
+          <!--
+          <div class="sm-item">
+            <span *ngIf="commentData.like !== undefined">
+              <button ion-button color="primary" *ngIf='this.service.findIndex(commentData.like, user.userId, "userId") === -1' (click)="post.likeComment(user.userId, commentData.id)">
+                {{commentData.like.length}}
+              </button>
+              <button ion-button color="secondary" *ngIf='this.service.findIndex(commentData.like, user.userId, "userId") !== -1' (click)="post.unlikeComment(user.userId, commentData.id, commentData.like)">
+                {{commentData.like.length}}
+              </button>
+            </span>
+            <span *ngIf="commentData.like === undefined">
+              <button ion-button color="primary" (click)="post.likeComment(user.userId, commentData.id)">
+                0
               </button>
             </span>
           </div>
-          <!--
           <div *ngFor="let subcomment of comment.comment; let i1 = index">
               <img class="md-icon" src="{{user.data[postData.userId].avatar}}">
               {{user.data[postData.userId].name}}

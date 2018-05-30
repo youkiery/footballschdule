@@ -23,19 +23,22 @@ export class UserProvider {
     lastlog: "",
   }
   data = {}
+  setting = {
+    numberload: 2
+  }
   userId = ""
   username = ""
   password = ""
   constructor(private service: ServiceProvider) {
     this.ref = this.service.db.ref("user")
-    /*this.service.storage.get("userInfo").then(data => {
+    this.service.storage.get("userInfo").then(data => {
       var userInfo = data
     
       if(this.service.valid(userInfo)) {
         this.service.event.publish("loading-start")
         this.loginSuccess(userInfo.userInfo, userInfo.userId)
       }
-    })*/
+    })
   }
 
   login(username, password) {
@@ -69,11 +72,15 @@ export class UserProvider {
 
   loginSuccess(userInfo, userId) {
     var currentTime = Date.now()
-    userInfo.lastLog = currentTime
+    userInfo.lastlog = currentTime
     this.userId = userId
+    this.username = userInfo.username
+    this.password = userInfo.password
+    this.setting = userInfo.setting
     
     this.data[userId] = userInfo
-    this.ref.child(this.userId).update({lastLog: currentTime}).then(() => {
+    this.setUser(userId, userInfo)
+    this.ref.child(this.userId).update({lastlog: currentTime}).then(() => {
       this.service.event.publish("login-success")
     })
     // catch error
@@ -98,10 +105,11 @@ export class UserProvider {
         }
         
         var libraryId = this.ref.parent.child("library").push().key
+        var imageId = this.ref.parent.child("image").push().key
         var imageData = {
           libraryId: libraryId,
           time: currentTime,
-          url: this.defaultImage
+          imageId: "default"
         }
         updateData["user/" + userId] = signupData
         updateData["library/" + libraryId] = {
@@ -110,9 +118,9 @@ export class UserProvider {
           name: "không tên",
           type: 0,
           time: currentTime,
-          describe: ""
+          describe: "chưa có"
         }
-        updateData["image/" + imageId] = imageData
+        updateData["libraryImage/" + imageId] = imageData
 
         this.ref.parent.update(updateData).then(() => {
           var storeData = {
@@ -134,7 +142,7 @@ export class UserProvider {
   }
 
   
-  /*signupFb() {
+  signupFb() {
     this.service.event.publish('loading-start')
     var provider = new firebase.auth.FacebookAuthProvider();
     firebase.auth().signInWithPopup(provider).then(result => {
@@ -174,19 +182,18 @@ export class UserProvider {
           var imageData = {
             libraryId: libraryId,
             time: currentTime,
-            url: this.defaultImage
+            imageId: "default"
           }
           updateData["user/" + userId] = signupData
           updateData["library/" + libraryId] = {
             userId: userId,
-            last: imageId,
+            last: "default",
             name: "không tên",
             type: 0,
             time: currentTime,
-            describe: ""
+            describe: "chưa có"
           }
-          updateData["image/" + imageId] = imageData
-  
+          updateData["libraryImage/" + imageId] = imageData
           this.ref.parent.update(updateData).then(() => {
             var storeData = {
               userId: userId,
@@ -198,12 +205,20 @@ export class UserProvider {
         }
       })
     })
-  }*/
+  }
+
+  changeNumberLoad(numberload) {
+    this.service.event.publish("loading-start")
+    this.ref.child(this.userId + "/setting/numberload").set(numberload).then(() => {
+      this.setting.numberload = numberload
+      this.service.event.publish("loading-end")
+    })
+  }
 
 
   getuserInfo(userList, event) {
     var end = userList.length - 1
-    var list = []
+    //var list = []
     userList.forEach((userId, userIndex) => {
       if(!this.service.valid(this.data[userId])) {
         this.ref.child(userId).once("value").then(userInfoSnap => {
@@ -243,7 +258,8 @@ export class UserProvider {
       name: userInfo.name,
       avatar: userInfo.avatar,
       region: userInfo.region,
-      lastLog: userInfo.lastLog
+      lastLog: userInfo.lastLog,
+      describe: userInfo.describe
     }
   }
 
@@ -260,15 +276,15 @@ export class UserProvider {
     })
   }
   
-  changeUserInfo(username, password, name) {
+  changeUserInfo(username, password, name, region) {
     this.service.event.publish('loading-start')
     var updateData = {}
     var check = 0
-    if(username !== this.data[this.userId].username && username !== '') {
+    if(username !== username && username !== '') {
       updateData["username"] = username
       check ++
     }
-    if(password !== this.data[this.userId].password && password !== '') {
+    if(password !== password && password !== '') {
       updateData["password"] = password
       check ++
     }
@@ -276,15 +292,28 @@ export class UserProvider {
       updateData["name"] = name
       check ++
     }
+    if(region !== this.data[this.userId].region) {
+      updateData["region"] = region
+      check ++
+    }
     if(check) {
       this.ref.child(this.userId).update(updateData).then(() => {
-        for (const key in updateData) {
-          if (updateData.hasOwnProperty(key)) {
-            this.data[this.userId] = updateData[key]
-          }
+        if(updateData["username"] !== undefined) {
+          this.username = username
+        }
+        if(updateData["password"] !== undefined) {
+          this.password = password
+        }
+        if(updateData["name"] !== undefined) {
+          this.data[this.userId].name = name
+        }
+        if(updateData["region"] !== undefined) {
+          this.data[this.userId].region = region
         }
         var storeData = {
           userId: this.userId,
+          username: this.username,
+          password: this.password,
           userInfo: this.data[this.userId]
         }
         this.service.storeData("userInfo", storeData)
@@ -301,6 +330,7 @@ export class UserProvider {
     if(this.data[userId] === undefined) {
       this.ref.child(userId).once("value").then(userDataSnap => {
         var userData = userDataSnap.val()
+        console.log(userData)
         if(this.service.valid(userData)) {
           this.setUser(userId, userData)
         }

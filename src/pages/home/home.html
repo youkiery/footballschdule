@@ -35,7 +35,7 @@
         <ion-item>
           <ion-label>Vùng</ion-label>
           <ion-select [(ngModel)]="position" name="position">
-            <ion-option *ngFor="let pos of user.position; let i = index" value="{{i}}">{{pos}}</ion-option>
+            <ion-option *ngFor="let pos of service.position; let i = index" value="{{i}}">{{pos}}</ion-option>
           </ion-select>
         </ion-item>
         <button ion-button color="primary" (click)="signup()">đăng ký</button>

@@ -28,7 +28,6 @@ export class GroupPage {
   groupInfo = {}
   tempList = []
   follow = []
-  images = []
   postList = []
   
   page = 1
@@ -71,7 +70,6 @@ export class GroupPage {
         console.log(this.groupInfo)
         console.log(this.tempList)
         console.log(this.follow)
-        console.log(this.images)
         console.log(this.postList)
       })
 
@@ -91,12 +89,6 @@ export class GroupPage {
       })
       this.service.event.subscribe("group-child-finish", (imageData) => {
         var list = []
-        for (const key in imageData) {
-          if (imageData.hasOwnProperty(key)) {
-            const element = imageData[key]
-            this.images[key] = element
-          }
-        }
         console.log(this.image)
         this.service.event.publish("group-display-post", this.postList)
       })
@@ -118,9 +110,6 @@ export class GroupPage {
           indexToLoad.forEach(index => {
             this.displayList.push(this.postList[index].id)
             // quere load
-            if(this.user.data[this.postList[index].userId] === undefined) {
-              this.user.getUserData(this.postList[index].userId)
-            }
             if(index === end) {
               this.service.event.publish("loading-end")
             }

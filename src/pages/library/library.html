@@ -3,46 +3,60 @@
 -->
 <ion-content>
   <div class="header">
-    <div *ngIf="action === 'change'">
-      <ion-icon name="arrow-round-back" (click)="goback()"></ion-icon>      
-      <ion-icon name="ios-done-all" (click)="changeAvatar()"></ion-icon>
+    <div *ngIf="isChild === true">
+      <div *ngIf="action === 'change'">
+        <ion-icon name="arrow-round-back" (click)="goback()"></ion-icon> 
+        <ion-icon name="md-arrow-back" (click)="returnBack()"></ion-icon>     
+        <ion-icon name="ios-done-all" (click)="changeAvatar()"></ion-icon>
+      </div>
+
+      <div *ngIf="action === 'select'">
+        <ion-icon name="arrow-round-back" (click)="goback()"></ion-icon>  
+        <ion-icon name="md-arrow-back" (click)="returnBack()"></ion-icon>    
+        <ion-icon name="ios-done-all" (click)="selectImageToPost()"></ion-icon>
+      </div>
+      
+      <div *ngIf="action === ''">
+        <ion-icon name="arrow-round-back" (click)="returnBack()"></ion-icon>
+        <label for="file">
+          <ion-icon name="cloud-upload"></ion-icon>
+          <span aria-hidden="true"></span>
+          <input type="file" id="file" style="display:none" (change)="getFile()" multiple />
+        </label>
+        <ion-icon *ngIf="files !== undefined" name="cloud-done" (click)="uploadImage()"></ion-icon>
+        <ion-icon *ngIf="isSelect === true" name="ios-checkbox-outline" (click)="selectOff()"></ion-icon>
+        <ion-icon *ngIf="isSelect === false" name="ios-checkbox" (click)="selectOn()"></ion-icon>
+        <ion-icon *ngIf="isSelect === true" name="ios-trash" (click)="delete()"></ion-icon>
+        <ion-icon name="create" (click)="modifyLibrary()"></ion-icon>
+        <ion-icon *ngIf="selectedIndex !== 0" name="remove-circle" (click)="deleteThisLibrary()"></ion-icon>
+      </div>
     </div>
 
-    <div *ngIf="action === 'select'">
-      <ion-icon name="arrow-round-back" (click)="goback()"></ion-icon>      
-      <ion-icon name="ios-done-all" (click)="selectImageToPost()"></ion-icon>
+    <div *ngIf="isChild === false">
+      <div *ngIf="action === 'change'">
+        <ion-icon name="arrow-round-back" (click)="goback()"></ion-icon>      
+        <ion-icon name="ios-done-all" (click)="changeAvatar()"></ion-icon>
+      </div>
+
+      <div *ngIf="action === 'select'">
+        <ion-icon name="arrow-round-back" (click)="goback()"></ion-icon>      
+        <ion-icon name="ios-done-all" (click)="selectImageToPost()"></ion-icon>
+      </div>
+
+      <div *ngIf="action === ''">
+        <ion-icon name="arrow-round-back" (click)="goback()"></ion-icon>    
+        <ion-icon name="add-circle" (click)="newLibrary()"></ion-icon>
+      </div>
     </div>
-
-    <div *ngIf="isChild === false && action === ''">
-      <ion-icon name="arrow-round-back" (click)="goback()"></ion-icon>    
-      <ion-icon name="add-circle" (click)="newLibrary()"></ion-icon>
-    </div>
-
-    <div *ngIf="isChild === true && action === ''">
-      <ion-icon name="arrow-round-back" (click)="returnBack()"></ion-icon>
-
-      <label for="file">
-        <ion-icon name="cloud-upload"></ion-icon>
-        <span aria-hidden="true"></span>
-        <input type="file" id="file" style="display:none" (change)="getFile()" multiple />
-      </label>
-      <ion-icon *ngIf="files !== undefined" name="cloud-done" (click)="uploadImage()"></ion-icon>
-
-      <ion-icon *ngIf="isSelect === true" name="ios-checkbox-outline" (click)="selectOff()"></ion-icon>
-      <ion-icon *ngIf="isSelect === false" name="ios-checkbox" (click)="selectOn()"></ion-icon>
-      <ion-icon *ngIf="isSelect === true" name="ios-trash" (click)="delete()"></ion-icon>
-      <ion-icon name="create" (click)="modifyLibrary()"></ion-icon>
-      <ion-icon *ngIf="selectedIndex !== 0" name="remove-circle" (click)="deleteThisLibrary()"></ion-icon>
-    </div>    
   </div>
-
   <div class="container">
     <ion-list *ngIf="isChild === false">
       <ion-item color="primary">
         Danh sách thư viện
       </ion-item>
       <ion-item *ngFor="let libraryDataList of library.list; let libraryIndex = index">
-        <img class="md-icon" *ngIf="image.data[libraryDataList.last] !== undefined" src="{{image.data[libraryDataList.last].url}}" (click)="gotoLibrary(libraryDataList.id, libraryIndex)">
+        <img class="md-icon" *ngIf="image.data[libraryDataList.last] !== undefined" src="{{image.data[libraryDataList.last]}}" (click)="gotoLibrary(libraryDataList.id, libraryIndex)">
+        <img class="md-icon" *ngIf="image.data[libraryDataList.last] === undefined" src="{{service.defaultImage}}" (click)="gotoLibrary(libraryDataList.id, libraryIndex)">
         <div class="right">
           <p>
             {{libraryDataList.name}}
@@ -75,10 +89,10 @@
       </ion-item>
       <span class="inline" *ngFor="let imageId of displayLibraryImage; let imageIndex = index">
         <span *ngIf="isSelect === true">
-          <img class="md-icon" src="{{image.data[imageId].url}}" *ngIf="selectImages.indexOf(imageId) < 0" (click)="tickImage(imageId)">
-          <img class="md-icon selected" src="{{image.data[imageId].url}}" *ngIf="selectImages.indexOf(imageId) >= 0" (click)="untickImage(imageId)">    
+          <img class="md-icon" src="{{image.data[imageId]}}" *ngIf="selectImages.indexOf(imageId) < 0" (click)="tickImage(imageId)">
+          <img class="md-icon selected" src="{{image.data[imageId]}}" *ngIf="selectImages.indexOf(imageId) >= 0" (click)="untickImage(imageId)">    
         </span>
-        <img class="md-icon" src="{{image.data[imageId].url}}" *ngIf="isSelect === false" (click)="viewImage(image.data[imageId].url)">
+        <img class="md-icon" src="{{image.data[imageId]}}" *ngIf="isSelect === false" (click)="viewImage(image.data[imageId])">
       </span>
     </ion-list>
   </div>

@@ -18,14 +18,7 @@ export class FriendPage {
 
   constructor(private friend: FriendProvider, private user: UserProvider, 
     private navCtrl: NavController) {
-      console.log(user)
-      /*this.friend.request.forEach(friendId => {
-        this.user.getUserData(friendId)
-      })
-      this.friend.inactive.forEach(friendId => {
-        this.user.getUserData(friendId)
-      })*/
-    //console.log(this.user.friendInactiveList)
+      
   }
 
   ionViewDidLoad() {

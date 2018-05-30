@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { IonicPage, NavController } from 'ionic-angular';
+import { IonicPage, NavController, AlertController } from 'ionic-angular';
 
 import { UserProvider } from '../../providers/user/user';
 import { ServiceProvider } from '../../providers/service/service';
@@ -19,7 +19,9 @@ export class SettingPage {
   password = ''
   vpassword = ''
   name = ''
-  constructor(public user: UserProvider, public service: ServiceProvider, public navCtrl: NavController) {
+  region = 0
+  constructor(public user: UserProvider, public service: ServiceProvider, public navCtrl: NavController,
+    private alertCtrl: AlertController) {
     this.name = this.user.data[this.user.userId].name
   }
 
@@ -69,12 +71,39 @@ export class SettingPage {
       this.service.warning(e)
     }
     else {
-      this.user.changeUserInfo(this.username, this.password, this.name)
+      this.user.changeUserInfo(this.username, this.password, this.name, this.region)
     }
   }
 
+  // đổi lượng post hiển thị mỗi lần NL: number load
+  changeNL() {
+    let alert = this.alertCtrl.create({
+      message: "nhập lượng tin mong muốn<br>lượng tin tối thiểu: 2",
+      inputs: [{
+        name: "numberload",
+        type: "number",
+        placeholder: "0"
+      }],
+      buttons: [{
+        role: "cancel",
+        text: "hủy"
+      },
+      {
+        text: 'Sửa',
+        handler: data => {
+          console.log(data)
+          if(data.numberload < 2) {
+            this.service.warning("lượng tin tối thiểu: 2")
+          }
+          else {
+            this.user.changeNumberLoad(data.numberload);
+          }
+        }
+      }]
+    })
+  }
+
   goback() {
-    console.log("xxx")
     this.navCtrl.pop()
   }
 }

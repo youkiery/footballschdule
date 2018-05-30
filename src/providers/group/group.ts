@@ -9,7 +9,7 @@ import {ServiceProvider} from "../service/service"
 @Injectable()
 export class GroupProvider {
   ref: any
-  defaultImage = "../../assets/imgs/logo.png"
+  data = {}
   constructor(private service: ServiceProvider) {
     this.ref = this.service.db.ref("group")
   }
@@ -32,6 +32,7 @@ export class GroupProvider {
         this.ref.child(element).once("value").then(groupDataListSnap => {
           var groupDataList = groupDataListSnap.val()
           if(groupDataList) {
+            this.data[groupDataListSnap.key] = groupDataList
             groupDataList.id = groupDataListSnap.key
             list.push(groupDataList)
           }
@@ -75,6 +76,7 @@ export class GroupProvider {
     }
     this.ref.parent.update(updateData).then(() => {
       updateData["group/" + groupId].id = groupId
+      this.data[groupId] = updateData["group/" + groupId]
       this.service.event.publish(event, updateData["group/" + groupId])
     })
   }

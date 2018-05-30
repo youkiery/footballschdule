@@ -3,7 +3,7 @@
     <ion-icon name="arrow-round-back" (click)="goback()"></ion-icon>
   </div>
   <div class="container">
-    <ion-list *ngIf="user.username !== ''">
+    <ion-list>
       <ion-item color="primary">
         cập nhật thông tin người dùng
       </ion-item>
@@ -21,11 +21,27 @@
           <ion-input [(ngModel)]="vpassword" type="password" name="vpassword" placeholder="xác nhận mật khẩu"></ion-input>
         </ion-item>
         <ion-item>
-          <button ion-button (click)="changeUserInfo()">
-            cập nhật
-          </button>
+        <ion-label>Vùng</ion-label>
+          <ion-select [(ngModel)]="region" name="region">
+            <span *ngFor="let pos of service.position; let i = index">
+              <ion-option value="{{i}}" *ngIf="user.data[user.userId].region === i" selected="true">
+                {{pos}}
+              </ion-option>
+              <ion-option value="{{i}}" *ngIf="user.data[user.userId].region !== i">
+                {{pos}}
+              </ion-option>
+            </span>
+          </ion-select>
         </ion-item>
+        <button ion-button (click)="changeUserInfo()">
+          cập nhật
+        </button>
       </form>
+    </ion-list>
+    <ion-list>
+      <ion-item (click)="changeNL()">
+        đổi lượng tin mỗi lần load
+      </ion-item>
     </ion-list>
   </div>
 </ion-content>

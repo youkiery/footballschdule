@@ -6,6 +6,9 @@ import { PostPage } from '../post/post';
 import { ServiceProvider } from '../../providers/service/service'
 import { UserProvider } from '../../providers/user/user'
 import { PostProvider } from '../../providers/post/post'
+import { FriendProvider } from '../../providers/friend/friend'
+import { GroupProvider } from '../../providers/group/group'
+import { ImageProvider } from '../../providers/image/image'
 
 /**
  * 
@@ -25,9 +28,11 @@ export class CommentPage {
   comment = []
   constructor(public service: ServiceProvider, public user: UserProvider, public post: PostProvider,
     public alertCtrl: AlertController, public viewCtrl: ViewController, public navCtrl: NavController,
-    private navParam: NavParams) {
+    private navParam: NavParams, private friend: FriendProvider, private group: GroupProvider,
+    private image: ImageProvider) {
         this.postId = this.navParam.get("postId")
         this.postData = this.post.data[this.postId]
+        console.log(this.postData)
         
         this.listener = this.post.ref.parent.child("comment")
         this.listener.on("child_added", (dataSnap) => {
@@ -69,7 +74,11 @@ export class CommentPage {
         this.service.event.subscribe("delete-post", () => {
           this.navCtrl.pop()
         })
-        this.service.event.subscribe("comment-like", (data) => {
+        this.service.event.subscribe("comment-update-post", (data) => {
+          this.postData.msg = data.msg
+          this.postData.image = data.image
+        })
+        /*this.service.event.subscribe("comment-like", (data) => {
           var index = this.service.findIndex(this.comment, data[0], "id")
           this.comment[index].like.push(data[1])
         })
@@ -78,7 +87,7 @@ export class CommentPage {
           this.comment[index].like = this.comment[index].like.filter(x => {
             return x.userId !== user.userId
           })
-        })
+        })*/
       }
 
   commentPost(msg) {
@@ -99,31 +108,7 @@ export class CommentPage {
       message: displayForm
     })
     alert.present()
-  }
-  changeContent() {
-    this.service.postId = this.service.detailId
-    this.navCtrl.push(PostPage)
-    this.viewCtrl.dismiss()
-  }
-  deletePost() {
-    let alert = this.alertCtrl.create({
-      buttons: [
-        {
-          text: 'Hủy',
-          role: 'cancel',
-        },
-        {
-          text: 'Xóa',
-          handler: () => {
-            this.post.deletePost(this.user.userId, this.service.detailId)
-          }
-        }
-      ]
-    })
-    alert.present()
-    this.viewCtrl.dismiss()
-  }
-  
+  }  
   thisPostOption(event, postId) {
     let popover = this.service.popoverCtrl.create(DetailOption, {
       postId: postId

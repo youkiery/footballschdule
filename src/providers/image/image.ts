@@ -13,22 +13,14 @@ export class ImageProvider {
     this.ref = this.service.db.ref("image")
   }
   getLibraryImage(libraryId, event) {
-    var list = []
-    this.ref.orderByChild("libraryId").equalTo(libraryId).once("value").then(imageSnap => {
+    var data = []
+    this.ref.parent.child("libraryImage").orderByChild("libraryId").equalTo(libraryId).once("value").then(imageSnap => {
       var image = imageSnap.val()
 
       if(this.service.valid(image)) {
-        for (const imageId in image) {
-          if (image.hasOwnProperty(imageId)) {
-            var element = image[imageId]
-            element["id"] = imageId
-            list.push(imageId)
-            this.data[imageId] = element
-          }
-        }
+        data = image
       }
-      console.log(list)
-      this.service.event.publish("get-image-list", list)
+      this.service.event.publish(event, data)
     })
   }
   getImage(imageList, event) {
@@ -37,15 +29,12 @@ export class ImageProvider {
     if(end) {
       end --
       imageList.forEach((imageId, index) => {
-        console.log(imageId)
         this.ref.child(imageId).once("value").then(imageSnap => {
           var image = imageSnap.val()
-    
-          console.log(image, imageId)
           if(this.service.valid(image)) [
             this.data[imageId] = image
           ]
-          list.push(image)
+          list.push(imageId)
           if(end === index) {
             this.service.event.publish(event, list)
           }
@@ -53,7 +42,7 @@ export class ImageProvider {
       })
     }
     else {
-      this.service.event.publish(event)
+      this.service.event.publish(event, list)
     }
   }
 }

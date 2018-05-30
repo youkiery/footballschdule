@@ -46,6 +46,7 @@ export class LibraryPage {
   displayLibraryImage = []
   selectedLibrary: any
   selectedIndex: any
+  libraryImageKey = {}
   // templist, selectedlist
   constructor(public service: ServiceProvider, public user: UserProvider, private navParam: NavParams,
     public library: LibraryProvider, public navCtrl: NavController, public alertCtrl: AlertController,
@@ -56,27 +57,35 @@ export class LibraryPage {
           this.isSelect = true
         }
 
-        this.service.event.subscribe("remove-image-list", imageList => {
-          imageList.forEach(imageData => {
+        this.service.event.subscribe("library-remove-image", imageList => {
+          imageList.forEach(imageId => {
             this.displayLibraryImage = this.displayLibraryImage.filter(imageLibraryData => {
-              return imageLibraryData.id !== imageData
+              return imageLibraryData !== imageId
             })
           })   
         })
-        this.service.event.subscribe("get-image-list", imageList => {
-          this.displayLibraryImage = imageList
-          this.service.event.publish("loading-end")
-        })
-        this.service.event.subscribe("get-last-image", () => {
-          console.log(1)
+        this.service.event.subscribe("library-get-last-image", () => {
           var list = []
           this.library.list.forEach(libraryList => {
             list.push(libraryList.last)
           })
           this.image.getImage(list, "loading-end")
         })
-
-        this.library.getLibraryList(this.user.userId, "get-last-image")
+        this.service.event.subscribe("library-get-image", imageList => {
+          this.displayLibraryImage = imageList
+          this.service.event.publish("loading-end")
+        })
+        this.service.event.subscribe("library-get-child-image", imageData => {
+          var list = []
+          for (const key in imageData) {
+            if (imageData.hasOwnProperty(key)) {
+              list.push(imageData[key].imageId)
+              this.libraryImageKey[imageData[key].imageId] = key 
+            }
+          }
+          this.image.getImage(list, "library-get-image")
+        })
+        this.library.getLibraryList(this.user.userId, "library-get-last-image")
   }
 
   selectOn() {
@@ -89,7 +98,11 @@ export class LibraryPage {
   }
   delete() {
     if(this.selectImages.length > 0) {
-      this.library.deleteImage(this.user.userId, this.selectedIndex, this.selectImages)
+      var idList = []
+      this.selectImages.forEach(imageId => {
+        idList.push(this.libraryImageKey[imageId])
+      })
+      this.library.deleteImage(this.user.userId, this.selectedIndex, this.selectImages, idList)
       this.selectOff()
     }
     else {
@@ -97,7 +110,6 @@ export class LibraryPage {
     }
   }
   gotoLibrary(libraryId, libraryIndex) {
-    console.log(this.library)
     this.service.event.publish("loading-start")
     this.selectedIndex = libraryIndex
     
@@ -106,7 +118,7 @@ export class LibraryPage {
     this.selectedLibrary.time = new Date(this.selectedLibrary.time)
     this.isChild = true
     
-    this.image.getLibraryImage(libraryId, "loading-finish")
+    this.image.getLibraryImage(libraryId, "library-get-child-image")
   }
   goback() {
     this.navCtrl.pop()
@@ -193,7 +205,6 @@ export class LibraryPage {
         {
           text: 'Chuyển',
           handler: (data) => {
-            console.log(data)
             if(this.selectImages.length > 0) {
               this.library.moveImage(this.user.userId, this.selectImages, this.selectedIndex, data)
             }
@@ -247,7 +258,6 @@ export class LibraryPage {
         this.selectImages.push(imageId)
         break
     }
-    console.log(this.selectImages)
   }
   untickImage(imageId) {
     switch(this.action) {
@@ -269,20 +279,18 @@ export class LibraryPage {
       })
       break
     }
-    console.log(this.selectImages)
   }
   viewImage(imageUrl) {
     this.navCtrl.push(viewImage, {imageUrl: imageUrl})
   }
   changeAvatar() {
     if(this.service.valid(this.selectImages[0])) {
-      console.log(this.image.data[this.selectImages[0]])
-      this.user.changeAvatar(this.image.data[this.selectImages[0]].url)
+      this.user.changeAvatar(this.image.data[this.selectImages[0]])
       this.navCtrl.pop()
     }
   }
   selectImageToPost() {
-    if(this.service.valid(this.service.selectImages)) {
+    if(this.service.valid(this.selectImages)) {
       this.service.event.publish("update-image-post", this.selectImages)
       this.navCtrl.pop()
     }
@@ -324,6 +332,7 @@ export class LibraryPage {
         fileIdToLoad.forEach((fileId, fileIndex) => {
           this.service.event.publish("loading-update", (fileIndex + 1) + "/" + (end + 1))
           var imageId = this.image.ref.push().key
+          var libraryImageId = this.image.ref.push().key
           var storageRef = this.service.store.ref().child(imageId);
           var uploadTask = storageRef.put(this.files[fileId]);
           
@@ -336,16 +345,20 @@ export class LibraryPage {
                 
                 var currTime = Date.now()
                 var imageData = {
-                  url: url,
+                  imageId: imageId,
                   libraryId: libraryId,
                   time: currTime
                 }
   
                 var updateData = {}
-                updateData["image/" + imageId] = imageData
+                updateData["libraryImage/" + libraryImageId] = imageData
+                updateData["library/" + libraryId + "/last"] = imageId
+                updateData["image/" + imageId] = url
+
                 this.library.ref.parent.update(updateData).then(() => {
-                  this.image.data[imageId] = imageData
-                  this.displayLibraryImage.push(imageData)
+                  this.image.data[imageId] = url
+                  this.library.list[this.selectedIndex].last = imageId
+                  this.displayLibraryImage.push(imageId)
   
                   if(end === fileIndex) {
                     this.files = undefined
