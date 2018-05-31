@@ -17,6 +17,7 @@ import { PostProvider } from '../providers/post/post';
 import { ImageProvider } from '../providers/image/image';
 import { LibraryProvider } from '../providers/library/library';
 import { GroupProvider } from '../providers/group/group';
+import { UIEventManager } from 'ionic-angular/gestures/ui-event-manager';
 
 /**
  * loading
@@ -46,7 +47,9 @@ export class MyApp {
 
       this.ref = firebase.database().ref()
 
-      // loading
+      /**
+       * general
+       */
       this.event.subscribe("loading-start", () => {
         if(!this.isload) {
           this.load = this.loadCtrl.create()
@@ -64,51 +67,62 @@ export class MyApp {
         this.service.warning(msg)
       })
 
-      // control data load
-      
       this.event.subscribe('login-success', () => {
         this.dismissLoading()
         this.rootPage = MainPage
       })
 
-      // get userData(userId)
+      this.event.subscribe('logout', () => {
+        this.service.storage.remove("userInfo")
+        this.rootPage = HomePage
+      })
+      
+      /**
+       * main page
+       */
 
-      this.event.subscribe("get-login-data", (loggedId) => {
+      this.event.subscribe("get-login-data", (userId) => {
         // get following user and group        
-        this.ref.child("friend").orderByChild("fromId").equalTo(loggedId).once("value").then(friendSnap => {
+        this.ref.child("friend").orderByChild("userId").equalTo(userId).once("value").then(friendSnap => {
           var friendDataList = friendSnap.val()
           if(friendDataList) {
             this.friend.setFriend(friendDataList)
           }
           // get post
-          this.event.publish("get-login-data-2", loggedId)
+          this.event.publish("get-login-data-2", userId)
         })
       })
 
-      this.event.subscribe("get-login-data-2", (loggedId) => {
+      this.event.subscribe("get-login-data-2", (userId) => {
         // get post
-        var postGetList = this.friend.user.concat(this.friend.group).concat([loggedId])
+        var postGetList = this.friend.user.concat(this.friend.group).concat([userId])
         var postList = []
-        var end1 = postGetList.length - 1
+        console.log(postGetList)
+        var end = postGetList.length - 1
         postGetList.forEach((ownerId, ownerIndex) => {
+          console.log(ownerId)
           this.ref.child("post").orderByChild("ownerId").equalTo(ownerId).once("value").then(postSnap => {
             var postDataList = postSnap.val()
             if(postDataList) {
+              console.log(postDataList)
               for (const postKey in postDataList) {
                 if (postDataList.hasOwnProperty(postKey)) {
-                  var postData = postDataList[postKey];
+                  var postData = postDataList[postKey]
                   postData["postId"] = postKey
-                  var index = this.service.findIndex(postList, postKey, "postId")
-                  if(index < 0) {
-                    postList.push(postData)
+                  postData["like"] = []
+                  if(postData.image === undefined) {
+                    postData.image = []
                   }
-                  else {
-                    postList[index] = postData
+                  postData.time = new Date(postData.time)
+
+                  this.post.data[postKey] = postData
+                  if(postList.indexOf(postKey) < 0) {
+                    postList.push(postKey)
                   }
                 }
               }
             }
-            if(ownerIndex === end1) {
+            if(ownerIndex === end) {
               this.postList = postList
               this.event.publish("get-login-data-3")
             }
@@ -117,10 +131,9 @@ export class MyApp {
       })
       this.event.subscribe("get-login-data-3", () => {
         // get user
-        var end2 = this.friend.user.length
-        console.log(end2)
-        if(end2) {
-          end2 --
+        var end = this.friend.user.length
+        if(end) {
+          end --
           this.friend.user.forEach((userId, userIndex) => {
             this.ref.child("user/" + userId).once("value").then(userSnap => {
               var userData = userSnap.val()
@@ -133,9 +146,7 @@ export class MyApp {
                   describe: userData.describe
                 }
               }
-              console.log(userIndex, end2)
-              if(userIndex === end2) {
-                console.log(this.user)
+              if(userIndex === end) {
                 this.event.publish("get-login-data-4")
               }
             })
@@ -148,20 +159,18 @@ export class MyApp {
 
       this.event.subscribe("get-login-data-4", () => {
         //get group
-        var end3 = this.friend.group.length
-        if(end3) {
-          end3 --
+        var end = this.friend.group.length
+        if(end) {
+          end --
           this.friend.group.forEach((groupId, groupIndex) => {
   
             this.ref.child("group/" + groupId).once("value").then(groupSnap => {
               var groupData = groupSnap.val()
-              console.log(groupSnap)
               if(groupData) {
                 this.group.data[groupSnap.key] = groupData
               }
-              if(groupIndex === end3) {
+              if(groupIndex === end) {
                 // display next
-                console.log(this.group)
                 this.event.publish("get-login-data-5")
               }
             })
@@ -184,9 +193,6 @@ export class MyApp {
               }              
             })
           }
-          else {
-            this.post.data[postId].image = []
-          }
         })
         var end = getImageList.length
         if(end) {
@@ -194,7 +200,6 @@ export class MyApp {
           getImageList.forEach((imageId, imageIndex) => {
             this.ref.child("image/" + imageId).once("value").then(imageSnap => {
               var imageData = imageSnap.val()
-              console.log(imageData, imageSnap)
               if(imageData) {
                 this.image.data[imageSnap.key] = imageData
               }
@@ -222,13 +227,13 @@ export class MyApp {
                 for(const likeKey in likeDataList) {
                   if(likeDataList.hasOwnProperty(likeKey)) {
                     var likeData = likeDataList[likeKey];
-                    likeList.push(likeData.userId)
+                    likeList.push({
+                      userId: likeData.userId,
+                      likeId: likeKey
+                    })
                   }
                 }
                 this.post.data[postId].like = likeList
-              }
-              else {
-                this.post.data[postId].like = []
               }
               if(end === postIndex) {
                 this.event.publish("main-get-initiaze", this.postList)
@@ -243,10 +248,138 @@ export class MyApp {
         }
       })
 
-      this.event.subscribe('logout', () => {
-        this.service.storage.remove("userInfo")
-        this.rootPage = HomePage
+      /**
+       * library
+       */
+
+      this.service.event.subscribe("library-get-list", () => {
+        this.ref.child("library").orderByChild("userId").equalTo(this.user.userId).once("value")
+          .then(librarySnap => {
+            var libraryDataList = librarySnap.val()
+            if(libraryDataList) {
+              for(const libraryKey in libraryDataList) {
+                if(libraryDataList.hasOwnProperty(libraryKey)) {
+                  libraryDataList[libraryKey]["libraryId"] = libraryKey
+                  var index = this.service.findIndex(this.library.list, libraryKey, "libraryId")
+                  if(index < 0) {
+                    this.library.list.push(libraryDataList[libraryKey])
+                  }
+                  else {
+                    this.library.list[index] = libraryDataList[libraryKey]
+                  }
+                }
+              }
+            }
+            this.service.event.publish("library-get-avatar")
+        })
       })
+
+      this.service.event.subscribe("library-get-avatar", () => {
+        // get library avatar
+        var lastImagelist = []
+        this.library.list.forEach(libraryList => {
+          if(lastImagelist.indexOf(libraryList.last))
+          lastImagelist.push(libraryList.last)
+        })
+        var list = []
+        var end = list.length
+        if(end) {
+          end --
+          lastImagelist.forEach((imageId, index) => {
+            this.ref.child(imageId).once("value").then(imageSnap => {
+              var imageData = imageSnap.val()
+              if(imageData) [
+                this.image.data[imageId] = imageData
+              ]
+              if(end === index) {
+                this.service.event.publish("library-get-initiaze")
+              }
+            })      
+          })
+        }
+        else {
+          this.service.event.publish("library-get-initiaze")
+        }
+      })
+
+      this.service.event.subscribe("library-get-child-image", (libraryId) => {
+        // get library image
+        this.ref.child("libraryImage").orderByChild("libraryId").equalTo(libraryId).once("value")
+          .then(imageSnap => {
+            var imageDataList = imageSnap.val()
+            var getImageList = []
+            if(imageDataList) {
+              for (const libraryImagekey in imageDataList) {
+                if (imageDataList.hasOwnProperty(libraryImagekey)) {
+                  if(getImageList.indexOf(imageDataList[libraryImagekey].imageId) < 0) {
+                    getImageList.push(imageDataList[libraryImagekey].imageId)
+                    this.library.keyList[imageDataList[libraryImagekey].imageId] = libraryImagekey
+                  }
+                }
+              }
+            }
+            this.event.publish("library-get-image", getImageList)
+        })
+      })
+
+      this.service.event.subscribe("library-get-image", (imageList) => {
+        // get imageurl of child
+        var end = imageList.length
+        if(end) {
+          end --
+          imageList.forEach((imageId, imageIndex) => {
+            this.ref.child("image/" + imageId).once("value").then(imageSnap => {
+              var imageData = imageSnap.val()
+              if(imageData) {
+                this.image.data[imageSnap.key] = imageData
+              }
+              if(end === imageIndex) {
+                this.event.publish("library-get-child-initiaze", imageList)
+              }
+            })
+          })
+        }
+        else {
+          this.event.publish("library-get-child-initiaze", imageList)
+        }
+      })
+
+      /**
+       * search
+       */
+
+      this.event.subscribe("search-get", (usercb, groupcb, key, mode) => {
+        var postList = []
+        if(mode) {
+          this.ref.child("user").orderByChild("region").equalTo(this.user.data[this.user.userId].region)
+            .once("value").then((userSnap) => {
+              var userDataList = userSnap.val()
+              if(userDataList) {
+                var userIdList = []
+                for(const userKey in userDataList) {
+                  if(userDataList.hasOwnProperty(userKey)) {
+                    userIdList.push(userKey)
+                  }
+                }
+              }
+              var end = userIdList.length
+              if(end) {
+                end --
+                var groupIdList
+                userIdList.forEach((userId, userIndex) => {
+                  this.ref.child("group").orderByChild("userId").equalTo(userId)
+                })
+              }
+              else {
+
+              }
+            })
+        }
+      })
+
+      /**
+       * end
+       */
     });
   }
   dismissLoading() {

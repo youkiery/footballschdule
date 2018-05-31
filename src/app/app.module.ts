@@ -14,6 +14,7 @@ import { FriendPage } from '../pages/friend/friend'
 import { ProfilePage } from '../pages/profile/profile'
 import { CommentPage, DetailOption, CommentOption } from '../pages/comment/comment'
 import { GroupPage } from '../pages/group/group'
+import { SearchPage } from '../pages/search/search'
 
 import { UserProfilePage } from '../pages/user-profile/user-profile'
 
@@ -57,7 +58,8 @@ firebase.initializeApp(config);
     DetailOption,
     CommentOption,
     GroupPage,
-    UserProfilePage
+    UserProfilePage,
+    SearchPage
   ],
   imports: [
     BrowserModule,
@@ -80,7 +82,8 @@ firebase.initializeApp(config);
     DetailOption,
     CommentOption,
     GroupPage,
-    UserProfilePage
+    UserProfilePage,
+    SearchPage
   ],
   providers: [
     StatusBar,

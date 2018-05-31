@@ -4,10 +4,11 @@
       <ion-icon name="settings" (click)="gotoSetting()"></ion-icon>
       <ion-icon name="contacts" (click)="gotoFriend()"></ion-icon>
       <ion-icon name="images" (click)="gotoLibrary()"></ion-icon>
-      <!--<ion-icon name="football" (click)="gotoGroup()"></ion-icon>-->
+      <ion-icon name="search" (click)="gotoSearch()"></ion-icon>
+      <ion-icon name="football" (click)="gotoGroup()"></ion-icon>
       <ion-icon name="log-out" (click)="user.logout()"></ion-icon>
   </div>
-  <div class="container">
+  <div class="container" *ngIf="display === true">
     <ion-card>
       <ion-card-header>
         <ion-item>
@@ -22,21 +23,38 @@
           </p>
         </ion-item>
       </ion-card-header>
-      <ion-card-content class="blank3" (click)="gotoPost()">
-        
+      <ion-card-content class="textarea" (click)="gotoPost()">
+        <button ion-button class="input-button">
+          đăng
+        </button>
       </ion-card-content>
     </ion-card>
     <ion-card *ngFor="let postId of displayList">
-      <ion-item>
+      <ion-item *ngIf="post.data[postId].type === 0">
         <ion-avatar item-start>
-          <img src="{{user.data[post.data[postId].avatar]}}">
+          <img src="{{user.data[post.data[postId].ownerId].avatar}}">
         </ion-avatar>
-        <h2>{{user.data[post.data[postId].name]}}</h2>
-        <p>{{post.data[postId].time | date: "yyyy/MM/dd HH:mm"}}</p>
+        <h2>{{user.data[post.data[postId].ownerId].name}}</h2>
+        <button ion-button color="primary" icon-left clear small *ngIf="post.data[postId].ownerId !== user.userId && friend.user.indexOf(post.data[postId].ownerId) === -1" (click) ="friend.follow(user.userId, post.data[postId].ownerId, post.data[postId].type)">
+          <ion-icon name="add"></ion-icon>
+          <div>follow</div>
+        </button>
+        <ion-icon class="right" name="menu" (click)="thisPostOption($event, postId)" *ngIf="user.userId === post.data[postId].ownerId"></ion-icon>
       </ion-item>
-      <img *ngIf="post.data[postId].image.length > 0" src="{{post.data[postId].image[0]}}">
-    
-      <ion-card-content>
+      <ion-item *ngIf="post.data[postId].type === 1">
+        <ion-avatar item-start>
+          <img src="{{group.data[post.data[postId].ownerId].avatar}}">
+        </ion-avatar>
+        <h2>{{group.data[post.data[postId].ownerId].name}}</h2>
+        <p>{{post.data[postId].time | date: "dd/MM/yyyy HH:mm"}}</p>
+        <button ion-button color="primary" icon-left clear small *ngIf="post.data[postId].ownerId !== user.userId && friend.group.indexOf(post.data[postId].ownerId) === -1" (click) ="friend.follow(user.userId, post.data[postId].ownerId, post.data[postId].type)">
+          <ion-icon name="add"></ion-icon>
+          <div>follow</div>
+        </button>
+        <ion-icon class="right" name="menu" (click)="thisPostOption($event, postId)" *ngIf="user.userId === group.data[post.data[postId].ownerId].userId"></ion-icon>
+      </ion-item>
+      <img class="image" *ngIf="post.data[postId].image.length > 0" src="{{image.data[post.data[postId].image[0]]}}">
+      <ion-card-content (click)="gotoDetail(postId)">
         <p>{{post.data[postId].msg}}</p>
       </ion-card-content>
       <span *ngIf="post.data[postId].like.length > 0">

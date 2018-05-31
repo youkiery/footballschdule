@@ -1,61 +1,47 @@
 <ion-content>  
   <div class="header">
-    <ion-icon name="arrow-round-back" (click)="goback()"></ion-icon>      
+    <ion-icon name="arrow-round-back" (click)="goback()"></ion-icon>
   </div>
   <div class="container">
     <ion-list>
       <ion-item color="primary">
-        yêu cầu kết bạn
+        Người dùng đã theo dõi
       </ion-item>
-      <div *ngFor="let friendId of friend.request; let i = index">
-        <ion-item *ngIf="user.data[friendId] !== undefined">
+      <div *ngFor="let objectId of friend.user; let i = index">
+        <ion-item *ngIf="i < userNumber">
           <ion-avatar item-start>
-            <img src="{{user.data[friendId].avatar}}">
+            <img src="{{user.data[objectId].avatar}}">
           </ion-avatar>
-          <b>
-            {{user.data[friendId].name}}
-          </b>
-          <span ion-button (click)="friend.acceptFriend(user.userId, friendId, i)">
-            đồng ý
-          </span>
-          <span ion-button (click)="friend.deleteFriendRequest(user.userId, friendId)">
-            từ chối
-          </span>
+          <p>
+            {{user.data[objectId].name}}
+          </p>
+          <button ion-button (click)="friend.unfollow(objectId)">
+            bỏ theo dõi
+          </button>
         </ion-item>
       </div>
-    </ion-list>
-    <ion-list>
+      <button ion-button (click)="loadMoreUser()" *ngIf="userNumber < friend.user.length">
+        Xem thêm
+      </button>
       <ion-item color="primary">
-        danh sách bạn
+        Nhóm đã theo dõi
       </ion-item>
-      <div *ngFor="let friendId of friend.active">
-        <ion-item *ngIf="user.data[friendId] !== undefined">
+      <div *ngFor="let objectId of friend.group; let i = index">
+        <ion-item *ngIf="i < userNumber">
           <ion-avatar item-start>
-            <img src="{{user.data[friendId].avatar}}">
+            <img src="{{group.data[objectId].avatar}}">
           </ion-avatar>
-          <b>
-            {{user.data[friendId].name}}
-          </b>
-          <span ion-button (click)="friend.unfriend(user.userId, friendId)">
-            unfriend
-          </span>
+          <p>
+            {{group.data[objectId].name}}
+          </p>
+          <button ion-button (click)="friend.unfollow(objectId)">
+            bỏ theo dõi
+          </button>
         </ion-item>
       </div>
-    </ion-list>
-    <ion-list>
-      <ion-item color="primary">
-        danh sách đang được chờ xác nhận
-      </ion-item>
-      <div *ngFor="let friendId of friend.inactive">
-        <ion-item *ngIf="user.data[friendId] !== undefined">
-          <ion-avatar item-start>
-            <img src="{{user.data[friendId].avatar}}">
-          </ion-avatar>
-          <b>
-            {{user.data[friendId].name}}
-          </b>
-        </ion-item>
-      </div>
+      <button ion-button (click)="loadMoreGroup()" *ngIf="groupNumber < friend.group.length">
+        Xem thêm
+      </button>
     </ion-list>
   </div>
 </ion-content>

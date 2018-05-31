@@ -26,6 +26,7 @@ export class CommentPage {
   commentMsg = ""
   listener: any
   comment = []
+  display = true
   constructor(public service: ServiceProvider, public user: UserProvider, public post: PostProvider,
     public alertCtrl: AlertController, public viewCtrl: ViewController, public navCtrl: NavController,
     private navParam: NavParams, private friend: FriendProvider, private group: GroupProvider,
@@ -33,33 +34,54 @@ export class CommentPage {
         this.postId = this.navParam.get("postId")
         this.postData = this.post.data[this.postId]
         console.log(this.postData)
+        console.log(this.user.data)
         
         this.listener = this.post.ref.parent.child("comment")
-        this.listener.on("child_added", (dataSnap) => {
-          var data = dataSnap.val()
-          if(data.postId === this.postId) {
-            var key = dataSnap.key
-            data.id = key
-            this.post.ref.parent.child("like").orderByChild("postId").equalTo(key).once("value")
-              .then((likeSnap) => {
-                var likeData = likeSnap.val()
-                var like = []
-                if(this.service.valid(likeData)) {
-                  like = this.service.objToList(likeData)
-                }
-                data["like"] = like
+        this.listener.on("child_added", (commentSnap) => {
+          var commentData = commentSnap.val()
+          if(commentData.postId === this.postId) {
+            console.log(commentData)
+            var key = commentSnap.key
+            var userId = commentData.userId
+            if(this.user.data[userId] === undefined) {
+              console.log(userId)
+              this.user.ref.child(userId).once("value").then(userSnap => {
+                  var userData = userSnap.val()
+                  console.log(userSnap)
+                  if(userData) {
+                    console.log(userData)
+                    this.user.data[userSnap.key] = {
+                      name: userData.name,
+                      avatar: userData.avatar,
+                      region: userData.region,
+                      lastlog: userData.lastlog,
+                      describe: userData.describe
+                    }
+                  }
+                  this.comment.push({
+                    commentId: key,
+                    userId: commentData.userId,
+                    time: commentData.time,
+                    msg: commentData.msg
+                  })
+                })
+            }
+            else {
+              this.comment.push({
+                commentId: key,
+                userId: commentData.userId,
+                time: commentData.time,
+                msg: commentData.msg
               })
-            this.comment.push(data)
+            } 
           }
         })
         this.listener.on("child_changed", (dataSnap) => {
           var data = dataSnap.val()
-          console.log(data)
           if(data.postId === this.postId) {
-            console.log("x")
             var key = dataSnap.key
             data.id = key
-            var index = this.comment.findIndex(x => x.id === key);
+            var index = this.comment.findIndex(x => x.commentId === key)
             this.comment[index] = data
           }
         })
@@ -68,7 +90,7 @@ export class CommentPage {
           if(data.postId === this.postId) {
             var key = dataSnap.key
             data.id = key
-            this.comment = this.comment.filter(x => x.id !== key);
+            this.comment = this.comment.filter(x => x.commentId !== key);
           }
         })
         this.service.event.subscribe("delete-post", () => {
@@ -158,7 +180,7 @@ export class DetailOption {
         {
           text: 'Xóa',
           handler: () => {
-            this.post.deletePost(this.user.userId, this.postId)
+            this.post.deletePost(this.postId)
             this.service.event.publish("delete-post")
           }
         }

@@ -44,50 +44,52 @@ export class LibraryPage {
   isChild = false
   selectImages = []
   displayLibraryImage = []
+  imageNum = 0
   selectedLibrary: any
   selectedIndex: any
-  libraryImageKey = {}
+  display = false
   // templist, selectedlist
   constructor(public service: ServiceProvider, public user: UserProvider, private navParam: NavParams,
     public library: LibraryProvider, public navCtrl: NavController, public alertCtrl: AlertController,
     private image: ImageProvider) {
-        var action = this.navParam.get("action")
-        if(this.service.valid(action)) {
-          this.action = action
-          this.isSelect = true
-        }
-
-        this.service.event.subscribe("library-remove-image", imageList => {
-          imageList.forEach(imageId => {
-            this.displayLibraryImage = this.displayLibraryImage.filter(imageLibraryData => {
-              return imageLibraryData !== imageId
-            })
-          })   
-        })
-        this.service.event.subscribe("library-get-last-image", () => {
-          var list = []
-          this.library.list.forEach(libraryList => {
-            list.push(libraryList.last)
+      var action = this.navParam.get("action")
+      if(this.service.valid(action)) {
+        this.action = action
+        this.isSelect = true
+      }
+      console.log(this.library)
+      this.service.event.subscribe("library-remove-image", imageList => {
+        imageList.forEach(imageId => {
+          this.displayLibraryImage = this.displayLibraryImage.filter(imageLibraryData => {
+            return imageLibraryData !== imageId
           })
-          this.image.getImage(list, "loading-end")
-        })
-        this.service.event.subscribe("library-get-image", imageList => {
-          this.displayLibraryImage = imageList
-          this.service.event.publish("loading-end")
-        })
-        this.service.event.subscribe("library-get-child-image", imageData => {
-          var list = []
-          for (const key in imageData) {
-            if (imageData.hasOwnProperty(key)) {
-              list.push(imageData[key].imageId)
-              this.libraryImageKey[imageData[key].imageId] = key 
-            }
-          }
-          this.image.getImage(list, "library-get-image")
-        })
-        this.library.getLibraryList(this.user.userId, "library-get-last-image")
+        })   
+      })
+      this.service.event.subscribe("library-remove", () => {
+        this.returnBack()
+      })
+      this.service.event.subscribe("library-get-initiaze", () => {
+        this.display = true
+        this.service.event.publish("loading-end")
+      })
+      this.service.event.subscribe("library-get-child-initiaze", imageList => {
+        console.log(this.image)
+        console.log(this.library)
+        console.log(imageList)
+        this.displayLibraryImage = imageList
+        this.display = true
+        
+        this.imageNum = this.user.setting.numberload
+        this.service.event.publish("loading-end")
+      })
+      this.service.event.publish("library-get-list")
   }
 
+  loadMore() {
+    if(this.imageNum < this.displayLibraryImage.length) {
+      this.imageNum += this.user.setting.numberload
+    }
+  }
   selectOn() {
     this.isSelect = true
     this.selectImages = []
@@ -98,11 +100,7 @@ export class LibraryPage {
   }
   delete() {
     if(this.selectImages.length > 0) {
-      var idList = []
-      this.selectImages.forEach(imageId => {
-        idList.push(this.libraryImageKey[imageId])
-      })
-      this.library.deleteImage(this.user.userId, this.selectedIndex, this.selectImages, idList)
+      this.library.deleteImage(this.user.userId, this.selectedIndex, this.selectImages)
       this.selectOff()
     }
     else {
@@ -111,14 +109,19 @@ export class LibraryPage {
   }
   gotoLibrary(libraryId, libraryIndex) {
     this.service.event.publish("loading-start")
-    this.selectedIndex = libraryIndex
     
+    this.display = false
+    this.selectedIndex = libraryIndex
+
+    this.imageNum = this.user.setting.numberload
     this.selectedLibrary = this.library.list[this.selectedIndex]
     
     this.selectedLibrary.time = new Date(this.selectedLibrary.time)
     this.isChild = true
     
-    this.image.getLibraryImage(libraryId, "library-get-child-image")
+    console.log(this.library)
+    console.log(libraryId)
+    this.service.event.publish("library-get-child-image", libraryId)
   }
   goback() {
     this.navCtrl.pop()
@@ -127,6 +130,12 @@ export class LibraryPage {
     this.selectedIndex = null
     this.isChild = false
     this.selectedLibrary = {}
+    this.files = undefined
+    this.isSelect = false
+    
+    this.selectImages = []
+    this.displayLibraryImage = []
+    this.imageNum = 0
   }
   newLibrary() {
     let alert = this.alertCtrl.create({
@@ -227,7 +236,7 @@ export class LibraryPage {
         {
           text: 'Xóa',
           handler: () => {
-            this.library.deleteLibrary(this.user.userId, this.selectedIndex)
+            this.library.deleteLibrary(this.selectedIndex)
           }
         }
       ]
@@ -341,19 +350,21 @@ export class LibraryPage {
             if(progress === 100){
               storageRef.getDownloadURL().then(urlsnap => {
                 var url = urlsnap
-                var libraryId = this.library.list[this.selectedIndex].id
+                var libraryId = this.library.list[this.selectedIndex].libraryId
                 
                 var currTime = Date.now()
                 var imageData = {
                   imageId: imageId,
-                  libraryId: libraryId,
-                  time: currTime
+                  libraryId: libraryId
                 }
   
                 var updateData = {}
                 updateData["libraryImage/" + libraryImageId] = imageData
-                updateData["library/" + libraryId + "/last"] = imageId
+                if(end === fileId) {
+                  updateData["library/" + libraryId + "/last"] = imageId
+                }
                 updateData["image/" + imageId] = url
+                console.log(updateData)
 
                 this.library.ref.parent.update(updateData).then(() => {
                   this.image.data[imageId] = url

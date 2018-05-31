@@ -37,6 +37,7 @@ export class PostPage {
         if(this.service.valid(this.postId)) {
           this.postData = this.post.data[this.postId]
           this.msg = this.postData.msg  
+          this.imageList = this.postData.image  
         }
         this.service.event.subscribe("update-image-post", (imageList) => {
           this.imageList = imageList

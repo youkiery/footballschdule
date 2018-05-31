@@ -8,6 +8,7 @@ import { GroupPage } from '../group/group';
 import { SettingPage } from '../setting/setting';
 import { FriendPage } from '../friend/friend';
 import { ProfilePage } from '../profile/profile';
+import { SearchPage } from '../search/search';
 
 import { ServiceProvider } from '../../providers/service/service';
 import { UserProvider } from '../../providers/user/user';
@@ -33,9 +34,7 @@ export class MainPage {
   page = 1
   postList = []
   displayList = []
-  /*
-    displayList[postId]
-  */
+  display = false
   constructor(public user: UserProvider, public post: PostProvider, public group: GroupProvider,
     public navCtrl: NavController, public friend: FriendProvider, public service: ServiceProvider,
     private image: ImageProvider) {
@@ -78,10 +77,6 @@ export class MainPage {
         this.image.getImage(list, "display-post")
       })*/
       this.service.event.subscribe("main-get-initiaze", postlist => {
-        console.log(postlist)
-        console.log(this.user)
-        console.log(this.group)
-        console.log(this.friend)
         this.postList = postlist
         /**
          * soft post list
@@ -93,9 +88,14 @@ export class MainPage {
         this.postList.forEach(postId => {
           console.log(this.post.data[postId].time)
         })
+        
+        console.log(this.post.data)
+        console.log(this.user.data)
         this.service.event.publish("display-post")
       })
+
       this.service.event.subscribe("display-post", () => {
+        this.display = true
         var end = this.postList.length
         if(end) {
           var from = (this.page - 1) * this.user.setting.numberload
@@ -110,9 +110,8 @@ export class MainPage {
           this.page ++
           indexToLoad.forEach(index => {
             var postId = this.post.data[this.postList[index]].postId
-            var indexof = this.displayList.indexOf(postId)
-            if(indexof < 0) {
-              this.displayList.push()
+            if(this.displayList.indexOf(postId) < 0) {
+              this.displayList.push(postId)
             }
             
             if(index === end) {
@@ -125,8 +124,10 @@ export class MainPage {
           this.service.event.publish("loading-end")
         }
       })
-      /*
+
       this.service.event.subscribe("main-push-post", (postId) => {
+        console.log(this.post.data)
+        console.log(this.user.data)
         var temp = []
         this.displayList.forEach((newId, newIndex) => {
           temp[newIndex + 1] = newId
@@ -135,11 +136,12 @@ export class MainPage {
         this.displayList = temp
         console.log(this.displayList)
       })
+
       this.service.event.subscribe("remove-post-list", (postId) => {
         this.displayList = this.displayList.filter(x => {
           return x !== postId
         })
-      })*/
+      })
       
       // start initiaze
       //this.service.event.publish("loading-start")
@@ -183,6 +185,9 @@ export class MainPage {
   gotoGroup() {
     this.navCtrl.push(GroupPage)
   }
+  gotoSearch() {
+    this.navCtrl.push(SearchPage)
+  }
   thisPostOption(event, postId) {
     console.log(postId)
     let popover = this.service.popoverCtrl.create(PostOption, {
@@ -225,7 +230,7 @@ export class PostOption {
         {
           text: 'Xóa',
           handler: () => {
-            this.post.deletePost(this.user.userId, this.postId)
+            this.post.deletePost(this.postId)
           }
         }
       ]

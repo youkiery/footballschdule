@@ -1,0 +1,34 @@
+<ion-content>
+  <div class="header">
+    <ion-icon name="arrow-round-back" (click)="goback()"></ion-icon>
+  </div>
+  <div class="container">
+    <form>
+      <ion-list>
+        <ion-item>
+          <ion-label>người dùng</ion-label>
+          <ion-checkbox [(ngModel)]="groupcb" name="groupcb"></ion-checkbox>
+        </ion-item>
+        <ion-item>
+          <ion-label>đội bóng</ion-label>
+          <ion-checkbox [(ngModel)]="usercb" name="usercb"></ion-checkbox>
+        </ion-item>
+        <ion-item>
+          <ion-input [(ngModel)]="key" name="key"></ion-input>
+        </ion-item>
+        <ion-item>
+          <ion-label>Tìm kiếm theo</ion-label>
+          <ion-select [(ngModel)]="mode" name="mode">
+            <ion-option value="0">Đăng gần đây</ion-option>
+            <ion-option value="1">Trong vùng</ion-option>
+          </ion-select>
+        </ion-item>
+        <ion-item>
+          <button ion-button (click)="search()">
+            Tìm kiếm
+          </button>
+        </ion-item>
+      </ion-list>
+    </form>
+  </div>
+</ion-content>

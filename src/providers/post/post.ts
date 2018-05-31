@@ -64,7 +64,7 @@ export class PostProvider {
     var currTime = Date.now()
     var postData
     postData = {
-      userId: userId,
+      ownerId: userId,
       type: type,
       time: currTime,
       msg: content,
@@ -92,17 +92,16 @@ export class PostProvider {
       msg: content,
       image: image
     }
-    this.ref.update(detailPost).then(() => {
+    this.ref.child(postId).update(detailPost).then(() => {
       this.data[postId].msg = content
       this.data[postId].image = image
       console.log(this.data[postId])
       
-      this.service.event.publish("comment-update-post", detailPost)
       this.service.event.publish("loading-end")
     })
   }
 
-  deletePost(userId, postId) {
+  deletePost(postId) {
     this.service.event.publish("loading-start")  
     var updateData = {}
     updateData[postId] = null
@@ -134,7 +133,7 @@ export class PostProvider {
   unlike(userId, postId) {
     this.service.event.publish('loading-start')
     var index = this.service.findIndex(this.data[postId].like, userId, "userId")
-    var likeId = this.data[postId].like[index].id
+    var likeId = this.data[postId].like[index].likeId
     this.ref.parent.child("like/" + likeId).remove().then(() => {
       this.data[postId].like = this.data[postId].like.filter(liker => {
         return liker.userId !== userId 
@@ -155,6 +154,7 @@ export class PostProvider {
     }
     // realtime issue
     this.ref.parent.child("comment").push(commentData).then(() => {
+      this.service.event.publish('comment-push')
       this.service.event.publish('loading-end')
     })
   }

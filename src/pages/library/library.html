@@ -49,14 +49,15 @@
       </div>
     </div>
   </div>
-  <div class="container">
+
+  <div class="container" *ngIf="display === true">
     <ion-list *ngIf="isChild === false">
       <ion-item color="primary">
         Danh sách thư viện
       </ion-item>
       <ion-item *ngFor="let libraryDataList of library.list; let libraryIndex = index">
-        <img class="md-icon" *ngIf="image.data[libraryDataList.last] !== undefined" src="{{image.data[libraryDataList.last]}}" (click)="gotoLibrary(libraryDataList.id, libraryIndex)">
-        <img class="md-icon" *ngIf="image.data[libraryDataList.last] === undefined" src="{{service.defaultImage}}" (click)="gotoLibrary(libraryDataList.id, libraryIndex)">
+        <img class="md-icon" *ngIf="image.data[libraryDataList.avatar] !== undefined" src="{{image.data[libraryDataList.avatar]}}" (click)="gotoLibrary(libraryDataList.libraryId, libraryIndex)">
+        <img class="md-icon" *ngIf="image.data[libraryDataList.avatar] === undefined" src="{{service.defaultImage}}" (click)="gotoLibrary(libraryDataList.libraryId, libraryIndex)">
         <div class="right">
           <p>
             {{libraryDataList.name}}
@@ -88,12 +89,18 @@
         Danh sách ảnh
       </ion-item>
       <span class="inline" *ngFor="let imageId of displayLibraryImage; let imageIndex = index">
-        <span *ngIf="isSelect === true">
-          <img class="md-icon" src="{{image.data[imageId]}}" *ngIf="selectImages.indexOf(imageId) < 0" (click)="tickImage(imageId)">
-          <img class="md-icon selected" src="{{image.data[imageId]}}" *ngIf="selectImages.indexOf(imageId) >= 0" (click)="untickImage(imageId)">    
+        <span *ngIf="imageIndex < imageNum">
+          <span *ngIf="isSelect === true">
+            <img class="md-icon" src="{{image.data[imageId]}}" *ngIf="selectImages.indexOf(imageId) < 0" (click)="tickImage(imageId)">
+            <img class="md-icon selected" src="{{image.data[imageId]}}" *ngIf="selectImages.indexOf(imageId) >= 0" (click)="untickImage(imageId)">    
+          </span>
+          <img class="md-icon" src="{{image.data[imageId]}}" *ngIf="isSelect === false" (click)="viewImage(image.data[imageId])">
         </span>
-        <img class="md-icon" src="{{image.data[imageId]}}" *ngIf="isSelect === false" (click)="viewImage(image.data[imageId])">
       </span>
+      <div></div>
+      <button ion-button (click)="loadMore()" *ngIf="imageNum < displayLibraryImage.length">
+        Xem thêm
+      </button>
     </ion-list>
   </div>
 </ion-content>

@@ -101,6 +101,7 @@ export class SettingPage {
         }
       }]
     })
+    alert.present()
   }
 
   goback() {

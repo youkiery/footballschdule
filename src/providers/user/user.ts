@@ -36,7 +36,14 @@ export class UserProvider {
     
       if(this.service.valid(userInfo)) {
         this.service.event.publish("loading-start")
-        this.loginSuccess(userInfo.userInfo, userInfo.userId)
+        console.log(userInfo)
+        console.log(userInfo.username && userInfo.password)
+        if(userInfo.username && userInfo.password) {
+          this.login(userInfo.username, userInfo.password)
+        }
+        else {
+          this.service.event.publish("loading-end")
+        }
       }
     })
   }
@@ -58,8 +65,8 @@ export class UserProvider {
       }
       if(!msg) {
         var storeData = {
-          userId: userId,
-          userInfo: userInfo[userId]
+          username: username,
+          password: password
         }
         this.service.storeData("userInfo", storeData)
         this.loginSuccess(userInfo[userId], userId)
@@ -86,7 +93,7 @@ export class UserProvider {
     // catch error
   }
 
-  signup(username, password, name, avatar, position) {
+  signup(username, password, name, avatar, region) {
     this.service.event.publish('loading-start')
     this.ref.orderByChild('username').equalTo(username).once('value').then(snap => {
       var userInfo = snap.val()
@@ -99,7 +106,7 @@ export class UserProvider {
           password: password,
           name: name,
           avatar: avatar,
-          position: position,
+          region: region,
           describe: "",
           lastlog: currentTime
         }
@@ -124,8 +131,8 @@ export class UserProvider {
 
         this.ref.parent.update(updateData).then(() => {
           var storeData = {
-            userId: userId,
-            userInfo: signupData
+            username: username,
+            password: password
           }
           this.service.storeData("userInfo", storeData)
           this.loginSuccess(signupData, userId)
@@ -157,14 +164,14 @@ export class UserProvider {
         name: user.displayName,
         avatar: user.photoURL,
         lastLog: currentTime,
-        position: 0,
+        region: 0,
         describe: ""
       }
       
       this.ref.child(userId).once("value").then(userInfoSnap => {
         var userInfo = userInfoSnap.val()
         if(this.service.valid(userInfo)) {
-          signupData.position = userInfo.position
+          signupData.region = userInfo.region
           signupData.describe = userInfo.describe
           this.ref.child(userId).set(signupData).then(snap => {
             var storeData = {
@@ -195,11 +202,6 @@ export class UserProvider {
           }
           updateData["libraryImage/" + imageId] = imageData
           this.ref.parent.update(updateData).then(() => {
-            var storeData = {
-              userId: userId,
-              userInfo: signupData
-            }
-            this.service.storeData("userInfo", storeData)
             this.loginSuccess(signupData, userId)
           })
         }
