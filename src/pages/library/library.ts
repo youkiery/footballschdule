@@ -347,17 +347,14 @@ export class LibraryPage {
           
           uploadTask.on('state_changed', function(snapshot){
             var progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-            console.log('Upload is ' + progress + '% done');
             
           }, function(error) {
             
           }, function() {
             uploadTask.snapshot.ref.getDownloadURL().then(function(downloadURL) {
-              console.log('File available at', downloadURL);
               
               var libraryId = this.library.list[this.selectedIndex].libraryId
                 
-              var currTime = Date.now()
               var imageData = {
                 imageId: imageId,
                 libraryId: libraryId

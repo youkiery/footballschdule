@@ -12,6 +12,24 @@ export class PostProvider {
   constructor(private service: ServiceProvider) {
     this.ref = this.service.db.ref("post")
   }
+  setPost(postKey, postData) {
+    if(!this.data[postKey]) {
+      this.data[postKey] = postData
+    }
+  }
+  setPostList(postDataList) {
+    var postIdList = []
+    for (const key in postDataList) {
+      if (postDataList.hasOwnProperty(key)) {
+        const postData = postDataList[key];
+        if(postIdList.indexOf(key) === -1) {
+          postIdList.push(key)
+        }
+        this.setPost(key, postData)
+      }
+    }
+    return postIdList
+  }
   getPostList(userList, event) {
     // check if friendlist vaild
     var list = []

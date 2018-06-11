@@ -10,6 +10,7 @@ import { PostProvider } from '../../providers/post/post'
 import { FriendProvider } from '../../providers/friend/friend'
 import { GroupProvider } from '../../providers/group/group'
 import { ImageProvider } from '../../providers/image/image'
+import { MemberProvider } from '../../providers/member/member'
 
 /**
  * 
@@ -29,9 +30,9 @@ export class CommentPage {
   comment = []
   display = true
   constructor(public service: ServiceProvider, public user: UserProvider, public post: PostProvider,
-    public alertCtrl: AlertController, public viewCtrl: ViewController, public navCtrl: NavController,
-    private navParam: NavParams, private friend: FriendProvider, private group: GroupProvider,
-    private image: ImageProvider) {
+      public alertCtrl: AlertController, public viewCtrl: ViewController, public navCtrl: NavController,
+      private navParam: NavParams, private friend: FriendProvider, private group: GroupProvider,
+      private image: ImageProvider, private member: MemberProvider) {
         this.postId = this.navParam.get("postId")
         this.postData = this.post.data[this.postId]
         console.log(this.postData)
@@ -197,9 +198,8 @@ export class CommentOption {
   msg = ""
   postId = ""
   commentId = ""
-  constructor(public service: ServiceProvider, public post: PostProvider, public viewCtrl: ViewController, public navParam: NavParams,
-    public alertCtrl: AlertController,
-    public user: UserProvider) {
+  constructor(public service: ServiceProvider, public post: PostProvider, public viewCtrl: ViewController,
+    public navParam: NavParams, public alertCtrl: AlertController, public user: UserProvider) {
       this.msg = this.navParam.get("msg")
       this.commentId = this.navParam.get("commentId")
       console.log(this.msg, this.commentId)

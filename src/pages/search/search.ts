@@ -1,4 +1,4 @@
-import { Component, group } from '@angular/core';
+import { Component } from '@angular/core';
 import { IonicPage, NavController, NavParams } from 'ionic-angular';
 
 import { ServiceProvider } from "../../providers/service/service"

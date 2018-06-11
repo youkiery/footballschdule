@@ -9,23 +9,27 @@
       </ion-item>
       <form>
         <ion-item>
+          <ion-label stacked>tên tài khoản</ion-label>
           <ion-input [(ngModel)]="username" type="text" name="username" placeholder="tên tài khoản">
           </ion-input>
         </ion-item>
         <ion-item>
-          <ion-input [(ngModel)]="name" type="text" name="name" placeholder="tên hiển thị">
+            <ion-label stacked>tên hiển thị</ion-label>
+          <ion-input [(ngModel)]="name" type="text" name="name">
           </ion-input>
         </ion-item>
         <ion-item>
-          <ion-input [(ngModel)]="password" type="password" name="password" placeholder="mật khẩu">
+            <ion-label stacked>mật khẩu</ion-label>
+          <ion-input [(ngModel)]="password" type="password" name="password">
           </ion-input>
         </ion-item>
         <ion-item>
-          <ion-input [(ngModel)]="vpassword" type="password" name="vpassword" placeholder="xác nhận mật khẩu">
+            <ion-label stacked>xác nhận mật khẩu</ion-label>
+          <ion-input [(ngModel)]="vpassword" type="password" name="vpassword">
           </ion-input>
         </ion-item>
         <ion-item>
-        <ion-label>Vùng</ion-label>
+          <ion-label stacked>vùng</ion-label>
           <ion-select [(ngModel)]="region" name="region">
             <span *ngFor="let pos of service.region; let i = index">
               <ion-option value="{{i}}" *ngIf="user.data[user.userId].region === i" selected="true">
@@ -50,9 +54,11 @@
       </ion-item>
       <form>
         <ion-item>
+          <ion-label stacked>số bài viết tải thêm</ion-label>
           <ion-input [(ngModel)]="numberload" type="number" name="numberload"></ion-input>
         </ion-item>
         <ion-item>
+          <ion-label stacked>số bài viết mở đầu</ion-label>
           <ion-input [(ngModel)]="startload" type="number" name="startload"></ion-input>
         </ion-item>
         <ion-item>

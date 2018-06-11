@@ -32,7 +32,8 @@
           <div>follow</div>
         </button>
         <ion-icon class="right" name="menu" (click)="thisPostOption($event, postId)"
-            *ngIf="user.userId === group.data[postData.ownerId].userId"></ion-icon>
+            *ngIf="user.userId === group.data[postData.ownerId].userId
+            || this.service.findIndex(member.list, groupId, 'groupId') !== -1"></ion-icon>
       </ion-item>
       <ion-slides *ngIf="postData.image !== undefined || postData.image !== []">
         <ion-slide *ngFor="let imageId of postData.image">
@@ -50,7 +51,8 @@
           <div>{{postData.like.length}}</div>
         </button>
         <button ion-button color="secondary" icon-left clear small
-            *ngIf='this.service.findIndex(postData.like, user.userId, "userId") !== -1'  (click)="post.unlike(user.userId, postId)">
+            *ngIf='this.service.findIndex(postData.like, user.userId, "userId") !== -1'
+            (click)="post.unlike(user.userId, postId)">
           <ion-icon name="thumbs-up"></ion-icon>
           <div>{{postData.like.length}}</div>
         </button>

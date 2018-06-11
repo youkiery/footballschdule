@@ -16,8 +16,6 @@ import { CommentPage, DetailOption, CommentOption } from '../pages/comment/comme
 import { GroupPage } from '../pages/group/group'
 import { SearchPage } from '../pages/search/search'
 
-import { UserProfilePage } from '../pages/user-profile/user-profile'
-
 import  firebase from 'firebase'
 import { Facebook } from '@ionic-native/facebook'
 
@@ -46,19 +44,14 @@ firebase.initializeApp(config);
   declarations: [
     MyApp,
     HomePage,
-    MainPage,
-    PostOption,
+    MainPage, PostOption,
     PostPage,
     SettingPage,
-    LibraryPage,
-    viewImage,
+    LibraryPage, viewImage,
     FriendPage,
     ProfilePage,
-    CommentPage,
-    DetailOption,
-    CommentOption,
+    CommentPage, DetailOption, CommentOption,
     GroupPage,
-    UserProfilePage,
     SearchPage
   ],
   imports: [
@@ -70,19 +63,14 @@ firebase.initializeApp(config);
   entryComponents: [
     MyApp,
     HomePage,
-    MainPage,
-    PostOption,
+    MainPage, PostOption,
     PostPage,
     SettingPage,
-    LibraryPage,
-    viewImage,
+    LibraryPage, viewImage,
     FriendPage,
     ProfilePage,
-    CommentPage,
-    DetailOption,
-    CommentOption,
+    CommentPage, DetailOption, CommentOption,
     GroupPage,
-    UserProfilePage,
     SearchPage
   ],
   providers: [

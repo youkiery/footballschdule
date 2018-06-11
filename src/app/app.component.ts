@@ -6,8 +6,6 @@ import { SplashScreen } from '@ionic-native/splash-screen';
 import { HomePage } from '../pages/home/home';
 import { MainPage } from '../pages/main/main';
 
-import { UserProfilePage } from '../pages/user-profile/user-profile';
-
 import firebase from "firebase"
 
 import { ServiceProvider } from '../providers/service/service';
@@ -17,7 +15,7 @@ import { PostProvider } from '../providers/post/post';
 import { ImageProvider } from '../providers/image/image';
 import { LibraryProvider } from '../providers/library/library';
 import { GroupProvider } from '../providers/group/group';
-import { UIEventManager } from 'ionic-angular/gestures/ui-event-manager';
+import { MemberProvider } from '../providers/member/member';
 
 /**
  * loading
@@ -38,7 +36,8 @@ export class MyApp {
   constructor(platform: Platform, statusBar: StatusBar, splashScreen: SplashScreen, public event: Events,
       public user: UserProvider, public toastCtrl: ToastController, public loadCtrl: LoadingController,
       public service:  ServiceProvider,public friend: FriendProvider, public post: PostProvider,
-      public library: LibraryProvider, public group: GroupProvider, public image: ImageProvider) {
+      public library: LibraryProvider, public group: GroupProvider, public image: ImageProvider,
+      private member: MemberProvider) {
     platform.ready().then(() => {
       // Okay, so the platform is ready and our plugins are available.
       // Here you can do any higher level native things you might need.
@@ -97,14 +96,11 @@ export class MyApp {
         // get post
         var postGetList = this.friend.user.concat(this.friend.group).concat([userId])
         var postList = []
-        console.log(postGetList)
         var end = postGetList.length - 1
         postGetList.forEach((ownerId, ownerIndex) => {
-          console.log(ownerId)
           this.ref.child("post").orderByChild("ownerId").equalTo(ownerId).once("value").then(postSnap => {
             var postDataList = postSnap.val()
             if(postDataList) {
-              console.log(postDataList)
               for (const postKey in postDataList) {
                 if (postDataList.hasOwnProperty(postKey)) {
                   var postData = postDataList[postKey]
@@ -129,6 +125,7 @@ export class MyApp {
           })
         }) 
       })
+
       this.event.subscribe("get-login-data-3", () => {
         // get user
         var end = this.friend.user.length
@@ -138,13 +135,7 @@ export class MyApp {
             this.ref.child("user/" + userId).once("value").then(userSnap => {
               var userData = userSnap.val()
               if(userData) {
-                this.user.data[userSnap.key] = {
-                  name: userData.name,
-                  avatar: userData.avatar,
-                  region: userData.region,
-                  lastlog: userData.lastlog,
-                  describe: userData.describe
-                }
+                this.user.setUser(userId, userData)
               }
               if(userIndex === end) {
                 this.event.publish("get-login-data-4")
@@ -236,16 +227,31 @@ export class MyApp {
                 this.post.data[postId].like = likeList
               }
               if(end === postIndex) {
-                this.event.publish("main-get-initiaze", this.postList)
-                this.postList = []
+                this.event.publish("get-login-data-7")
               }
             })
           })
         }
         else {
-          this.event.publish("main-get-initiaze", this.postList)
-          this.postList = []
+          this.event.publish("get-login-data-7")
         }
+      })
+
+      this.event.subscribe('get-login-data-7', () => {
+        // get member
+        this.ref.child("member").orderByChild("userId").equalTo(this.user.userId)
+            .once("value").then(memberSnap => {
+              var memberDataList = memberSnap.val()
+              if(memberDataList) {
+                this.member.setMemberList(memberDataList)
+                this.event.publish("main-get-initiaze", this.postList)
+                this.postList = []
+              }
+              else {
+                this.event.publish("main-get-initiaze", this.postList)
+                this.postList = []
+              }
+        })
       })
 
       /**
@@ -341,6 +347,154 @@ export class MyApp {
         }
         else {
           this.event.publish("library-get-child-initiaze", imageList)
+        }
+      })
+
+      /**
+       * group
+       */
+
+      this.service.event.subscribe("group-get-data", (groupId) => {
+        // get group
+        this.postList = []
+        this.ref.child("post").orderByChild("ownerId").equalTo(groupId).once("value").then(postSnap => {
+          var postDataList = postSnap.val()
+          if(postDataList) {
+            this.postList = this.post.setPostList(postDataList)
+            this.event.publish("group-get-data-2")
+          }
+          else {
+            this.event.publish("group-get-data-finish", [])
+          }
+        })
+      })
+
+      
+      this.event.subscribe('group-get-data-2', () => {
+        // get image
+        var getImageList = []
+        this.postList.forEach(postId => {
+          if(this.post.data[postId].image !== undefined) {
+            this.post.data[postId].image.forEach(imageId => {
+              if(getImageList.indexOf(imageId) < 0) {
+                getImageList.push(imageId)
+              }              
+            })
+          }
+        })
+        var end = getImageList.length
+        if(end) {
+          end --
+          getImageList.forEach((imageId, imageIndex) => {
+            this.ref.child("image/" + imageId).once("value").then(imageSnap => {
+              var imageData = imageSnap.val()
+              if(imageData) {
+                this.image.data[imageSnap.key] = imageData
+              }
+            })
+            if(end === imageIndex) {
+              this.event.publish("group-get-data-3")              
+            }
+          })
+        }
+        else {
+          this.event.publish("group-get-data-3")
+        }
+      })
+
+      this.event.subscribe('group-get-data-3', () => {
+        // get like
+        var end = this.postList.length
+        if(end) {
+          end --
+          this.postList.forEach((postId, postIndex) => {
+            this.ref.child("like").orderByChild("postId").equalTo(postId).once("value").then(likeSnap => {
+              var likeDataList = likeSnap.val()
+              if(likeDataList) {
+                var likeList = []
+                for(const likeKey in likeDataList) {
+                  if(likeDataList.hasOwnProperty(likeKey)) {
+                    var likeData = likeDataList[likeKey];
+                    likeList.push({
+                      userId: likeData.userId,
+                      likeId: likeKey
+                    })
+                  }
+                }
+                this.post.data[postId].like = likeList
+              }
+              if(end === postIndex) {
+                this.event.publish("group-get-data-finish", this.postList)
+                this.postList = []
+              }
+            })
+          })
+        }
+        else {
+          this.event.publish("group-get-data-finish", this.postList)
+          this.postList = []
+        }
+      })
+
+      this.event.subscribe("member-request", (userId, groupId) => {
+        this.event.publish("loading-start")
+        var key = this.ref.child("member").push().key
+        var updateData = {
+          userId: userId,
+          groupId: groupId,
+          type: 2
+        }        
+        this.ref.child("member/" + key).update(updateData).then(() => {
+          this.member.setMember(key, updateData)
+          this.event.publish("member-request-finish")
+          this.event.publish("loading-end")
+        })
+      })
+
+      this.event.subscribe("get-member-list", (groupId) => {
+        this.event.publish("loading-start")
+        var memberList = []
+        var userIdList = []
+        this.ref.child("member").orderByChild("groupId").equalTo(groupId)
+            .once("value").then(memberSnap => {
+              var memberDataList = memberSnap.val()
+              if(memberDataList) {
+                for (const key in memberDataList) {
+                  if (memberDataList.hasOwnProperty(key)) {
+                    var memberData = memberDataList[key];
+                    memberData["memberId"] = key
+                    memberList.push(memberData)
+                    if(!this.user.data[memberData.userId]) {
+                      userIdList.push(memberData.userId)
+                    }
+                  }
+                }
+                this.event.publish("get-user-member-data", userIdList, memberList)
+              }
+              else {
+                this.event.publish("get-member-list-finish", memberList)
+              }
+        })
+      })
+
+      this.event.subscribe("get-member-list", (userIdList, memberList) => {
+        var end = userIdList.length
+        if(end) {
+          end --
+          userIdList.forEach((userId, userIndex) => {
+            this.ref.child("user/" + userId).once("value").then(userSnap => {
+              var userData = userSnap.val()
+              if(userData) {
+                this.user.setUser(userId, userData)
+              }
+              if(userIndex === end) {
+                this.event.publish("get-member-list-finish", memberList)
+              }
+            })
+          })
+        }
+        else {
+          this.event.publish("get-member-list-finish", memberList)
         }
       })
 

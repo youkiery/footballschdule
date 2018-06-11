@@ -10,7 +10,7 @@ import { PostProvider } from "../../providers/post/post"
 import { ImageProvider } from "../../providers/image/image"
 import { FriendProvider } from '../../providers/friend/friend';
 import { ServiceProvider } from "../../providers/service/service"
-import { getLocaleFirstDayOfWeek } from '@angular/common';
+import { MemberProvider } from "../../providers/member/member"
 
 /**
  * 
@@ -33,13 +33,26 @@ export class GroupPage {
   page = 1
   postPerLoad = 6
   displayList = []
+  memberNumber = 0
   
   constructor(private service: ServiceProvider, private group: GroupProvider, private user: UserProvider,
     public navCtrl: NavController, public navParams: NavParams, private image: ImageProvider,
-    private post: PostProvider, public friend: FriendProvider, private alertCtrl: AlertController) {
+    private post: PostProvider, public friend: FriendProvider, private alertCtrl: AlertController,
+    private member: MemberProvider) {
+      this.groupId = this.navParams.get("groupId")
+      this.memberNumber = this.user.setting.startload
 
       this.service.event.subscribe("group-new", (group) => {
         this.follow.push(group)
+      })
+      this.service.event.subscribe("member-request-finish", () => {
+        this.service.event.publish("loading-end")
+        
+      })
+
+      this.service.event.subscribe("get-member-list-finish", (memberList) => {
+        this.service.event.publish("loading-end")
+        this.follow = memberList
       })
       this.service.event.subscribe("group-update-post", (postId) => {
         var temp = []
@@ -49,47 +62,11 @@ export class GroupPage {
         temp[0] = postId
         this.displayList = temp
       })
-      this.service.event.subscribe("group-get-data", (list) => {
-        var grouplist = []
-        list.forEach(data => {
-          grouplist.push(data.groupId)
-        })
-        this.group.getGroupList(grouplist, "get-recent-group")
-      })
-      this.service.event.subscribe("get-recent-group", (list) => {
-        this.follow = list
-        this.group.getRecentGroup("group-finish")
-      })
-      this.service.event.subscribe("group-finish", (list) => {
-        this.tempList = list
-        this.service.event.publish("loading-end")
-        console.log()
-        console.log(this.controller)
-        console.log(this.groupId)
-        console.log(this.groupIndex)
-        console.log(this.groupInfo)
-        console.log(this.tempList)
-        console.log(this.follow)
-        console.log(this.postList)
-      })
 
-      this.service.event.subscribe("group-get-image", (postlist) => {
-        var list = []
-        postlist.forEach(data => {
-          if(data.image) {
-            data.image.forEach(imagelist => {
-              console.log(imagelist)
-              list.push(imagelist.id)
-            })
-          }
-        })
+      this.service.event.subscribe("group-get-data-finish", (postIdList) => {
+        this.service.event.publish("loading-end")
+        this.postList = postIdList
         console.log(this.postList)
-        this.postList = postlist
-        this.image.getImage(list, "group-child-finish")
-      })
-      this.service.event.subscribe("group-child-finish", (imageData) => {
-        var list = []
-        console.log(this.image)
         this.service.event.publish("group-display-post", this.postList)
       })
       this.service.event.subscribe("group-display-post", (postList) => {
@@ -110,9 +87,6 @@ export class GroupPage {
           indexToLoad.forEach(index => {
             this.displayList.push(this.postList[index].id)
             // quere load
-            if(index === end) {
-              this.service.event.publish("loading-end")
-            }
           })
         }
         else {
@@ -120,67 +94,40 @@ export class GroupPage {
         }
       })
       this.service.event.publish("loading-start")
-      this.group.getRelativeGroupList(this.user.userId, "group-get-data")
+      this.service.event.publish("group-get-data", this.groupId)
   }
 
-  newGroup() {
-    let alert = this.alertCtrl.create({
-      message: "tạo đội bóng mới",
-      inputs: [
-        {
-          name: "name",
-          placeholder: "tên đội bóng"
-        },
-        {
-          name: "describe",
-          placeholder: "giới thiệu"          
-        }
-      ],
-      buttons: [
-        {
-          text: 'Hủy',
-          role: 'cancel',
-        },
-        {
-          text: 'Thêm',
-          handler: (data) => {
-            this.group.newGroup(this.user.userId, data.name, data.describe, "group-new")
-          }
-        }
-      ]
-    })
-    alert.present()
-  }
   reload() {
     this.displayList = []
     this.postList = []
     this.page = 1
     this.service.event.publish("loading-start")
-    this.post.getPostList([this.groupId], "group-get-image")
+    this.post.getPostList([this.groupId], "group-get-data")
   }
   loadMore() {
     this.service.event.publish("loading-start")
     this.service.event.publish("group-display-post", this.postList)
   }
+  loadMoreMember() {
+    if(this.memberNumber < this.follow.length) {
+      this.memberNumber += this.user.setting.numberload
+    }
+  }
+  request(userId, groupId) {
+    this.service.event.publish("member-request", userId, groupId)
+  }
 
   goback() {
     this.navCtrl.pop()
-  }
-  gotoGroup(groupIndex) {
-    this.groupIndex = groupIndex
-    this.groupInfo = this.follow[groupIndex]
-    this.groupId = this.groupInfo["id"]
-    this.controller = "child"
-    console.log(this.follow)
-    console.log(this.groupIndex)
-    console.log(this.groupInfo)
-    console.log(this.groupId)
-    this.post.getPostList([this.groupId], "group-get-image")
   }
   gotoPost(groupId) {
     this.navCtrl.push(PostPage, {groupId: groupId})
   }
   gotoDetail(postId) {
     this.navCtrl.push(CommentPage, {postId: postId})
+  }
+  gotoMember() {
+    this.controller = "member"
+    this.service.event.publish("get-member-list", this.groupId)
   }
 }

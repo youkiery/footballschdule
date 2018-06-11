@@ -19,7 +19,9 @@ export class ServiceProvider {
     "bmp",
   ]
   defaultImage = "../../assets/imgs/logo.png"
-  region = ["Cư Êbur", "Tân Lợi", "Tân An", "Ea Tu", "Hòa Thuận", "Thành Nhất", "Thành Công", "Thắng Lợi", "Thống Nhất", "Tân Tiến", "Tân Thành", "Tự An", "Tân Lập", "Tân Hòa" ,"Khánh Xuân", "Ea Tam" ,"Hòa Thắng", "Hòa Xuân", "Hòa Phú", "Hòa Khánh", "Ea Kao"]
+  region = ["Cư Êbur", "Tân Lợi", "Tân An", "Ea Tu", "Hòa Thuận", "Thành Nhất", "Thành Công",
+      "Thắng Lợi", "Thống Nhất", "Tân Tiến", "Tân Thành", "Tự An", "Tân Lập", "Tân Hòa" ,"Khánh Xuân",
+      "Ea Tam" ,"Hòa Thắng", "Hòa Xuân", "Hòa Phú", "Hòa Khánh", "Ea Kao"]
   
   constructor(public storage: Storage, public event: Events, public popoverCtrl: PopoverController,
       public platform: Platform, public toastCtrl: ToastController) {

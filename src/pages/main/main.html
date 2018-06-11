@@ -41,7 +41,8 @@
           <ion-icon name="add"></ion-icon>
           <div>follow</div>
         </button>
-        <ion-icon class="right" name="menu" (click)="thisPostOption($event, postId)" *ngIf="user.userId === post.data[postId].ownerId"></ion-icon>
+        <ion-icon class="right" name="menu" (click)="thisPostOption($event, postId)"
+        *ngIf="user.userId === post.data[postId].ownerId"></ion-icon>
       </ion-item>
       <ion-item *ngIf="post.data[postId].type === 1">
         <ion-avatar item-start>
@@ -50,14 +51,14 @@
         <h2>{{group.data[post.data[postId].ownerId].name}}</h2>
         <p>{{post.data[postId].time | date: "dd/MM/yyyy HH:mm"}}</p>
         <button ion-button color="primary" icon-left clear small
-            *ngIf="post.data[postId].ownerId !== user.userId
-            && friend.group.indexOf(post.data[postId].ownerId) === -1"
-            (click) ="friend.follow(user.userId, post.data[postId].ownerId, post.data[postId].type)">
+            *ngIf="friend.group.indexOf(post.data[postId].ownerId) === -1"
+            (click)="friend.follow(user.userId, post.data[postId].ownerId, post.data[postId].type)">
           <ion-icon name="add"></ion-icon>
           <div>follow</div>
         </button>
         <ion-icon class="right" name="menu" (click)="thisPostOption($event, postId)"
-            *ngIf="user.userId === group.data[post.data[postId].ownerId].userId"></ion-icon>
+            *ngIf="user.userId === group.data[post.data[postId].ownerId].userId
+            || this.service.findIndex(member.list, groupId, 'groupId') !== -1"></ion-icon>
       </ion-item>
       <img class="image" *ngIf="post.data[postId].image.length > 0"
           src="{{image.data[post.data[postId].image[0]]}}" (click)="gotoDetail(postId)">
@@ -86,7 +87,8 @@
       </button>
       </span>
     </ion-card>
-    <button ion-button (click)="loadMore()" *ngIf="(page - 1) * user.setting.numberload < postList.length">
+    <button class="max" ion-button (click)="loadMore()"
+        *ngIf="(page - 1) * user.setting.numberload < postList.length">
       Xem thêm
     </button>
   </div>

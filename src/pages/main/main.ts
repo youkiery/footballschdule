@@ -4,7 +4,6 @@ import { IonicPage, NavController, ViewController, NavParams, AlertController } 
 import { LibraryPage } from '../../pages/library/library';
 import { PostPage } from '../post/post';
 import { CommentPage } from '../comment/comment';
-import { GroupPage } from '../group/group';
 import { SettingPage } from '../setting/setting';
 import { FriendPage } from '../friend/friend';
 import { ProfilePage } from '../profile/profile';
@@ -16,6 +15,7 @@ import { PostProvider } from '../../providers/post/post';
 import { FriendProvider } from '../../providers/friend/friend';
 import { GroupProvider } from '../../providers/group/group';
 import { ImageProvider } from '../../providers/image/image';
+import { MemberProvider } from '../../providers/member/member';
 
 /**
  * filter for data display
@@ -37,8 +37,13 @@ export class MainPage {
   display = false
   constructor(public user: UserProvider, public post: PostProvider, public group: GroupProvider,
     public navCtrl: NavController, public friend: FriendProvider, public service: ServiceProvider,
-    private image: ImageProvider) {
+    private image: ImageProvider, private member: MemberProvider) {
       this.service.event.subscribe("main-get-initiaze", postlist => {
+        console.log(this.user)
+        console.log(this.group)
+        console.log(this.friend)
+        console.log(this.post)
+        console.log(this.member)
         this.postList = postlist
         /**
          * soft post list
@@ -72,7 +77,6 @@ export class MainPage {
             }
             
             if(index === end) {
-              console.log(this.displayList)
               this.service.event.publish("loading-end")
             }
           })
@@ -97,6 +101,7 @@ export class MainPage {
         })
       })
       
+      this.service.event.publish("loading-start")
       this.service.event.publish("get-login-data", this.user.userId)
   }
 
@@ -132,9 +137,6 @@ export class MainPage {
   }
   gotoDetail(postId) {
     this.navCtrl.push(CommentPage, {postId: postId})
-  }
-  gotoGroup() {
-    this.navCtrl.push(GroupPage)
   }
   gotoSearch() {
     this.navCtrl.push(SearchPage)
