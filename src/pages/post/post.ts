@@ -34,10 +34,10 @@ export class PostPage {
         if(this.groupId) {
           this.type = 1
         }
-        if(this.service.valid(this.postId)) {
+        if(this.postId) {
           this.postData = this.post.data[this.postId]
           this.msg = this.postData.msg  
-          this.imageList = this.postData.image  
+          this.imageList = this.postData.image
         }
         this.service.event.subscribe("update-image-post", (imageList) => {
           this.imageList = imageList

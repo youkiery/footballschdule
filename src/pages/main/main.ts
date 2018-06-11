@@ -38,44 +38,6 @@ export class MainPage {
   constructor(public user: UserProvider, public post: PostProvider, public group: GroupProvider,
     public navCtrl: NavController, public friend: FriendProvider, public service: ServiceProvider,
     private image: ImageProvider) {
-
-      /*this.service.event.subscribe("main-get-friend", () => {
-        this.service.event.publish("loading-update", "đang tải danh sách bạn bè")
-        this.friend.initiaze(this.user.userId, "main-get-group-list")
-      })
-      this.service.event.subscribe("main-get-group-list", () => {
-        this.service.event.publish("loading-update", "đang tải danh sách đội bóng")
-        this.group.getRelativeGroupList(this.user.userId, "main-get-group")
-      })
-      this.service.event.subscribe("main-get-group", (list) => {
-
-        list.forEach(data => {
-          this.member.push(data.groupId)
-        })
-        this.group.getGroupList(this.member, "main-get-user-post")
-      })
-      this.service.event.subscribe("main-get-user-post", (list) => {
-        this.service.event.publish("loading-update", "đang tải danh sách bài viết")
-        var idList = [this.user.userId]
-        this.friend.data.forEach(friend => {
-          if(friend.type === 0) {
-            idList.push(friend.friendId)
-          }
-        })
-        list.forEach(group => {
-          idList.push(group.id)
-        })
-        this.post.getPostList(idList, "main-get-image")
-      })
-      this.service.event.subscribe("main-get-image", (postlist) => {
-        this.postList = postlist
-        var list = []
-        this.postList.forEach(post => {
-          list = list.concat(this.post.data[post].image)
-        })
-        console.log(list)
-        this.image.getImage(list, "display-post")
-      })*/
       this.service.event.subscribe("main-get-initiaze", postlist => {
         this.postList = postlist
         /**
@@ -85,12 +47,7 @@ export class MainPage {
         this.postList.sort((a, b) => {
           return this.post.data[b].time - this.post.data[a].time
         })
-        this.postList.forEach(postId => {
-          console.log(this.post.data[postId].time)
-        })
         
-        console.log(this.post.data)
-        console.log(this.user.data)
         this.service.event.publish("display-post")
       })
 
@@ -126,15 +83,12 @@ export class MainPage {
       })
 
       this.service.event.subscribe("main-push-post", (postId) => {
-        console.log(this.post.data)
-        console.log(this.user.data)
         var temp = []
         this.displayList.forEach((newId, newIndex) => {
           temp[newIndex + 1] = newId
         })
         temp[0] = postId
         this.displayList = temp
-        console.log(this.displayList)
       })
 
       this.service.event.subscribe("remove-post-list", (postId) => {
@@ -143,9 +97,6 @@ export class MainPage {
         })
       })
       
-      // start initiaze
-      //this.service.event.publish("loading-start")
-      //this.service.event.publish("main-get-friend")
       this.service.event.publish("get-login-data", this.user.userId)
   }
 

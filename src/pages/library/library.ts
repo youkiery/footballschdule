@@ -343,42 +343,46 @@ export class LibraryPage {
           var imageId = this.image.ref.push().key
           var libraryImageId = this.image.ref.push().key
           var storageRef = this.service.store.ref().child(imageId);
-          var uploadTask = storageRef.put(this.files[fileId]);
+          var uploadTask = storageRef.put(this.files[fileId])
           
-          uploadTask.on('state_changed', (snapshot) => {
-            var progress = (uploadTask.snapshot.bytesTransferred / uploadTask.snapshot.totalBytes) * 100;
-            if(progress === 100){
-              storageRef.getDownloadURL().then(urlsnap => {
-                var url = urlsnap
-                var libraryId = this.library.list[this.selectedIndex].libraryId
+          uploadTask.on('state_changed', function(snapshot){
+            var progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+            console.log('Upload is ' + progress + '% done');
+            
+          }, function(error) {
+            
+          }, function() {
+            uploadTask.snapshot.ref.getDownloadURL().then(function(downloadURL) {
+              console.log('File available at', downloadURL);
+              
+              var libraryId = this.library.list[this.selectedIndex].libraryId
                 
-                var currTime = Date.now()
-                var imageData = {
-                  imageId: imageId,
-                  libraryId: libraryId
-                }
-  
-                var updateData = {}
-                updateData["libraryImage/" + libraryImageId] = imageData
-                if(end === fileId) {
-                  updateData["library/" + libraryId + "/last"] = imageId
-                }
-                updateData["image/" + imageId] = url
-                console.log(updateData)
+              var currTime = Date.now()
+              var imageData = {
+                imageId: imageId,
+                libraryId: libraryId
+              }
 
-                this.library.ref.parent.update(updateData).then(() => {
-                  this.image.data[imageId] = url
-                  this.library.list[this.selectedIndex].last = imageId
-                  this.displayLibraryImage.push(imageId)
-  
-                  if(end === fileIndex) {
-                    this.files = undefined
-                    this.service.event.publish("loading-end")
-                  }
-                })
+              var updateData = {}
+              updateData["libraryImage/" + libraryImageId] = imageData
+              if(end === fileId) {
+                updateData["library/" + libraryId + "/last"] = imageId
+              }
+              updateData["image/" + imageId] = downloadURL
+              console.log(updateData)
+
+              this.library.ref.parent.update(updateData).then(() => {
+                this.image.data[imageId] = downloadURL
+                this.library.list[this.selectedIndex].last = imageId
+                this.displayLibraryImage.push(imageId)
+
+                if(end === fileIndex) {
+                  this.files = undefined
+                  this.service.event.publish("loading-end")
+                }
               })
-            }
-          })  
+            })
+          })
         })
       }
     }

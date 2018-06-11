@@ -9,21 +9,25 @@
       </ion-item>
       <form>
         <ion-item>
-          <ion-input [(ngModel)]="username" type="text" name="username" placeholder="tên tài khoản"></ion-input>
+          <ion-input [(ngModel)]="username" type="text" name="username" placeholder="tên tài khoản">
+          </ion-input>
         </ion-item>
         <ion-item>
-          <ion-input [(ngModel)]="name" type="text" name="name" placeholder="tên hiển thị"></ion-input>
+          <ion-input [(ngModel)]="name" type="text" name="name" placeholder="tên hiển thị">
+          </ion-input>
         </ion-item>
         <ion-item>
-          <ion-input [(ngModel)]="password" type="password" name="password" placeholder="mật khẩu"></ion-input>
+          <ion-input [(ngModel)]="password" type="password" name="password" placeholder="mật khẩu">
+          </ion-input>
         </ion-item>
         <ion-item>
-          <ion-input [(ngModel)]="vpassword" type="password" name="vpassword" placeholder="xác nhận mật khẩu"></ion-input>
+          <ion-input [(ngModel)]="vpassword" type="password" name="vpassword" placeholder="xác nhận mật khẩu">
+          </ion-input>
         </ion-item>
         <ion-item>
         <ion-label>Vùng</ion-label>
           <ion-select [(ngModel)]="region" name="region">
-            <span *ngFor="let pos of service.position; let i = index">
+            <span *ngFor="let pos of service.region; let i = index">
               <ion-option value="{{i}}" *ngIf="user.data[user.userId].region === i" selected="true">
                 {{pos}}
               </ion-option>
@@ -33,15 +37,30 @@
             </span>
           </ion-select>
         </ion-item>
-        <button ion-button (click)="changeUserInfo()">
-          cập nhật
-        </button>
+        <ion-item>
+          <button class="max" ion-button (click)="changeUserInfo()">
+            cập nhật
+          </button>
+        </ion-item>
       </form>
     </ion-list>
     <ion-list>
-      <ion-item (click)="changeNL()">
-        đổi lượng tin mỗi lần load
+      <ion-item color="primary">
+        Tùy chọn hiển thị
       </ion-item>
+      <form>
+        <ion-item>
+          <ion-input [(ngModel)]="numberload" type="number" name="numberload"></ion-input>
+        </ion-item>
+        <ion-item>
+          <ion-input [(ngModel)]="startload" type="number" name="startload"></ion-input>
+        </ion-item>
+        <ion-item>
+          <button class="max" ion-button (click)="user.changeOption(numberload, startload)">
+            cập nhật
+          </button>
+        </ion-item>
+      </form>
     </ion-list>
   </div>
 </ion-content>

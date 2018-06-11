@@ -2,6 +2,7 @@ import { Component } from '@angular/core';
 import { IonicPage, AlertController, NavController, ViewController, NavParams } from 'ionic-angular';
 
 import { PostPage } from '../post/post';
+import { viewImage } from '../library/library';
 
 import { ServiceProvider } from '../../providers/service/service'
 import { UserProvider } from '../../providers/user/user'
@@ -100,16 +101,6 @@ export class CommentPage {
           this.postData.msg = data.msg
           this.postData.image = data.image
         })
-        /*this.service.event.subscribe("comment-like", (data) => {
-          var index = this.service.findIndex(this.comment, data[0], "id")
-          this.comment[index].like.push(data[1])
-        })
-        this.service.event.subscribe("comment-unlike", (data) => {
-          var index = this.service.findIndex(this.comment, data, "id")
-          this.comment[index].like = this.comment[index].like.filter(x => {
-            return x.userId !== user.userId
-          })
-        })*/
       }
 
   commentPost(msg) {
@@ -148,6 +139,9 @@ export class CommentPage {
   goback() {
     this.listener.off()
     this.navCtrl.pop()
+  }
+  viewImage(imageUrl) {
+    this.navCtrl.push(viewImage, {imageUrl: imageUrl})
   }
 }
 

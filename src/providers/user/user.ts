@@ -16,38 +16,45 @@ import firebase from 'firebase'
 @Injectable()
 export class UserProvider {
   ref: any
-  datatype = {
-    id: "",
-    name: "",
-    avatar: "",
-    lastlog: "",
-  }
   data = {}
   setting = {
-    numberload: 2
+    numberload: 4,
+    startload: 6
   }
   userId = ""
   username = ""
   password = ""
   constructor(private service: ServiceProvider) {
     this.ref = this.service.db.ref("user")
-    this.service.storage.get("userInfo").then(data => {
-      var userInfo = data
-    
-      if(this.service.valid(userInfo)) {
+    this.service.storage.get("userInfo").then(userInfo => {
+
+      if(userInfo) {
         this.service.event.publish("loading-start")
-        console.log(userInfo)
-        console.log(userInfo.username && userInfo.password)
         if(userInfo.username && userInfo.password) {
           this.login(userInfo.username, userInfo.password)
         }
         else {
-          this.service.event.publish("loading-end")
+          if(userInfo.userId) {
+            this.fbLogin(userInfo.userId)
+          }
+          else {
+            this.service.event.publish("loading-end")
+          }
         }
       }
     })
   }
 
+  setUser(userId, userData) {
+    this.data[userId] = {
+      name: userData.name,
+      region: userData.region,
+      describe: userData.describe,
+      avatar: userData.avatar,
+      lastlog: userData.lastlog
+    }
+  }
+  
   login(username, password) {
     this.service.event.publish('loading-start')
     this.ref.orderByChild("username").equalTo(username).once('value').then(userInfoSnap => {
@@ -143,12 +150,12 @@ export class UserProvider {
       }
     })
   }
+
   logout() {
     this.service.event.publish("logout")
     this.service.storage.remove("userInfo")
   }
 
-  
   signupFb() {
     this.service.event.publish('loading-start')
     var provider = new firebase.auth.FacebookAuthProvider();
@@ -209,60 +216,27 @@ export class UserProvider {
     })
   }
 
-  changeNumberLoad(numberload) {
+  fbLogin(userId) {
     this.service.event.publish("loading-start")
-    this.ref.child(this.userId + "/setting/numberload").set(numberload).then(() => {
-      this.setting.numberload = numberload
+    this.ref.child(userId).once("value").then(userSnap => {
+      var userData = userSnap.val()
+      if(userData) {
+        this.loginSuccess(userId, userData)
+      }
       this.service.event.publish("loading-end")
     })
   }
 
-
-  getuserInfo(userList, event) {
-    var end = userList.length - 1
-    //var list = []
-    userList.forEach((userId, userIndex) => {
-      if(!this.service.valid(this.data[userId])) {
-        this.ref.child(userId).once("value").then(userInfoSnap => {
-          var userInfo = userInfoSnap.val()
-          if(this.service.valid(userInfo)) {
-            this.setUser(userId, userInfo)
-          }
-          // else case
-          if(end === userIndex) {
-            this.service.event.publish(event)
-          }
-        })
-      }
-      else if(end === userIndex) {
-        this.service.event.publish(event)
-      }
+  changeOption(numberload, startload) {
+    this.service.event.publish("loading-start")
+    this.ref.child(this.userId + "/setting").update({
+      numberload: numberload,
+      startload: startload
+    }).then(() => {
+      this.setting.numberload = numberload
+      this.setting.startload = startload
+      this.service.event.publish("loading-end")
     })
-  }
-
-  getAdvice() {
-    this.ref.orderByChild("lastLog").limitToLast(10).once("value").then(userListSnap => {
-      var userList = userListSnap.val()
-      var adviceList = []
-      if(this.service.valid(userList)) {
-        for(const userId in userList) {
-          if(userList.hasOwnProperty(userId)) {
-            adviceList.push(userId)
-          }
-        }
-      }
-      this.service.event.publish("get-advice-post-list", adviceList)
-    })
-  }
-
-  setUser(userId, userInfo) {
-    this.data[userId] = {
-      name: userInfo.name,
-      avatar: userInfo.avatar,
-      region: userInfo.region,
-      lastLog: userInfo.lastLog,
-      describe: userInfo.describe
-    }
   }
 
   changeAvatar(imageUrl) {
@@ -326,92 +300,4 @@ export class UserProvider {
       this.service.event.publish('loading-end')
     }
   }
-
-  getUserData(userId) {
-    console.log(userId)
-    if(this.data[userId] === undefined) {
-      this.ref.child(userId).once("value").then(userDataSnap => {
-        var userData = userDataSnap.val()
-        console.log(userData)
-        if(this.service.valid(userData)) {
-          this.setUser(userId, userData)
-        }
-      })
-    }
-  }
-  /*
-
-  confirmAccount(username, password) {
-    this.event.publish('loading')
-    this.userRef.orderByChild('username').equalTo(username).once('value').then((snap) => {
-      var currentTime = Date.now()
-      var userId = snap.val()
-      if(userId === null) {
-        this.userRef.child(this.data.userId).update({
-          username: username,
-          password: password,
-          lastLog: currentTime
-        }).then(() => {
-          this.data.username = username
-          this.data.password = password
-          this.data.lastLog = currentTime
-          this.storeData()
-          this.event.publish('fail')
-        })
-      }
-      else {
-        this.event.publish('fail', 'tên tài khoản không khả dụng')
-      }
-    })
-  }
-
-
-
-  gotoProfile(id) {
-    this.profileId = id
-  }
-
-  bbtotext(text) {
-    var format_search =  [
-      /\[b\](.*?)\[\/b\]/ig,
-      /\[i\](.*?)\[\/i\]/ig,
-      /\[u\](.*?)\[\/u\]/ig
-    ]
-    var format_replace = [
-      '<strong>$1</strong>',
-      '<em>$1</em>',
-      '<span style="text-decoration: underline;">$1</span>'
-    ];
-    var length = format_search.length
-
-    text = 'this is a [b]bolded[/b] and [i]italic[/i] string';
-
-    for (var i = 0; i < length; i++) {
-      text = text.replace(format_search[i], format_replace[i]);
-    }
-    return text
-  }
-
-  objToList(obj) {
-    var arr = []
-    for (const key in obj) {
-      if (obj.hasOwnProperty(key)) {
-        arr.push(obj[key])
-        arr[arr.length - 1].id = key
-      }
-    }
-    return arr
-  }
-
-  objToKeyList(obj) {
-    var arr = []
-    for (const key in obj) {
-      if (obj.hasOwnProperty(key)) {
-        arr.push(key)        
-      }
-    }
-    return arr
-    
-  }
-  */
 }

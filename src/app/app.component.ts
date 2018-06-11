@@ -83,7 +83,7 @@ export class MyApp {
 
       this.event.subscribe("get-login-data", (userId) => {
         // get following user and group        
-        this.ref.child("friend").orderByChild("userId").equalTo(userId).once("value").then(friendSnap => {
+        this.ref.child("follow").orderByChild("userId").equalTo(userId).once("value").then(friendSnap => {
           var friendDataList = friendSnap.val()
           if(friendDataList) {
             this.friend.setFriend(friendDataList)

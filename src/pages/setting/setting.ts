@@ -20,35 +20,16 @@ export class SettingPage {
   vpassword = ''
   name = ''
   region = 0
+  numberload = 0
+  startload = 0
   constructor(public user: UserProvider, public service: ServiceProvider, public navCtrl: NavController,
     private alertCtrl: AlertController) {
     this.name = this.user.data[this.user.userId].name
+    
+    this.region = this.user.data[this.user.userId].region
+    this.numberload = this.user.setting.numberload
+    this.startload = this.user.setting.startload
   }
-
-  ionViewDidLoad() {
-    console.log('ionViewDidLoad SettingPage');
-  }
-  /*confirmAccount() {
-    var e
-    if(this.username.length < 4) {
-      e = "tên người dùng quá ngắn"
-    }
-    else if(this.password.length < 4) {
-      e = "mật khẩu quá ngắn"      
-    }
-    else if(this.vpassword !== this.password) {
-      e = "xác nhận mật khẩu không khớp"
-    }
-
-    if(e !== undefined) {
-      this.service.toastCtrl.create({
-        message: e,
-        duration: 1000,
-        position: 'bottom'
-      }).present()
-    }
-    this.user.confirmAccount(this.username, this.password)
-  }*/
   changeUserInfo() {
     var e = ""
     if(this.username.length < 4 && this.username !== '') {
@@ -73,35 +54,6 @@ export class SettingPage {
     else {
       this.user.changeUserInfo(this.username, this.password, this.name, this.region)
     }
-  }
-
-  // đổi lượng post hiển thị mỗi lần NL: number load
-  changeNL() {
-    let alert = this.alertCtrl.create({
-      message: "nhập lượng tin mong muốn<br>lượng tin tối thiểu: 2",
-      inputs: [{
-        name: "numberload",
-        type: "number",
-        placeholder: "0"
-      }],
-      buttons: [{
-        role: "cancel",
-        text: "hủy"
-      },
-      {
-        text: 'Sửa',
-        handler: data => {
-          console.log(data)
-          if(data.numberload < 2) {
-            this.service.warning("lượng tin tối thiểu: 2")
-          }
-          else {
-            this.user.changeNumberLoad(data.numberload);
-          }
-        }
-      }]
-    })
-    alert.present()
   }
 
   goback() {

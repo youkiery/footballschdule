@@ -14,12 +14,17 @@
 // To declare rules for a specific mode, create a child rule
 // for the .md, .ios, or .wp mode classes. The mode class is
 // automatically applied to the <body> element in the app.
+.scroll-content {
+	max-width: 800px !important;
+	margin: auto !important;
+	background: #eee;
+}
 .card-header-md {
 	padding: 0px;
 	border-bottom: 1px solid #ddd;
 }
 .msg {
-	padding: 16px 16px 0px 16px;
+	padding: 16px;
 	border-bottom: 1px solid #ddd;
 }
 .md-icon {
@@ -59,17 +64,17 @@
 }
 .header {
 	position: fixed;
-	height: 30px;
-	width: 100%;
-	font-size: 20px;
-	z-index: 1;
-	background: #eee;
-	border-bottom: 1px solid #ddd;
+	height: 40px;
+	width: 800px;
+	font-size: 30px;
+	z-index: 2;
+	background: #ddd;
+	border-bottom: 2px solid #fff;
 }
 .container {
-	margin: 35px 0px 0px 0px;
+	margin: 45px auto 0px auto;
 	padding: 0px;
-	z-index: 0
+	z-index: 0;
 }
 ion-icon {
 	margin: 2px 4px 0px 8px;
@@ -94,4 +99,5 @@ ion-icon {
 .image {
 	max-height: 256px;
 	width: auto;
+	margin: auto;
 }
