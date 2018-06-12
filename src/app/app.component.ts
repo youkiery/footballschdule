@@ -469,6 +469,7 @@ export class MyApp {
                     }
                   }
                 }
+                console.log(userIdList)
                 this.event.publish("get-user-member-data", userIdList, memberList)
               }
               else {
@@ -477,8 +478,9 @@ export class MyApp {
         })
       })
 
-      this.event.subscribe("get-member-list", (userIdList, memberList) => {
+      this.event.subscribe("get-user-member-data", (userIdList, memberList) => {
         var end = userIdList.length
+        console.log(userIdList)
         if(end) {
           end --
           userIdList.forEach((userId, userIndex) => {
@@ -497,38 +499,228 @@ export class MyApp {
           this.event.publish("get-member-list-finish", memberList)
         }
       })
+      
+      this.event.subscribe("new-group", (userId, name, describe) => {
+        var currentTime = Date.now()
+        var updateData = {}
+    
+        var groupId = this.ref.child("group").push().key
+        var memberId = this.ref.child("member").push().key
+        var followId = this.ref.child("follow").push().key
+        updateData["group/" + groupId] = {
+          userId: userId,
+          name: name,
+          avatar: "../../assets/imgs/logo.png",
+          time: currentTime,
+          describe: describe
+        }
+        updateData["member/" + memberId] = {
+          userId: userId,
+          groupId: groupId,
+          type: 2
+        }
+        updateData["follow/" + memberId] = {
+          userId: userId,
+          objectId: groupId,
+          type: 1
+        }
+        this.ref.update(updateData).then(() => {
+          updateData["group/" + groupId].id = groupId
+          this.group.data[groupId] = updateData["group/" + groupId]
+          this.member.setMember(memberId, updateData["member/" + memberId])
+          this.friend.setFriend([updateData["member/" + memberId]])
+          this.group.data[groupId] = updateData["group/" + groupId]
+          this.service.event.publish("new-group-finish")
+        })
+      })
+
+      this.event.subscribe("remove-group", (groupId) => {
+        this.event.publish("loading-start")
+        var updateData = {}
+        updateData["group/" + groupId] = null
+        this.ref.child("member").orderByChild("groupId").equalTo(groupId).once("value").then(memberSnap => {
+          var memberDataList = memberSnap.val()
+          if(memberDataList) {
+            for(const key in memberDataList) {
+              if(memberDataList.hasOwnProperty(key)) {
+                updateData["member/" + key] = null
+              }
+            }
+          }
+          this.ref.child("follow").orderByChild("objectId").equalTo(groupId).once("value")
+              .then(followSnap => {
+                var followDataList = followSnap.val()
+                if(followDataList) {
+                  for(const key in followDataList) {
+                    if(followDataList.hasOwnProperty(key)) {
+                      updateData["follow/" + key] = null
+                    }
+                  }
+                }
+                this.ref.child("post").orderByChild("ownerId").equalTo(groupId).once("value")
+                    .then(postSnap => {
+                      var postDataList = postSnap.val()
+                      if(postDataList) {
+                        for(const key in postDataList) {
+                          if(postDataList.hasOwnProperty(key)) {
+                            updateData["post/" + key] = null
+                          }
+                        }
+                      }
+                      this.ref.update(updateData).then(() => {
+                        this.group.data[groupId] = null
+                        this.member.list = this.member.list.filter(data => {
+                          return data.groupId !== groupId
+                        })
+                        this.friend.group = this.friend.group.filter(data => {
+                          return data !== groupId
+                        })
+                        for(const key in postDataList) {
+                          if(postDataList.hasOwnProperty(key)) {
+                            this.post[key] = null
+                          }
+                        }
+                        this.event.publish("loading-end")
+                        this.event.publish("remove-group-finish", groupId)
+                      })
+                })
+          })
+          
+        }) 
+      })
+
+      /**
+       * profile
+       */
+
+      this.event.subscribe("profile-get-data", userId => {
+        this.postList = []
+        this.ref.child("post").orderByChild("ownerId").equalTo(userId).once("value").then(postSnap => {
+          var postDataList = postSnap.val()
+          if(postDataList) {
+            for (const postKey in postDataList) {
+              if (postDataList.hasOwnProperty(postKey)) {
+                var postData = postDataList[postKey]
+                postData["postId"] = postKey
+                postData["like"] = []
+                if(postData.image === undefined) {
+                  postData.image = []
+                }
+                postData.time = new Date(postData.time)
+
+                this.post.data[postKey] = postData
+                if(this.postList.indexOf(postKey) < 0) {
+                  this.postList.push(postKey)
+                }
+              }
+            }
+          }
+          console.log(this.postList)
+          
+          this.event.publish("profile-get-data-2")
+        })
+      })
+
+      
+      this.event.subscribe('profile-get-data-2', () => {
+        // get image
+        var getImageList = []
+        this.postList.forEach(postId => {
+          if(this.post.data[postId].image !== undefined) {
+            this.post.data[postId].image.forEach(imageId => {
+              if(getImageList.indexOf(imageId) < 0) {
+                getImageList.push(imageId)
+              }              
+            })
+          }
+        })
+        var end = getImageList.length
+        if(end) {
+          end --
+          getImageList.forEach((imageId, imageIndex) => {
+            this.ref.child("image/" + imageId).once("value").then(imageSnap => {
+              var imageData = imageSnap.val()
+              if(imageData) {
+                this.image.data[imageSnap.key] = imageData
+              }
+            })
+            if(end === imageIndex) {
+              this.event.publish("profile-get-data-3")              
+            }
+          })
+        }
+        else {
+          this.event.publish("profile-get-data-3")
+        }
+      })
+
+      this.event.subscribe('profile-get-data-3', () => {
+        // get like
+        var end = this.postList.length
+        if(end) {
+          end --
+          this.postList.forEach((postId, postIndex) => {
+            this.ref.child("like").orderByChild("postId").equalTo(postId).once("value").then(likeSnap => {
+              var likeDataList = likeSnap.val()
+              if(likeDataList) {
+                var likeList = []
+                for(const likeKey in likeDataList) {
+                  if(likeDataList.hasOwnProperty(likeKey)) {
+                    var likeData = likeDataList[likeKey];
+                    likeList.push({
+                      userId: likeData.userId,
+                      likeId: likeKey
+                    })
+                  }
+                }
+                this.post.data[postId].like = likeList
+              }
+              if(end === postIndex) {
+                this.event.publish("profile-get-data-finish", this.postList)
+                this.postList = []
+              }
+            })
+          })
+        }
+        else {
+          this.event.publish("group-get-data-finish", this.postList)
+          this.postList = []
+        }
+      })
 
       /**
        * search
        */
 
-      this.event.subscribe("search-get", (usercb, groupcb, key, mode) => {
-        var postList = []
-        if(mode) {
-          this.ref.child("user").orderByChild("region").equalTo(this.user.data[this.user.userId].region)
-            .once("value").then((userSnap) => {
-              var userDataList = userSnap.val()
-              if(userDataList) {
-                var userIdList = []
-                for(const userKey in userDataList) {
-                  if(userDataList.hasOwnProperty(userKey)) {
-                    userIdList.push(userKey)
-                  }
-                }
-              }
-              var end = userIdList.length
-              if(end) {
-                end --
-                var groupIdList
-                userIdList.forEach((userId, userIndex) => {
-                  this.ref.child("group").orderByChild("userId").equalTo(userId)
-                })
-              }
-              else {
-
-              }
-            })
+      this.event.subscribe("search-get", (type, key, mode) => {
+        this.postList = []
+        if(type === 2) {
+          this.ref.child("post").once("value").then((postSnap) => {
+            var postDataList = postSnap.val()
+            if(postDataList) {
+              this.postList = this.post.setPostList(postDataList)
+            }
+            this.event.publish("search-get-data-2", key, mode)
+          })
         }
+        else {
+          this.ref.child("post").orderByChild("type").equalTo(type).once("value").then((postSnap) => {
+            var postDataList = postSnap.val()
+            if(postDataList) {
+              this.postList = this.post.setPostList(postDataList)
+            }
+            this.event.publish("search-get-data-2", key, mode)
+          })
+        }
+      })
+
+      this.event.subscribe("search-get-data-2", (key, mode) => {
+        var temp = []
+        this.postList.forEach(postId => {
+          if(mode && this.post.data[postId].region) {
+
+          }
+        })
       })
 
       /**

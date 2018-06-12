@@ -241,13 +241,8 @@ export class UserProvider {
 
   changeAvatar(imageUrl) {
     this.service.event.publish('loading-start')
-    this.data[this.userId].avatar = imageUrl
-    var storeData = {
-      userId: this.userId,
-      userInfo: this.data[this.userId]
-    }
-    this.service.storeData("userInfo", storeData)
     this.ref.child(this.userId).update({avatar: imageUrl}).then(() => {
+      this.data[this.userId].avatar = imageUrl
       this.service.event.publish('loading-end')
     })
   }

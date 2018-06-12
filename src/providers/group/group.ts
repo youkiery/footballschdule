@@ -57,27 +57,12 @@ export class GroupProvider {
       this.service.event.publish(event, list)
     })
   }
-  newGroup(userId, name, describe, event) {
-    var currentTime = Date.now()
-    var updateData = {}
-
-    var groupId = this.ref.push().key
-    var memberId = this.ref.parent.child("member").push().key
-    updateData["group/" + groupId] = {
-      userId: userId,
-      name: name,
-      avatar: "../../assets/imgs/logo.png",
-      time: currentTime,
-      describe: describe
-    }
-    updateData["member/" + memberId] = {
-      userId: userId,
-      groupId: groupId
-    }
-    this.ref.parent.update(updateData).then(() => {
-      updateData["group/" + groupId].id = groupId
-      this.data[groupId] = updateData["group/" + groupId]
-      this.service.event.publish(event, updateData["group/" + groupId])
+  
+  changeAvatar(groupId, imageUrl) {
+    this.service.event.publish('loading-start')
+    this.ref.child(groupId).update({avatar: imageUrl}).then(() => {
+      this.data[groupId] = imageUrl
+      this.service.event.publish('loading-end')
     })
   }
 }

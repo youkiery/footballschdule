@@ -1,10 +1,11 @@
-import { Component } from '@angular/core';
+import { Component, group } from '@angular/core';
 import { IonicPage, NavController, AlertController, NavParams } from 'ionic-angular';
 
 import { ServiceProvider } from '../../providers/service/service';
 import { UserProvider } from '../../providers/user/user';
 import { LibraryProvider } from '../../providers/library/library';
 import { ImageProvider } from '../../providers/image/image';
+import { GroupProvider } from '../../providers/group/group';
 
 /**
  * manager image and library
@@ -13,24 +14,7 @@ import { ImageProvider } from '../../providers/image/image';
  * png, jpg
  */
 
-@Component({
-  template: `
-    <div class="header">
-      <ion-icon name="arrow-round-back" (click)="goback()"></ion-icon>
-    </div>
-    <div class="container">
-      <img src="{{img}}">
-    </div>`
-})
-export class viewImage {
-  img = ""
-  constructor(private navCtrl: NavController, private navParam: NavParams) {
-    this.img = this.navParam.get("imageUrl")
-  }
-  goback() {
-    this.navCtrl.pop()
-  }
-}
+
 @IonicPage()
 @Component({
   selector: 'page-library',
@@ -38,6 +22,7 @@ export class viewImage {
 })
 export class LibraryPage {
   action = ""
+  groupId = ""
   files: any
 
   isSelect = false
@@ -51,8 +36,9 @@ export class LibraryPage {
   // templist, selectedlist
   constructor(public service: ServiceProvider, public user: UserProvider, private navParam: NavParams,
     public library: LibraryProvider, public navCtrl: NavController, public alertCtrl: AlertController,
-    private image: ImageProvider) {
+    private image: ImageProvider, private group: GroupProvider) {
       var action = this.navParam.get("action")
+      this.groupId = this.navParam.get("groupId")
       if(this.service.valid(action)) {
         this.action = action
         this.isSelect = true
@@ -294,7 +280,12 @@ export class LibraryPage {
   }
   changeAvatar() {
     if(this.service.valid(this.selectImages[0])) {
-      this.user.changeAvatar(this.image.data[this.selectImages[0]])
+      if(this.groupId) {
+        this.group.changeAvatar(this.groupId, this.image.data[this.selectImages[0]])
+      }
+      else {
+        this.user.changeAvatar(this.image.data[this.selectImages[0]])
+      }
       this.navCtrl.pop()
     }
   }
@@ -386,5 +377,23 @@ export class LibraryPage {
     else {
       this.service.event.publish("loading-end", "chưa chọn ảnh nào")
     }
+  }
+}
+@Component({
+  template: `
+    <div class="header">
+      <ion-icon name="arrow-round-back" (click)="goback()"></ion-icon>
+    </div>
+    <div class="container">
+      <img src="{{img}}">
+    </div>`
+})
+export class viewImage {
+  img = ""
+  constructor(private navCtrl: NavController, private navParam: NavParams) {
+    this.img = this.navParam.get("imageUrl")
+  }
+  goback() {
+    this.navCtrl.pop()
   }
 }

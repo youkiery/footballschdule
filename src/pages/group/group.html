@@ -1,12 +1,14 @@
 <ion-content>
     <div class="header">
-      <ion-icon name="refresh" (click)="reload()"></ion-icon>
-      <ion-icon name="settings" (click)="gotoMember()"></ion-icon>
-      <ion-icon name="settings" (click)="removeGroup()"></ion-icon>
+      <ion-icon name="arrow-round-back" (click)="goback()"></ion-icon>
+      <span *ngIf="controller === 'normal'">
+        <ion-icon name="refresh" (click)="reload()"></ion-icon>
+        <ion-icon name="contacts" (click)="gotoMember()"></ion-icon>
+        <ion-icon name="remove" (click)="removeGroup()"></ion-icon>
+      </span>
     </div>
     <div class="container">
       <div *ngIf="controller === 'normal'">
-
           <ion-card *ngIf="this.service.findIndex(member.list, groupId, 'groupId') !== -1">
               <ion-card-header>
                 <ion-item>
@@ -44,8 +46,6 @@
                 </ion-avatar>
                 <h2>{{group.data[post.data[postId].ownerId].name}}</h2>
                 <p>{{post.data[postId].time | date: "dd/MM/yyyy HH:mm"}}</p>
-                {{postId}}
-                {{post.data[postId].ownerId}}
                 <button ion-button color="primary" icon-left clear small
                     *ngIf="friend.group.indexOf(post.data[postId].ownerId) === -1"
                     (click)="friend.follow(user.userId, post.data[postId].ownerId, post.data[postId].type)">
@@ -95,15 +95,20 @@
               <img src="{{user.data[memberData.userId].avatar}}">
             </ion-avatar>
             <p>
-              {{group.data[memberData.userId].name}}
+              {{user.data[memberData.userId].name}}
             </p>
-            <span ion-button (click)="incType(memberData)">
+            <span ion-button (click)="incType(memberData, i)"
+                *ngIf="memberData.type > 0 && memberData.userId !== user.userId">
               +
             </span>
-            <span ion-button (click)="desType(memberData)">
+            <span>
+              {{service.type[memberData.userId]}}
+            </span>
+            <span ion-button (click)="desType(memberData, i)"
+                *ngIf="memberData.type < 2 && memberData.userId !== user.userId">
               -
             </span>
-            <span ion-button (click)="revType(memberData)">
+            <span ion-button (click)="revType(memberData, i)" *ngIf="memberData.userId !== user.userId">
               x
             </span>
           </ion-item>

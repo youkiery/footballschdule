@@ -1,9 +1,18 @@
 import { Component } from '@angular/core';
-import { IonicPage, NavParams, NavController } from 'ionic-angular';
+import { IonicPage, NavParams, NavController } from 'ionic-angular'
 
-import { ServiceProvider } from "../../providers/service/service"
-import { PostProvider } from "../../providers/post/post"
-import { UserProvider } from "../../providers/user/user"
+import { LibraryPage } from '../../pages/library/library'
+import { PostPage } from '../post/post'
+import { CommentPage } from '../comment/comment'
+import { PostOption } from '../main/main'
+
+import { ServiceProvider } from '../../providers/service/service'
+import { UserProvider } from '../../providers/user/user'
+import { PostProvider } from '../../providers/post/post'
+import { FriendProvider } from '../../providers/friend/friend'
+import { GroupProvider } from '../../providers/group/group'
+import { ImageProvider } from '../../providers/image/image'
+import { MemberProvider } from '../../providers/member/member'
 
 /**
  * 
@@ -15,50 +24,68 @@ import { UserProvider } from "../../providers/user/user"
   templateUrl: 'profile.html',
 })
 export class ProfilePage {
+  controller = "normal"
   page = 1
-  postPerLoad = 6
   postList = []
   displayList = []
   userId = ""
-  constructor(public service: ServiceProvider, public user: UserProvider, public post: PostProvider,
-    private navParam: NavParams, private navCtrl: NavController) {
-      /*this.userId = this.navParam.get("userId")
+  display = false
+  constructor(public user: UserProvider, public post: PostProvider, public group: GroupProvider,
+    public navCtrl: NavController, public friend: FriendProvider, public service: ServiceProvider,
+    private image: ImageProvider, private member: MemberProvider, private navParam: NavParams) {
+      this.userId = this.navParam.get("userId")
 
-      this.service.event.subscribe("get-profile-post-list", () => {
-        this.service.event.publish("loading-update", "đang tải danh sách bài viết")
-        this.post.getUserPost([this.user.userId], "get-profile-post")
+      this.service.event.subscribe("push-post", (postId) => {
+        if(this.post.data[postId].type === 0) {
+          var temp = []
+          this.displayList.forEach((newId, newIndex) => {
+            temp[newIndex + 1] = newId
+          })
+          temp[0] = postId
+          this.displayList = temp
+        }
       })
-      this.service.event.subscribe("get-profile-post", (postList) => {
-        console.log(postList)
-        console.log(this.postList)
-        console.log(this.displayList)
-        this.postList = this.postList.concat(postList)
+      
+      this.service.event.subscribe("profile-get-data-finish", postlist => {
+        console.log(this.user)
+        console.log(this.group)
+        console.log(this.friend)
+        console.log(this.post)
+        console.log(this.member)
+        console.log(postlist)
+        this.postList = postlist
+        /**
+         * soft post list
+         * default desc time
+         */
+        this.postList.sort((a, b) => {
+          return this.post.data[b].time - this.post.data[a].time
+        })
+        
+        this.service.event.publish("display-post")
+      })
+
+      this.service.event.subscribe("display-post", () => {
+        this.display = true
         var end = this.postList.length
         if(end) {
-          var from = (this.page - 1) * this.postPerLoad
-          var to = this.page * this.postPerLoad
+          var from = (this.page - 1) * this.user.setting.numberload
+          var to = this.page * this.user.setting.numberload
           var indexToLoad = []
           while(from < to && from < end) {
             indexToLoad.push(from)
             from ++
           }
+          end = end > to ? to : end
           end --
           this.page ++
           indexToLoad.forEach(index => {
-            this.displayList.push({
-              postId: this.postList[index].postId,
-              type: this.postList[index].type,
-              display: false
-            })
-            // quere load
-            if(this.user.data[this.postList[index].userId] === undefined) {
-              this.user.getUserData(this.postList[index].userId)
+            var postId = this.post.data[this.postList[index]].postId
+            if(this.displayList.indexOf(postId) < 0) {
+              this.displayList.push(postId)
             }
             
-            this.post.getPostDetail(this.postList, this.postList[index].postId, index, "update-display-list")
-            
             if(index === end) {
-              console.log(this.displayList)
               this.service.event.publish("loading-end")
             }
           })
@@ -67,54 +94,42 @@ export class ProfilePage {
           this.service.event.publish("loading-end")
         }
       })
-      this.service.event.subscribe("update-display-list", postIndex => {
-        this.displayList[postIndex].display = true
-      })
-      this.service.event.subscribe("update-post-list", (postId) => {
-        if(this.userId === this.user.userId) {
-          var temp = []
-          this.displayList.forEach((newId, newIndex) => {
-            temp[newIndex + 1] = newId
-          })
-          temp[0] = {
-            postId: postId,
-            type: 0,
-            display: true
-          }
-          this.displayList = temp          
-        }
-      })
-      this.service.event.subscribe("update-post-list", (postId) => {
-        if(this.userId === this.user.userId) {
-          this.displayList = this.displayList.filter(postDataList => {
-            return postDataList.postId !== postId
-          })    
-        }
-      })
-      
-      this.service.event.publish("loading-start")
-      this.service.event.publish("get-profile-post-list")
-  }
-  
-  reload() {
-    this.displayList = []
-    this.postList = []
-    this.post.detail = {}
-    this.page = 1
-    this.service.event.publish("loading-start")
-    this.service.event.publish("get-friend-list")
-  }
 
-  loadMore() {
-    this.service.event.publish("get-profile-post", this.postList)
+      this.service.event.publish("profile-get-data", this.userId)
   }
 
   goback() {
     this.navCtrl.pop()
   }
-
-  ionViewDidLoad() {
-    console.log('ionViewDidLoad ProfilePage');*/
+  
+  reload() {
+    this.displayList = []
+    this.postList = []
+    this.page = 1
+    this.service.event.publish("loading-start")
+    this.service.event.publish("profile-get-data", this.userId)
+  }
+  loadMore() {
+    this.service.event.publish("loading-start")
+    this.service.event.publish("display-post", this.postList)
   }
 
+  changeAvatar() {
+    this.navCtrl.push(LibraryPage, {action: "change"})
+  }
+  gotoPost() {
+    this.navCtrl.push(PostPage)
+  }
+  gotoDetail(postId) {
+    this.navCtrl.push(CommentPage, {postId: postId})
+  }
+  thisPostOption(event, postId) {
+    console.log(postId)
+    let popover = this.service.popoverCtrl.create(PostOption, {
+      postId: postId
+    });
+    popover.present({
+      ev: event
+    });
+  }
 }

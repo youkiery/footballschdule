@@ -8,6 +8,7 @@ import { SettingPage } from '../setting/setting';
 import { FriendPage } from '../friend/friend';
 import { ProfilePage } from '../profile/profile';
 import { SearchPage } from '../search/search';
+import { GroupPage } from '../group/group';
 
 import { ServiceProvider } from '../../providers/service/service';
 import { UserProvider } from '../../providers/user/user';
@@ -86,7 +87,7 @@ export class MainPage {
         }
       })
 
-      this.service.event.subscribe("main-push-post", (postId) => {
+      this.service.event.subscribe("push-post", (postId) => {
         var temp = []
         this.displayList.forEach((newId, newIndex) => {
           temp[newIndex + 1] = newId
@@ -135,6 +136,10 @@ export class MainPage {
   gotoProfile(userId) {
     this.navCtrl.push(ProfilePage, {userId: userId})
   }
+  
+  gotoGroup(groupId) {
+    this.navCtrl.push(GroupPage, {groupId: groupId})
+  }
   gotoDetail(postId) {
     this.navCtrl.push(CommentPage, {postId: postId})
   }
@@ -162,14 +167,20 @@ export class MainPage {
 })
 export class PostOption {
   postId = ""
+  groupId = ""
   constructor(public service: ServiceProvider, public viewCtrl: ViewController, public navParam: NavParams,
     public navCtrl: NavController, public post: PostProvider, public alertCtrl: AlertController,
     public user: UserProvider) {
       this.postId = this.navParam.get("postId")
-      console.log(this.postId)
+      this.groupId = this.navParam.get("groupId")
     }
   changeContent() {
-    this.navCtrl.push(PostPage, {postId: this.postId})
+    if(this.groupId) {
+      this.navCtrl.push(PostPage, {postId: this.postId, groupId: this.groupId})      
+    }
+    else {
+      this.navCtrl.push(PostPage, {postId: this.postId})
+    }
     this.viewCtrl.dismiss()
   }
   deletePost() {

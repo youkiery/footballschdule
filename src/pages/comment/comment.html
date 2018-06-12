@@ -5,31 +5,31 @@
   <div class="container" *ngIf="display === true">
     <ion-card>
       <ion-item *ngIf="postData.type === 0">
-        <ion-avatar item-start>
+        <ion-avatar item-start (click)="gotoProfile(postData.ownerId)">
           <img src="{{user.data[postData.ownerId].avatar}}">
         </ion-avatar>
-        <h2>{{user.data[postData.ownerId].name}}</h2>
-        <p>{{postData.time | date: "dd/MM/yyyy HH:mm"}}</p>
+        <p (click)="gotoProfile(postData.ownerId)">{{user.data[postData.ownerId].name}}</p>
+        <p (click)="gotoProfile(postData.ownerId)">{{postData.time | date: "dd/MM/yyyy HH:mm"}}</p>
         <button ion-button color="primary" icon-left clear small
             *ngIf="postData.ownerId !== user.userId && friend.user.indexOf(postData.ownerId) === -1"
             (click)="friend.follow(user.userId, postData.ownerId, postData.type)">
           <ion-icon name="add"></ion-icon>
-          <div>follow</div>
+          <div>theo dõi</div>
         </button>
         <ion-icon class="right" name="menu" (click)="thisPostOption($event, postId)"
             *ngIf="user.userId === postData.ownerId"></ion-icon>
       </ion-item>
       <ion-item *ngIf="postData.type === 1">
-        <ion-avatar item-start>
+        <ion-avatar item-start (click)="gotoGroup(postData.ownerId)">
           <img src="{{group.data[postData.ownerId].avatar}}">
         </ion-avatar>
-        <h2>{{group.data[postData.ownerId].name}}</h2>
+        <p (click)="gotoGroup(postData.ownerId)">{{group.data[postData.ownerId].name}}</p>
         <p>{{postData.time | date: "dd/MM/yyyy HH:mm"}}</p>
         <button ion-button color="primary" icon-left clear small
             *ngIf="postData.ownerId !== user.userId && friend.group.indexOf(postData.ownerId) === -1"
             (click)="friend.follow(user.userId, postData.ownerId, postData.type)">
           <ion-icon name="add"></ion-icon>
-          <div>follow</div>
+          <div>theo dõi</div>
         </button>
         <ion-icon class="right" name="menu" (click)="thisPostOption($event, postId)"
             *ngIf="user.userId === group.data[postData.ownerId].userId
@@ -74,10 +74,10 @@
       </ion-card-header>
       <div *ngFor="let commentData of comment; let i1 = index">
         <ion-item>
-          <ion-avatar item-start>
+          <ion-avatar item-start (click)="gotoProfile(commentData.userId)">
             <img class="md-icon" src="{{user.data[commentData.userId].avatar}}">
           </ion-avatar>
-          <p>
+          <p (click)="gotoProfile(commentData.userId)">
             {{user.data[commentData.userId].name}}
           </p>
           <p>

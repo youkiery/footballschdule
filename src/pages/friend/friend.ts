@@ -33,6 +33,7 @@ export class FriendPage {
       this.userNumber = this.user.setting.numberload
       this.memberNumber = this.user.setting.numberload
       this.groupNumber = this.user.setting.numberload
+      this.service.event.subscribe("new-group-finish")
   }
 
   loadMoremeber() {
@@ -83,7 +84,7 @@ export class FriendPage {
         {
           text: 'Thêm',
           handler: (data) => {
-            this.group.newGroup(this.user.userId, data.name, data.describe, "group-new")
+            this.service.event.publish("new-group", this.user.userId, data.name, data.describe)
           }
         }
       ]

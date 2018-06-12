@@ -76,7 +76,7 @@ export class PostProvider {
   // this function may error
   // ref error
   
-  pushAPost(userId, content, image, type, event) {
+  pushAPost(userId, content, image, type) {
     this.service.event.publish("loading-start")
     var postId = this.ref.push().key
     var currTime = Date.now()
@@ -96,7 +96,7 @@ export class PostProvider {
       postData.time = new Date(postData.time)
       this.data[postId] = postData
 
-      this.service.event.publish(event, postId)
+      this.service.event.publish("push-post", postId)
       this.service.event.publish("loading-end")
     })
   }
@@ -113,8 +113,8 @@ export class PostProvider {
     this.ref.child(postId).update(detailPost).then(() => {
       this.data[postId].msg = content
       this.data[postId].image = image
-      console.log(this.data[postId])
       
+      this.service.event.publish("update-post", postId)
       this.service.event.publish("loading-end")
     })
   }
@@ -137,12 +137,9 @@ export class PostProvider {
       userId: userId,
       postId: postId
     }
-    console.log(this.data)
-    console.log(updateData)
     this.ref.parent.child("like/" + key).update(updateData).then(() => {
       updateData["id"] = key
       this.data[postId].like.push(updateData)
-      console.log(this.data)
       this.service.event.publish('loading-end')
     })
   }

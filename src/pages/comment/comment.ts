@@ -3,6 +3,7 @@ import { IonicPage, AlertController, NavController, ViewController, NavParams } 
 
 import { PostPage } from '../post/post';
 import { viewImage } from '../library/library';
+import { ProfilePage } from '../profile/profile';
 
 import { ServiceProvider } from '../../providers/service/service'
 import { UserProvider } from '../../providers/user/user'
@@ -136,6 +137,10 @@ export class CommentPage {
     popover.present({
       ev: event
     });
+  }
+  
+  gotoProfile(userId) {
+    this.navCtrl.push(ProfilePage, {userId: userId})
   }
   goback() {
     this.listener.off()

@@ -3,6 +3,8 @@ import { IonicPage, NavController, NavParams, AlertController } from 'ionic-angu
 
 import { PostPage } from '../post/post';
 import { CommentPage } from '../comment/comment';
+import { LibraryPage } from '../../pages/library/library';
+import { PostOption } from '../main/main';
 
 import { GroupProvider } from "../../providers/group/group"
 import { UserProvider } from "../../providers/user/user"
@@ -54,13 +56,15 @@ export class GroupPage {
         this.service.event.publish("loading-end")
         this.follow = memberList
       })
-      this.service.event.subscribe("group-update-post", (postId) => {
-        var temp = []
-        this.displayList.forEach((newId, newIndex) => {
-          temp[newIndex + 1] = newId
-        })
-        temp[0] = postId
-        this.displayList = temp
+      this.service.event.subscribe("push-post", (postId) => {
+        if(this.post.data[postId].type === 1) {
+          var temp = []
+          this.displayList.forEach((newId, newIndex) => {
+            temp[newIndex + 1] = newId
+          })
+          temp[0] = postId
+          this.displayList = temp
+        }
       })
 
       this.service.event.subscribe("group-get-data-finish", (postIdList) => {
@@ -85,13 +89,13 @@ export class GroupPage {
           this.page ++
           console.log(indexToLoad)
           indexToLoad.forEach(index => {
-            this.displayList.push(this.postList[index].id)
+            this.displayList.push(this.postList[index])
             // quere load
           })
         }
-        else {
-          this.service.event.publish("loading-end")
-        }
+        
+        console.log(this.post)
+        console.log(this.displayList)
       })
       this.service.event.publish("loading-start")
       this.service.event.publish("group-get-data", this.groupId)
@@ -102,7 +106,7 @@ export class GroupPage {
     this.postList = []
     this.page = 1
     this.service.event.publish("loading-start")
-    this.post.getPostList([this.groupId], "group-get-data")
+    this.service.event.publish("group-get-data", this.groupId)
   }
   loadMore() {
     this.service.event.publish("loading-start")
@@ -116,12 +120,56 @@ export class GroupPage {
   request(userId, groupId) {
     this.service.event.publish("member-request", userId, groupId)
   }
+  
+  thisPostOption(event, postId) {
+    console.log(postId)
+    let popover = this.service.popoverCtrl.create(PostOption, {
+      postId: postId,
+      groupId: this.groupId
+    });
+    popover.present({
+      ev: event
+    });
+  }
 
+  changeAvatar() {
+    this.navCtrl.push(LibraryPage, {action: "change"})
+  }
   goback() {
     this.navCtrl.pop()
   }
-  gotoPost(groupId) {
-    this.navCtrl.push(PostPage, {groupId: groupId})
+  removeGroup() {
+    this.service.event.publish("remove-group", this.groupId)
+    this.navCtrl.pop()
+  }
+  incType(memberData, index) {
+    this.service.event.publish("loading-start")
+    var ref = this.service.db.ref("member")
+    ref.child(memberData.memberId).update({type: memberData.type - 1}).then(() => {
+      this.follow[index].type = memberData.type - 1
+      this.service.event.publish("loading-end")
+    })
+  }
+  desType(memberData, index) {
+    this.service.event.publish("loading-start")
+    var ref = this.service.db.ref("member")
+    ref.child(memberData.memberId).update({type: memberData.type + 1}).then(() => {
+      this.follow[index].type = memberData.type + 1
+      this.service.event.publish("loading-end")
+    })
+  }
+  revType(memberData, index) {
+    this.service.event.publish("loading-start")
+    var ref = this.service.db.ref("member")
+    ref.child(memberData.memberId).remove().then(() => {
+      this.follow = this.follow.filter(data => {
+        return data.memberId !== memberData.memberId
+      })
+      this.service.event.publish("loading-end")
+    })
+  }
+  gotoPost() {
+    this.navCtrl.push(PostPage, {groupId: this.groupId})
   }
   gotoDetail(postId) {
     this.navCtrl.push(CommentPage, {postId: postId})
